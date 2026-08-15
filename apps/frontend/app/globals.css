@@ -1,24 +1,101 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&family=Poppins:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
+/* Thred has one paper-like, light-only visual system. */
 :root {
+  color-scheme: light;
+  --ink: #111111;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111111;
+  --muted-foreground: #6b6f76;
+  --border: rgba(17, 17, 17, 0.09);
+  --input: rgba(17, 17, 17, 0.03);
+  --surface: #ffffff;
+  --surface-soft: #fafafa;
+  --cta-primary-bg: #111111;
+  --cta-primary-fg: #ffffff;
+  --cta-primary-hover: #2b2b2b;
+  --cta-secondary-bg: rgba(17, 17, 17, 0.02);
+  --cta-secondary-fg: #111111;
+  --cta-secondary-border: rgba(17, 17, 17, 0.12);
+  --cta-outline-hover: rgba(17, 17, 17, 0.05);
+  --focus-ring: rgba(17, 17, 17, 0.42);
+  --font-body:
+    Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Cormorant Garamond", Gascogne, Georgia, "Times New Roman", serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --font-sans: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+    font-family: var(--font-body);
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    font-weight: 360;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 550;
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-cta-primary, .btn-cta-secondary, .btn-cta-outline {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 0.5rem 1.125rem;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-cta-primary { background: var(--cta-primary-bg); color: var(--cta-primary-fg); }
+  .btn-cta-primary:hover { background: var(--cta-primary-hover); }
+  .btn-cta-secondary { border-color: var(--cta-secondary-border); background: var(--cta-secondary-bg); color: var(--cta-secondary-fg); }
+  .btn-cta-secondary:hover, .btn-cta-outline:hover { background: var(--cta-outline-hover); }
+  .btn-cta-outline { border-color: var(--border); background: transparent; color: var(--foreground); }
+  .btn-cta-primary:focus-visible, .btn-cta-secondary:focus-visible, .btn-cta-outline:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .btn-cta-primary:disabled, .btn-cta-secondary:disabled, .btn-cta-outline:disabled { pointer-events: none; opacity: 0.4; }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .thread-mesh {
+    background:
+      radial-gradient(circle at 16% 78%, rgba(192, 184, 239, 0.72), transparent 32%),
+      radial-gradient(circle at 78% 26%, rgba(177, 216, 206, 0.8), transparent 35%),
+      radial-gradient(circle at 83% 83%, rgba(222, 205, 162, 0.55), transparent 30%),
+      radial-gradient(circle at 32% 22%, rgba(193, 216, 241, 0.78), transparent 35%),
+      linear-gradient(135deg, #d8e5f4 0%, #d7ebdf 48%, #e5d6ee 100%);
+  }
 }

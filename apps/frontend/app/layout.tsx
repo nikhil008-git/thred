@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Turborepo Auth Starter",
-  description: "Better Auth with a protected API",
+  title: "Thred — shared memory for AI agents",
+  description: "Shared temporal memory for coding agents through MCP.",
 };
 
 export default function RootLayout({
