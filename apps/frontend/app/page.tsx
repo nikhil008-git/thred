@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { SiClaude, SiCline, SiCursor, SiModelcontextprotocol, SiWindsurf } from "react-icons/si";
+import { SiClaude, SiCline, SiCursor, SiGithub, SiModelcontextprotocol, SiWindsurf, SiX } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
 
 function ThreadMark({ className = "" }: { className?: string }) {
@@ -17,6 +18,18 @@ function ThreadMark({ className = "" }: { className?: string }) {
       />
       <path d="M7.5 18.75h2.2" stroke="white" strokeWidth="2.15" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function ToolFlow({ left, right }: { left: ReactNode; right: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 rounded-[16px] border border-white bg-[#f1f3ef]/95 p-2 shadow-[0_10px_26px_rgba(29,38,32,0.12)]">
+      <div className="grid size-9 place-items-center rounded-[11px] border border-[#dfe2dc] bg-white text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{left}</div>
+      <ArrowRight className="size-3 text-[#9ca19b]" strokeWidth={1.5} />
+      <div className="grid size-9 place-items-center rounded-[11px] bg-[#191b19] shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-6" /></div>
+      <ArrowRight className="size-3 text-[#9ca19b]" strokeWidth={1.5} />
+      <div className="grid size-9 place-items-center rounded-[11px] border border-[#dfe2dc] bg-white text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{right}</div>
+    </div>
   );
 }
 
@@ -42,8 +55,7 @@ export default function Home() {
       </nav>
 
       <section className="relative mx-auto max-w-[1760px] overflow-hidden px-6 pb-4 pt-14 sm:px-10 sm:pt-18 lg:pb-6 lg:pt-20">
-        <div aria-hidden="true" className="absolute right-[-8%] top-20 h-[480px] w-[44%] bg-[radial-gradient(ellipse_at_70%_40%,rgba(205,224,242,0.58),transparent_23%),radial-gradient(ellipse_at_30%_68%,rgba(210,232,218,0.66),transparent_30%)]" />
-        <div className="relative max-w-[980px]">
+        <div className="relative max-w-[980px] lg:ml-8">
           <h1 className="max-w-[18ch] text-[42px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[50px] lg:text-[60px] lg:leading-[0.96]">
             <span className="block text-[#111111]">Context that carries your</span>
             <span className="block text-[#6b6e69]">work forward.</span>
@@ -58,18 +70,16 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="how-it-works" className="mx-auto max-w-[1400px] px-6 py-8 sm:px-10 sm:py-12">
-        <div className="thread-mesh relative min-h-[370px] overflow-hidden rounded-[28px] sm:min-h-[540px]">
-          <div className="absolute inset-x-[8%] top-[10%] overflow-hidden rounded-[18px] border border-white/85 bg-white shadow-[0_20px_60px_rgba(35,48,40,0.15)] sm:inset-x-[10%]">
+      <section id="how-it-works" className="mx-auto max-w-[1400px] px-6 pb-8 pt-0 sm:px-10 sm:pb-12">
+        <div className="mx-auto w-full max-w-[1360px] overflow-hidden rounded-[18px] border border-[#e3e4e0] bg-white shadow-[0_20px_60px_rgba(35,48,40,0.12)]">
             <Image
-              src="/temporary-saas-preview-v2.png"
+              src="/temporary-saas-preview.png"
               alt="Temporary SaaS landing page preview"
               width={1587}
               height={993}
-              sizes="(min-width: 640px) 1120px, 84vw"
+              sizes="(min-width: 640px) 1360px, 84vw"
               className="h-auto w-full"
             />
-          </div>
         </div>
       </section>
 
@@ -105,10 +115,94 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-10 px-6 pb-24 sm:grid-cols-3 sm:gap-10 sm:px-8">
-        {[["Working continuity", "Know exactly where the last agent stopped."], ["Temporal truth", "See the decision now—and what it replaced."], ["Inspectable context", "Every retrieved memory carries its evidence."]].map(([title, body]) => <div key={title}><p className="text-[15px] font-medium tracking-[-0.035em]">{title}</p><p className="mt-2 max-w-[220px] text-[12px] leading-5 text-[#797974]">{body}</p></div>)}
-      </section>
       </div>
+
+      <section className="mx-auto max-w-[1000px] border-x border-[#e8e8e4] px-6 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-20">
+          <div className="mx-auto max-w-[620px] text-center">
+            <h2 className="text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724] sm:text-[28px]">
+              Keep the work connected across every handoff.
+            </h2>
+            <p className="mx-auto mt-4 max-w-[520px] text-[13px] leading-6 text-[#70766f] sm:text-[14px]">
+              Thread keeps the active task, changing decisions, and supporting evidence available to the next tool that needs it.
+            </p>
+          </div>
+
+          <div className="mt-10 space-y-7">
+            {[
+              {
+                title: "Continue coding",
+                body: "Pick up the task with the files, failures, and next step already in view.",
+                image: "/preview-code-editor.png",
+                alt: "Code workspace with an assistant and task status",
+                left: <SiCursor className="size-[18px]" />,
+                right: <RiOpenaiFill className="size-[18px]" />,
+              },
+              {
+                title: "Resolve what changed",
+                body: "Trace the current decision back through the evidence and revisions behind it.",
+                image: "/preview-memory-graph.png",
+                alt: "Temporal decision graph with supporting evidence",
+                left: <SiClaude className="size-[18px]" />,
+                right: <SiModelcontextprotocol className="size-[18px]" />,
+              },
+              {
+                title: "Hand work to the next agent",
+                body: "Give every connected agent one current context stream through MCP.",
+                image: "/preview-agent-handoff.png",
+                alt: "Agent handoff dashboard with connected developer tools",
+                left: <SiWindsurf className="size-[18px]" />,
+                right: <SiCline className="size-[18px]" />,
+              },
+            ].map((card) => (
+              <article key={card.title} className="overflow-hidden rounded-[18px] bg-white">
+                <div className="px-5 pb-7 pt-7 text-center sm:px-10 sm:pb-8 sm:pt-9">
+                  <h3 className="text-[20px] font-medium tracking-[-0.045em] text-[#252724] sm:text-[24px]">{card.title}</h3>
+                  <p className="mx-auto mt-2 max-w-[500px] text-[12px] leading-5 text-[#747770] sm:text-[13px]">{card.body}</p>
+                </div>
+                <div className="thread-mesh relative overflow-hidden px-5 pt-12 sm:px-8 sm:pt-16">
+                  <div className="pointer-events-auto absolute left-1/2 top-5 z-10 -translate-x-1/2 sm:top-7">
+                    <ToolFlow left={card.left} right={card.right} />
+                  </div>
+                  <div className="mx-auto h-[220px] max-w-[900px] overflow-hidden rounded-t-[11px] border-x border-t border-[#e2e4df] bg-white shadow-[0_-6px_24px_rgba(35,48,40,0.1)] sm:h-[350px]">
+                    <Image src={card.image} alt={card.alt} width={1440} height={1080} sizes="(min-width: 1024px) 950px, 100vw" className="h-full w-full object-cover object-top" />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+      </section>
+
+      <footer className="mx-auto max-w-[1000px] border-x border-t border-[#e8e8e4] px-6 py-10 sm:px-8 sm:py-12">
+        <div className="grid gap-9 sm:grid-cols-[1.3fr_repeat(4,1fr)] sm:gap-6">
+          <div>
+            <Link href="/" className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.04em]">
+              <ThreadMark className="size-5" />
+              thred
+            </Link>
+            <p className="mt-3 max-w-[150px] text-[11px] leading-5 text-[#7b7d78]">Memory that carries work across agents.</p>
+          </div>
+          {[
+            ["Product", ["Memory", "MCP", "Evals"]],
+            ["Developers", ["Documentation", "GitHub", "Changelog"]],
+            ["Company", ["About", "Contact"]],
+            ["Legal", ["Privacy", "Terms"]],
+          ].map(([label, links]) => (
+            <div key={label as string}>
+              <p className="text-[11px] text-[#90928d]">{label}</p>
+              <div className="mt-3 space-y-2">
+                {(links as string[]).map((link) => <a key={link} href="#" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">{link}</a>)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-10 flex items-center justify-between border-t border-[#e8e8e4] pt-5 text-[11px] text-[#858781]">
+          <p>© 2026 thred</p>
+          <div className="flex items-center gap-4">
+            <a href="#" aria-label="Thred on GitHub" className="transition-colors hover:text-[#171717]"><SiGithub className="size-4" /></a>
+            <a href="#" aria-label="Thred on X" className="transition-colors hover:text-[#171717]"><SiX className="size-[13px]" /></a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
