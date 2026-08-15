@@ -24,6 +24,14 @@ function ThreadMark({ className = "" }: { className?: string }) {
   );
 }
 
+function HydraMark({ className = "" }: { className?: string }) {
+  return (
+    <span aria-label="HydraDB" className={`relative block overflow-hidden ${className}`}>
+      <Image src="/hydradb-logo-white.png" alt="" width={1180} height={215} className="absolute left-1/2 top-[9.8%] h-full max-w-none w-auto -translate-x-[7.5%]" />
+    </span>
+  );
+}
+
 function ToolFlow({ left, right }: { left: ReactNode; right: ReactNode }) {
   return (
     <div className="flex items-center gap-2 rounded-[16px] border border-white bg-[#f1f3ef]/95 p-2 shadow-[0_10px_26px_rgba(29,38,32,0.12)]">
@@ -45,15 +53,15 @@ export default function Home() {
           thred
         </Link>
         <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 text-[13px] text-[#6f716d] lg:flex">
-          <a href="#memory" className="landing-link hover:text-[#171717]">memory</a>
-          <a href="#how-it-works" className="landing-link hover:text-[#171717]">how it works</a>
-          <a href="#mcp" className="landing-link hover:text-[#171717]">MCP</a>
-          <a href="#evals" className="landing-link hover:text-[#171717]">evals</a>
-          <a href="#docs" className="landing-link hover:text-[#171717]">docs</a>
+          <a href="#memory" className="nav-link text-[#6f716d] hover:text-[#171717]">memory</a>
+          <a href="#how-it-works" className="nav-link text-[#6f716d] hover:text-[#171717]">how it works</a>
+          <a href="#mcp" className="nav-link text-[#6f716d] hover:text-[#171717]">MCP</a>
+          <a href="#evals" className="nav-link text-[#6f716d] hover:text-[#171717]">evals</a>
+          <a href="#docs" className="nav-link text-[#6f716d] hover:text-[#171717]">docs</a>
         </div>
         <div className="flex items-center gap-5">
-          <Link href="/sign-in" className="landing-link hidden text-[13px] text-[#4e504c] hover:text-[#171717] sm:block">sign in</Link>
-          <Link href="/sign-up" className="landing-link text-[13px] font-medium text-[#171717] hover:text-[#5c7565]">create workspace <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link>
+          <Link href="/sign-in" className="nav-link hidden text-[13px] text-[#4e504c] hover:text-[#171717] sm:block">sign in</Link>
+          <Link href="/sign-up" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">create workspace <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link>
         </div>
       </nav>
 
@@ -110,6 +118,8 @@ export default function Home() {
               <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><SiClaude className="size-7" /></div>
               <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
               <div className="grid size-[60px] place-items-center transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-[60px]" /></div>
+              <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
+              <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><HydraMark className="size-8" /></div>
               <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
               <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><RiOpenaiFill className="size-7" /></div>
             </div>
