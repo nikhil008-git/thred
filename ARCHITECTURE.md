@@ -19,11 +19,9 @@ Claude / Codex / Cursor
            ▼
         Thred
   ┌────────┴─────────┐
-  │ working memory   │  Where did work stop?
-  │ long-term memory │  What do we know now?
-  └────────┬─────────┘
-           ▼
-        HydraDB
+  │ working memory   │──► PostgreSQL / Prisma
+  │ long-term memory │──► HydraDB
+  └──────────────────┘
 ```
 
 ## Two memory layers
@@ -65,11 +63,13 @@ set of disconnected facts. It is a time-ordered revision history.
 
 | Store | Responsibility |
 | --- | --- |
-| PostgreSQL + Prisma | Product metadata: Better Auth records, workspaces, memberships, API keys, agent connections, lightweight agent-session metadata, eval runs/results. |
-| HydraDB | Thred's memory brain: extracted memories, entities, facts, decisions, temporal/revision graph, provenance, checkpoints, task state, and retrieval traversal. |
+| PostgreSQL + Prisma | Product metadata: Better Auth records, workspaces, memberships, API keys, agent connections, agent-session metadata, working checkpoints, evidence/audit events, eval runs/results. |
+| HydraDB | Thred's long-term memory brain: extracted memories, entities, facts, decisions, temporal/revision context, provenance references, and retrieval. |
 
-Memory, Fact, Decision, Revision, and Checkpoint are deliberately **not**
-Prisma models. They belong in HydraDB.
+Memory, Fact, Decision, and Revision are deliberately **not** Prisma models;
+they belong in HydraDB. `WorkingCheckpoint` and `EvidenceEvent` are Prisma
+models because they are structured, operational state with authoritative source
+references.
 
 ## Product metadata schema
 
@@ -79,6 +79,10 @@ Better Auth owns `User`, `Session`, `Account`, and `Verification`. Thred adds:
 - `ApiKey` (store only a hash and key prefix)
 - `AgentConnection` — a named Claude/Codex/Cursor connection per workspace
 - `AgentSession` — agent, external/Hydra session IDs, counts, start/end times
+- `WorkingCheckpoint` — latest resumable task state: progress, files, tests,
+  blockers, and next step
+- `EvidenceEvent` — immutable references to commits, diffs, test runs, issues,
+  PRs, and sanitized MCP permission decisions
 - `EvalRun` and `EvalCaseResult`
 
 `AgentSession` is a source/provenance record; a raw session is not itself a
@@ -86,14 +90,13 @@ memory.
 
 ## HydraDB graph
 
-Primary nodes include `Workspace`, `Agent`, `Session`, `Memory`, `Entity`,
-`Decision`, `Fact`, `Task`, `Checkpoint`, `File`, `Test`, and `Error`.
+Primary long-term nodes include `Workspace`, `Agent`, `Session`, `Memory`,
+`Entity`, `Decision`, `Fact`, `File`, and evidence references.
 
 Core edges include:
 
 `FROM_SESSION`, `ABOUT`, `SUPERSEDES`, `CONTRADICTS`, `SUPPORTS`,
-`RELATED_TO`, `CREATED_BY`, `BELONGS_TO`, `TOUCHED_FILE`, `FAILED_TEST`,
-`NEXT_STEP`, and `CHECKPOINT_OF`.
+`RELATED_TO`, `CREATED_BY`, `BELONGS_TO`, and `TOUCHED_FILE`.
 
 Every memory is workspace-scoped and carries provenance: source session,
 source content/reference, timestamps, confidence, extraction metadata, and
@@ -102,13 +105,14 @@ revision status.
 ```text
 MongoDB ──SUPERSEDED_BY──> PostgreSQL
 
-Task: Fix authentication
+Decision: Fix authentication with a shorter Redis TTL
   ├─ TOUCHED_FILE ───────> auth.ts
   ├─ TOUCHED_FILE ───────> token.ts
-  ├─ FAILED_TEST ────────> refresh-token.test.ts
-  ├─ OBSERVED ───────────> Redis TTL may be incorrect
-  └─ NEXT_STEP ──────────> Inspect Redis expiry logic
+  └─ SUPPORTS ───────────> EvidenceEvent: refresh-token.test.ts failure
 ```
+
+Working task state remains in PostgreSQL. A checkpoint links to the relevant
+HydraDB memory IDs and evidence-event IDs; it is not itself long-term memory.
 
 ## Memory write pipeline
 
@@ -117,7 +121,7 @@ conversation / agent event
   → structured LLM extraction
   → entity resolution
   → revision resolution
-  → HydraDB graph write
+  → HydraDB long-term memory write
 ```
 
 The extractor produces claims, not memory itself. A claim contains subject,
@@ -151,8 +155,8 @@ One Thread MCP server exposes exactly these initial tools:
 | `thread_resume` | Restore the latest checkpoint plus relevant long-term memory. |
 
 An MCP client authenticates with a workspace API key (`thrd_sk_…`). The API
-verifies its hash, determines the workspace, and scopes all HydraDB reads and
-writes to that workspace.
+verifies its hash, determines the workspace, and scopes all PostgreSQL and
+HydraDB reads and writes to that workspace.
 
 ## API and application layout
 
@@ -165,7 +169,7 @@ apps/evals     dataset adapters, baseline and Thread runners, metrics
 
 packages/db              Prisma/Postgres client and schema
 packages/auth            Better Auth server/client
-packages/hydra           HydraDB client, write, query, graph adapters
+packages/hydra           HydraDB client and long-term-memory query/write adapters
 packages/memory          extractor, resolver, graph builder, context/ranking,
                          abstention
 packages/working-memory  checkpoint, resume, resolver
@@ -219,13 +223,14 @@ handoff experience.
 ## Build order
 
 1. Workspace, auth, API keys, and session metadata.
-2. HydraDB adapter and workspace scoping.
-3. Claim schema, extraction, entity/revision resolution, and graph writes.
-4. Context builder, ranking, provenance, and abstention.
-5. Checkpoint/resume working memory.
-6. MCP server and six tools.
-7. Baseline and Thread evaluation runners/metrics.
-8. Workspace UI, demo, setup guide, open-source license, and short video.
+2. Prisma working-checkpoint and evidence-event models, plus workspace scoping.
+3. HydraDB adapter and workspace scoping for long-term memory.
+4. Claim schema, extraction, entity/revision resolution, and memory writes.
+5. Context builder, ranking, provenance, and abstention.
+6. Checkpoint/resume working memory.
+7. MCP server and six tools.
+8. Baseline and Thread evaluation runners/metrics.
+9. Workspace UI, demo, setup guide, open-source license, and short video.
 
 ## Why HydraDB is essential
 
