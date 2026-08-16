@@ -170,8 +170,9 @@ apps/evals     dataset adapters, baseline and Thread runners, metrics
 packages/db              Prisma/Postgres client and schema
 packages/auth            Better Auth server/client
 packages/hydra           HydraDB client and long-term-memory query/write adapters
-packages/memory          extractor, resolver, graph builder, context/ranking,
-                         abstention
+packages/memory-extractor session-to-memory extraction and output validation
+packages/memory-engine   entity/revision resolver, graph builder, context/ranking,
+                         and abstention before long-term HydraDB writes
 packages/working-memory  checkpoint, resume, resolver
 packages/shared          shared contracts/types
 packages/ui              shared UI
