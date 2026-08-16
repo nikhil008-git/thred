@@ -6,16 +6,46 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum WorkspaceRole {
+  OWNER
+  MEMBER
+}
+
+enum AgentKind {
+  CODEX
+  CLAUDE
+  CURSOR
+  HERMES
+  OTHER
+}
+
+enum CheckpointStatus {
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum EvidenceKind {
+  GIT_COMMIT
+  GIT_DIFF
+  TEST_RUN
+  GITHUB_ISSUE
+  GITHUB_PR
+  MCP_PERMISSION
+}
+
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+  id               String            @id
+  name             String
+  email            String
+  emailVerified    Boolean
+  image            String?
+  createdAt        DateTime
+  updatedAt        DateTime
+  sessions         Session[]
+  accounts         Account[]
+  workspaceMembers WorkspaceMember[]
 
   @@unique([email])
   @@map("user")
@@ -64,4 +94,110 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Workspace {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique()
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  members     WorkspaceMember[]
+  apiKeys     ApiKey[]
+  connections AgentConnection[]
+  sessions    AgentSession[]
+  checkpoints WorkingCheckpoint[]
+  evidence    EvidenceEvent[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  keyPrefix   String
+  keyHash     String    @unique()
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+model AgentConnection {
+  id          String         @id @default(cuid())
+  workspaceId String
+  name        String
+  agent       AgentKind
+  createdAt   DateTime       @default(now())
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sessions    AgentSession[]
+
+  @@index([workspaceId])
+}
+
+model AgentSession {
+  id           String              @id @default(cuid())
+  workspaceId  String
+  connectionId String?
+  agent        AgentKind
+  externalId   String?
+  startedAt    DateTime            @default(now())
+  endedAt      DateTime?
+  workspace    Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  connection   AgentConnection?    @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  checkpoints  WorkingCheckpoint[]
+  evidence     EvidenceEvent[]
+
+  @@index([workspaceId, startedAt])
+  @@index([connectionId])
+}
+
+model WorkingCheckpoint {
+  id             String           @id @default(cuid())
+  workspaceId    String
+  sessionId      String
+  taskKey        String
+  task           String
+  status         CheckpointStatus
+  payload        Json
+  hydraMemoryIds String[]         @default([])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  session        AgentSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, taskKey, updatedAt])
+  @@index([sessionId])
+}
+
+model EvidenceEvent {
+  id          String        @id @default(cuid())
+  workspaceId String
+  sessionId   String?
+  kind        EvidenceKind
+  externalRef String?
+  title       String
+  payload     Json
+  occurredAt  DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  session     AgentSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, kind, occurredAt])
+  @@index([sessionId])
 }
