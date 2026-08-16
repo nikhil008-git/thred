@@ -1,0 +1,19 @@
+{
+  "name": "@repo/working-memory",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/db": "*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "typescript": "5.9.2"
+  }
+}
