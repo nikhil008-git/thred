@@ -1,6 +1,6 @@
 import { getHydraClient } from "./client.js";
 import { workspaceDatabaseId } from "./tenant.js";
-import type { HydraResponse, LongTermMemoryInput } from "./types.js";
+import type { HydraMemoryWriteResponse, LongTermMemoryInput } from "./types.js";
 
 const longTermCollection = "long_term";
 
@@ -16,7 +16,9 @@ function validateMemory(input: LongTermMemoryInput) {
  * Ingests a curated, durable memory. The extraction/revision layer decides what
  * is worth writing; this adapter only persists it with readable provenance.
  */
-export async function writeLongTermMemory(input: LongTermMemoryInput): Promise<HydraResponse> {
+export async function writeLongTermMemory(
+  input: LongTermMemoryInput,
+): Promise<HydraMemoryWriteResponse> {
   validateMemory(input);
 
   const provenance = [

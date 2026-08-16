@@ -10,6 +10,8 @@ export { writeLongTermMemory } from "./write.js";
 export type {
   LongTermMemoryInput,
   LongTermMemoryKind,
+  HydraMemoryQueryResponse,
+  HydraMemoryWriteResponse,
   HydraResponse,
   RecallLongTermMemoryInput,
 } from "./types.js";

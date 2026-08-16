@@ -1,13 +1,13 @@
 import { getHydraClient } from "./client.js";
 import { workspaceDatabaseId } from "./tenant.js";
-import type { HydraResponse, RecallLongTermMemoryInput } from "./types.js";
+import type { HydraMemoryQueryResponse, RecallLongTermMemoryInput } from "./types.js";
 
 const longTermCollection = "long_term";
 
 /** Hybrid retrieval with HydraDB graph context, restricted to one workspace. */
 export async function recallLongTermMemory(
   input: RecallLongTermMemoryInput,
-): Promise<HydraResponse> {
+): Promise<HydraMemoryQueryResponse> {
   if (!input.query.trim()) throw new Error("query is required for long-term recall");
 
   return getHydraClient().query({

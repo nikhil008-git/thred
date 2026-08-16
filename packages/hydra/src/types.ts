@@ -22,3 +22,22 @@ export type HydraResponse = {
   data?: unknown;
   meta?: unknown;
 };
+
+export type HydraMemoryWriteResponse = HydraResponse & {
+  data?: {
+    results?: Array<{ id?: string }>;
+  };
+};
+
+export type HydraMemoryQueryResponse = HydraResponse & {
+  data?: {
+    chunks?: Array<{
+      id?: string;
+      chunkUuid?: string;
+      chunkContent?: string;
+      sourceLastUpdatedTime?: string;
+      sourceUploadTime?: string;
+      relevancyScore?: number;
+    }>;
+  };
+};
