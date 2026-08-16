@@ -3,7 +3,7 @@ import { LenisProvider } from "@/components/lenis-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "thred — shared memory for AI agents",
+  title: "thred shared memory for AI agents",
   description: "Shared temporal memory for coding agents through MCP.",
   applicationName: "thred",
   icons: {
