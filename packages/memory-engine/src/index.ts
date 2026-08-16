@@ -1,5 +1,10 @@
 export { normalizeEntity, memorySemanticKey } from "./entity-resolver.js";
+export { shouldAbstain, type AbstentionResult } from "./abstention.js";
 export { buildHydraMemory } from "./graph-builder.js";
+export { buildMemoryContext, type MemoryContext } from "./context-builder.js";
+export { buildMemoryHistory, type MemoryHistory } from "./history.js";
+export { inspectMemory } from "./inspect.js";
+export { resumeWithMemory, type ResumeWithMemory } from "./resume-context.js";
 export { HydraMemoryLookup } from "./hydra-lookup.js";
 export {
   ingestSession,
@@ -17,3 +22,11 @@ export {
   type ExistingMemory,
   type RevisionDecision,
 } from "./revision-resolver.js";
+export { rankMemories, type RankedMemory } from "./ranker.js";
+export {
+  TemporalGraph,
+  type TemporalEdge,
+  type TemporalMemory,
+  type TemporalRelation,
+  type TemporalResolution,
+} from "./temporal-graph.js";

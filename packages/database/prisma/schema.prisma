@@ -35,6 +35,11 @@ enum EvidenceKind {
   MCP_PERMISSION
 }
 
+enum EvalStrategy {
+  VECTOR_RAG
+  THRED
+}
+
 model User {
   id               String            @id
   name             String
@@ -108,6 +113,7 @@ model Workspace {
   sessions    AgentSession[]
   checkpoints WorkingCheckpoint[]
   evidence    EvidenceEvent[]
+  evalRuns    EvalRun[]
 }
 
 model WorkspaceMember {
@@ -200,4 +206,44 @@ model EvidenceEvent {
 
   @@index([workspaceId, kind, occurredAt])
   @@index([sessionId])
+}
+
+model EvalRun {
+  id          String       @id @default(cuid())
+  workspaceId String
+  dataset     String
+  strategy    EvalStrategy
+  answerModel String
+  config      Json
+  startedAt   DateTime     @default(now())
+  completedAt DateTime?
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  results     EvalCaseResult[]
+
+  @@index([workspaceId, dataset, startedAt])
+}
+
+model EvalCaseResult {
+  id                 String   @id @default(cuid())
+  evalRunId          String
+  caseId             String
+  question           String
+  expectedAnswer     String?
+  answer             String?
+  shouldAbstain      Boolean  @default(false)
+  abstained          Boolean  @default(false)
+  answerCorrect      Boolean?
+  temporalCorrect    Boolean?
+  revisionCorrect    Boolean?
+  abstentionCorrect  Boolean?
+  writeTokens        Int      @default(0)
+  readTokens         Int      @default(0)
+  ingestLatencyMs    Int      @default(0)
+  retrievalLatencyMs Int      @default(0)
+  evidence           Json
+  createdAt          DateTime @default(now())
+  evalRun            EvalRun  @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
+
+  @@unique([evalRunId, caseId])
+  @@index([caseId])
 }
