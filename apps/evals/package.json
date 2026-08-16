@@ -1,21 +1,23 @@
 {
-  "name": "@repo/memory-extractor",
-  "version": "0.0.0",
+  "name": "@repo/evals",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
+    "eval": "tsx src/run.ts",
     "check-types": "tsc --noEmit",
     "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
+    "@repo/db": "*",
+    "@repo/memory-engine": "*",
+    "@repo/memory-extractor": "*",
     "openai": "^6.32.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "typescript": "5.9.2",
-    "tsx": "^4.21.0"
+    "@types/node": "^22.15.3",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2"
   }
 }

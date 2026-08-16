@@ -4,14 +4,18 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "postinstall": "npm run db:generate --workspace=@repo/db",
     "lint": "turbo run lint",
+    "test": "npm run test --workspace=@repo/memory-extractor && npm run test --workspace=@repo/memory-engine && npm run test --workspace=@repo/evals",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "prettier": "^3.7.4",
+    "tsx": "^4.23.12",
     "turbo": "^2.8.21",
-    "typescript": "5.9.2"
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18"
@@ -22,6 +26,8 @@
     "packages/*"
   ],
   "dependencies": {
-    "dotenv": "^17.3.1"
+    "@modelcontextprotocol/server": "^2.0.0",
+    "dotenv": "^17.3.1",
+    "zod": "^4.4.3"
   }
 }

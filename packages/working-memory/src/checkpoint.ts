@@ -16,7 +16,7 @@ export async function saveCheckpoint(input: CheckpointInput) {
       task: checkpoint.task,
       status: checkpoint.status,
       payload: checkpoint.payload,
-      hydraMemoryIds: checkpoint.hydraMemoryIds,
+      ...(checkpoint.hydraMemoryIds ? { hydraMemoryIds: checkpoint.hydraMemoryIds } : {}),
     },
   });
 }

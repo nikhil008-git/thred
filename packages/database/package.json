@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "db:generate": "prisma generate",
+        "db:generate": "prisma generate && node scripts/create-prisma-facade.mjs",
         "db:migrate": "prisma migrate dev",
         "db:deploy": "prisma migrate deploy"
     },

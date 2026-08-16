@@ -3,13 +3,13 @@
 import type React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, AtSign, ChevronLeft } from "lucide-react";
-import { SiClaude } from "react-icons/si";
+import { ArrowRight, ChevronLeft } from "lucide-react";
+import { SiClaude, SiGoogle } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
 import { Button } from "./button";
 import { Input } from "./input";
 
-type AuthMode = "sign-in" | "sign-up";
+type AuthMode = "sign-in" | "workspace";
 
 type AuthPageProps = {
   mode: AuthMode;
@@ -20,24 +20,24 @@ type AuthPageProps = {
 
 const content = {
   "sign-in": {
-    eyebrow: "Welcome back",
+    eyebrow: "Shared agent memory",
     title: "Continue the work in motion.",
-    description: "Sign in to return to the context your agents are carrying forward.",
-    submit: "Sign in",
-    submitting: "Signing in…",
-    prompt: "New to Thred?",
-    action: "Create an account",
-    href: "/sign-up",
+    description: "",
+    submit: "Continue with Google",
+    submitting: "Opening Google…",
+    prompt: "",
+    action: "",
+    href: "/",
   },
-  "sign-up": {
-    eyebrow: "Start a workspace",
-    title: "Give every handoff a memory.",
-    description: "Create your account and keep decisions, evidence, and next steps connected.",
-    submit: "Create account",
-    submitting: "Creating account…",
-    prompt: "Already have an account?",
-    action: "Sign in",
-    href: "/sign-in",
+  workspace: {
+    eyebrow: "One last step",
+    title: "Name the work you want to carry forward.",
+    description: "Your workspace is where agents share checkpoints, decisions, and durable project memory.",
+    submit: "Create workspace",
+    submitting: "Creating workspace…",
+    prompt: "Want to finish this later?",
+    action: "Sign out",
+    href: "/",
   },
 } as const;
 
@@ -78,35 +78,25 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
               thred
             </Link>
           </div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#858680]">{copy.eyebrow}</p>
-          <h1 className="mt-3 text-[32px] font-normal leading-[1.03] tracking-[-0.055em] text-[#171717] sm:text-[38px]">{copy.title}</h1>
+          {mode !== "sign-in" && <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#858680]">{copy.eyebrow}</p>}
+          {mode === "sign-in" && <ThreadMark className="mb-5 size-9" />}
+          <h1 className={`${mode === "sign-in" ? "text-[28px] sm:text-[33px]" : "mt-3 text-[32px] sm:text-[38px]"} font-normal leading-[1.03] tracking-[-0.055em] text-[#171717]`}>{copy.title}</h1>
           <p className="mt-4 text-sm leading-6 text-[#70726e]">{copy.description}</p>
 
           {error && <p role="alert" className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
 
           <form className="mt-8 space-y-4" onSubmit={onSubmit}>
-            {mode === "sign-up" && (
-            <label className="block space-y-1.5" htmlFor="name">
-                <span className="text-sm font-medium text-[#373936]">Name</span>
-                <Input id="name" name="name" autoComplete="name" required placeholder="Your name" className="border-[#e3e4e0] bg-white focus:border-[#737670] focus:shadow-[0_0_0_3px_rgba(23,23,23,0.08)]" />
+            {mode === "workspace" && (
+              <label className="block space-y-1.5" htmlFor="workspace-name">
+                <span className="text-sm font-medium text-[#373936]">Workspace name</span>
+                <Input id="workspace-name" name="workspaceName" autoComplete="organization" required autoFocus placeholder="e.g. Acme engineering" className="border-[#e3e4e0] bg-white focus:border-[#737670] focus:shadow-[0_0_0_3px_rgba(23,23,23,0.08)]" />
+                <span className="block text-xs text-[#858781]">You can invite teammates and create more workspaces later.</span>
               </label>
             )}
-            <label className="block space-y-1.5" htmlFor="email">
-              <span className="text-sm font-medium text-[#373936]">Email</span>
-              <span className="relative block">
-                <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" className="border-[#e3e4e0] bg-white pl-9 focus:border-[#737670] focus:shadow-[0_0_0_3px_rgba(23,23,23,0.08)]" />
-                <AtSign aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#a4a6a1]" />
-              </span>
-            </label>
-            <label className="block space-y-1.5" htmlFor="password">
-              <span className="text-sm font-medium text-[#373936]">Password</span>
-              <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={mode === "sign-up" ? 8 : undefined} aria-describedby={mode === "sign-up" ? "password-hint" : undefined} placeholder="••••••••" className="border-[#e3e4e0] bg-white focus:border-[#737670] focus:shadow-[0_0_0_3px_rgba(23,23,23,0.08)]" />
-              {mode === "sign-up" && <span id="password-hint" className="block text-xs text-[#858781]">Use at least 8 characters.</span>}
-            </label>
-            <Button type="submit" className="mt-2 w-full bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.submit}</Button>
+            {mode === "sign-in" && <div><Button type="submit" className="mt-2 w-full cursor-pointer bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}><SiGoogle className="size-4" />{isSubmitting ? copy.submitting : copy.submit}</Button></div>}
+            {mode === "workspace" && <Button type="submit" className="mt-2 w-full bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.submit}</Button>}
           </form>
-          <p className="mt-7 text-center text-sm text-[#7b7d78]">{copy.prompt} <Link href={copy.href} className="font-medium text-[#373936] underline decoration-[#b7b9b4] underline-offset-4 hover:text-[#171717]">{copy.action}</Link></p>
-          <p className="mt-8 text-center text-xs leading-5 text-[#858781]">By continuing, you agree to our Terms of Service and Privacy Policy.</p>
+          {copy.prompt && <p className="mt-7 text-center text-sm text-[#7b7d78]">{copy.prompt}{copy.action && <> <Link href={copy.href} className="font-medium text-[#373936] underline decoration-[#b7b9b4] underline-offset-4 hover:text-[#171717]">{copy.action}</Link></>}</p>}
         </div>
       </section>
     </main>

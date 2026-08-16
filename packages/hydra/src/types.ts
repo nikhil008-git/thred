@@ -9,6 +9,11 @@ export type LongTermMemoryInput = {
   evidenceEventIds?: string[];
   sourceMessageIds?: string[];
   files?: string[];
+  /** Explicit semantic relations supplied by Thred's temporal resolver. */
+  relations?: Array<{
+    predicate: "ABOUT" | "FROM_SESSION" | "SUPPORTS" | "SUPERSEDES" | "TOUCHED_FILE";
+    target: string;
+  }>;
 };
 
 export type RecallLongTermMemoryInput = {

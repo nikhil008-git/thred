@@ -28,6 +28,9 @@ export async function writeLongTermMemory(
     input.evidenceEventIds?.length ? `evidence=${input.evidenceEventIds.join(",")}` : undefined,
     input.sourceMessageIds?.length ? `messages=${input.sourceMessageIds.join(",")}` : undefined,
     input.files?.length ? `files=${input.files.join(",")}` : undefined,
+    input.relations?.length
+      ? `relations=${input.relations.map((relation) => `${relation.predicate}:${relation.target}`).join("|")}`
+      : undefined,
   ].filter(Boolean).join("; ");
 
   return getHydraClient().context.ingest({
