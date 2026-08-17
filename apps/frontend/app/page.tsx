@@ -53,7 +53,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#fcfcfb] text-[#171717]">
-      <nav className="mx-auto flex h-[86px] max-w-[1760px] items-center justify-between px-6 sm:px-10">
+      <nav className="mx-auto flex h-[86px] w-full max-w-[1080px] items-center justify-between px-6 sm:px-8">
         <Link href="/" className="landing-link flex items-center gap-2 text-[16px] font-semibold tracking-[-0.055em]">
           <ThreadMark className="size-7 shrink-0" />
           thred
@@ -63,7 +63,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="relative min-h-[calc(100svh-86px)] max-w-none overflow-hidden bg-[#fcfcfb] px-6 py-14 sm:px-10 sm:py-18 lg:grid lg:min-h-0 lg:grid-cols-[minmax(360px,440px)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:py-10 lg:pr-0">
+      <section className="relative min-h-[calc(100svh-86px)] max-w-none overflow-x-clip bg-[#fcfcfb] px-6 py-14 sm:px-10 sm:py-18 lg:grid lg:min-h-0 lg:grid-cols-[minmax(360px,440px)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:py-10 lg:pr-0">
         <div className="relative z-10 mx-auto max-w-[440px] text-center lg:mx-0 lg:self-center lg:text-left">
           <h1 className="max-w-none text-[30px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[34px] lg:text-[35px] lg:leading-[0.96]">
             <span className="block text-[#111111]">Context that carries your</span>
@@ -77,17 +77,20 @@ export default function Home() {
             <a href="#mcp" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore MCP <ArrowRight className="size-3" strokeWidth={1.6} /></a>
           </div>
         </div>
-        <div id="how-it-works" className="relative mx-auto mt-12 h-[390px] w-full overflow-hidden sm:h-[560px] lg:mt-0 lg:h-[760px]">
-          <div className="pointer-events-none absolute left-0 top-0 w-[1440px] origin-top-left scale-[0.42] sm:scale-[0.6] lg:scale-[0.84]">
-            <DashboardPage preview />
+        <div id="how-it-works" className="relative mx-auto mt-12 h-[390px] w-full sm:h-[560px] lg:mt-0 lg:h-[760px]">
+          <div className="absolute inset-y-0 left-0 w-screen overflow-hidden rounded-l-[18px] border-y border-l border-[#d7dad4] bg-[#f1f2f0] shadow-[-18px_12px_40px_rgba(16,22,18,0.16),-4px_2px_8px_rgba(16,22,18,0.08)]">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute left-0 top-0 h-[1100px] w-[1280px] origin-top-left scale-[0.5] sm:scale-[0.7] lg:scale-[0.88]">
+                <DashboardPage preview />
+              </div>
+            </div>
+            <Link
+              href={session?.user ? "/dashboard" : "/sign-in"}
+              aria-label="Open the Thred dashboard"
+              className="absolute inset-0 z-10"
+            />
           </div>
-          <Link
-            href={session?.user ? "/dashboard" : "/sign-in"}
-            aria-label="Open the Thred dashboard"
-            className="absolute inset-0 z-10"
-          />
         </div>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-[#fcfcfb]/95 via-[#fcfcfb]/55 to-transparent backdrop-blur-[1px] sm:h-24" />
       </section>
 
       <div className="mx-auto max-w-[1000px] border-x border-[#e8e8e4]">

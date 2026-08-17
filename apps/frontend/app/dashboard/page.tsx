@@ -920,9 +920,9 @@ function DashboardContent({ preview = false }: { preview?: boolean }) {
 
   if ((!isHeroPreview && (isPending || loading || !workspace)) || !workspace) return <DashboardSkeleton />;
   return (
-    <main className="min-h-screen bg-white text-[#242622] lg:grid lg:grid-cols-[224px_minmax(0,1fr)]">
+    <main className={`${isHeroPreview ? "h-[1100px] min-h-0 overflow-hidden" : "min-h-screen"} bg-[#f1f2f0] text-[#242622] lg:grid lg:grid-cols-[224px_minmax(0,1fr)]`}>
       <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] min-h-screen flex-col bg-[#f1f2f0] px-4 py-3 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${isHeroPreview ? "min-h-full" : "min-h-screen"} ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto ${isHeroPreview ? "lg:h-full" : "lg:h-screen"} lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}>
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -1158,7 +1158,7 @@ function DashboardContent({ preview = false }: { preview?: boolean }) {
           </a>
           </div>
         </header>
-        <div className="min-h-[calc(100vh-48px)] bg-white lg:rounded-tl-[80px]">
+        <div className={`bg-white ${isHeroPreview ? "min-h-[calc(1100px-48px)]" : "min-h-[calc(100vh-48px)] lg:rounded-tl-[80px]"}`}>
           <div
             className={
               view === "docs"

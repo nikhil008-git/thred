@@ -1,0 +1,59 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @repo/evals@0.1.0 eval
+> tsx src/run.ts --dataset longmemeval --input /private/tmp/test.json --workspace cmswupgt50009bi8oj8m55wmv --limit 1 --concurrency 1
+
+[dotenv@17.3.1] injecting env (20) from ../../.env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+[dotenv@17.3.1] injecting env (0) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+(node:30076) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[VECTOR_RAG] run=cmsxsqlmr00007g8o7i9yefga cases=1
+[VECTOR_RAG] case=gpt4_2655b836 error=429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.
+[VECTOR_RAG] 1/1
+[VECTOR_RAG] complete run=cmsxsqlmr00007g8o7i9yefga
+[THRED] run=cmsxsxmqw00027g8o9i7q6l65 cases=1
+[THRED] case=gpt4_2655b836 error=429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.
+[THRED] 1/1
+[THRED] complete run=cmsxsxmqw00027g8o9i7q6l65
+# Thred Track 03 evaluation — longmemeval
+
+| Metric | Vector-RAG | Thred |
+| --- | ---: | ---: |
+| Accuracy | n/a | n/a |
+| Temporal accuracy | n/a | n/a |
+| Revision accuracy | n/a | n/a |
+| Abstention accuracy | n/a | n/a |
+| Eval errors | 1 | 1 |
+| Cases scored | 0 | 0 |
+| Write tokens | 0 | 0 |
+| Read tokens | 0 | 0 |
+| p50 retrieval latency | 0ms | 0ms |
+| p95 retrieval latency | 0ms | 0ms |
+
+Both strategies use the same answer model. The vector baseline is deterministic hashed-vector retrieval.
+Accuracy excludes EVAL_ERROR cases; see eval-error summaries below.
+
+## Vector-RAG failed-case summaries
+
+- None.
+
+## Thred failed-case summaries
+
+- None.
+
+## Vector-RAG eval-error summaries
+
+- `gpt4_2655b836`: 429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.. Question: What was the first issue I had with my new car after its first service?
+
+## Thred eval-error summaries
+
+- `gpt4_2655b836`: 429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.. Question: What was the first issue I had with my new car after its first service?
+
+Report written to /Users/nikhilrajpurohit/Developer/thred/apps/evals/reports/longmemeval-2026-08-17T22-30-43-277Z.md
