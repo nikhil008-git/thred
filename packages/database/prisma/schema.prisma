@@ -114,6 +114,24 @@ model Workspace {
   checkpoints WorkingCheckpoint[]
   evidence    EvidenceEvent[]
   evalRuns    EvalRun[]
+  providerCredentials ProviderCredential[]
+}
+
+model ProviderCredential {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  provider     String
+  label        String
+  model        String
+  baseUrl      String?
+  encryptedKey String
+  keyHint      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, provider])
+  @@index([workspaceId])
 }
 
 model WorkspaceMember {

@@ -1,16 +1,24 @@
-import type { CaseScore, EvalCase, EvaluatedAnswer } from "./types.js";
+import type { AnswerJudge, CaseScore, EvalCase, EvaluatedAnswer } from "./types.js";
 
 function normalize(value: string): string {
   return value.toLocaleLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-export function scoreCase(evalCase: EvalCase, result: EvaluatedAnswer): CaseScore {
+export async function scoreCase(
+  evalCase: EvalCase,
+  result: EvaluatedAnswer,
+  judge: AnswerJudge,
+): Promise<CaseScore> {
   const abstentionCorrect = evalCase.shouldAbstain === result.abstained;
   const answerCorrect = evalCase.shouldAbstain
     ? abstentionCorrect
     : evalCase.expectedAnswer
-      ? normalize(result.answer).includes(normalize(evalCase.expectedAnswer))
-        || normalize(evalCase.expectedAnswer).includes(normalize(result.answer))
+      ? normalize(result.answer) === normalize(evalCase.expectedAnswer)
+        || await judge.judge({
+          question: evalCase.question,
+          expectedAnswer: evalCase.expectedAnswer,
+          answer: result.answer,
+        })
       : null;
 
   return {
@@ -18,5 +26,6 @@ export function scoreCase(evalCase: EvalCase, result: EvaluatedAnswer): CaseScor
     temporalCorrect: evalCase.category === "temporal" ? answerCorrect : null,
     revisionCorrect: evalCase.category === "revision" ? answerCorrect : null,
     abstentionCorrect,
+    isAbstention: evalCase.shouldAbstain,
   };
 }

@@ -5,7 +5,7 @@ Thred processes benchmark histories one session at a time. Every extracted claim
 ## Run a benchmark
 
 1. Download one official dataset JSON locally and keep it outside the repository.
-2. Set `DATABASE_URL`, `HYDRA_DB_API_KEY`, and `OPENAI_API_KEY`; `EVAL_ANSWER_MODEL` and `MEMORY_EXTRACTION_MODEL` are optional model overrides.
+2. Set `DATABASE_URL` and `HYDRA_DB_API_KEY`. For local CLI runs, set a provider key such as `OPENAI_API_KEY`; in the workspace product, configure the equivalent provider through **Configure → BYOK providers**. `EVAL_ANSWER_MODEL` and `MEMORY_EXTRACTION_MODEL` are optional model overrides.
 3. Create an evaluation workspace in Thred, then run:
 
 ```bash

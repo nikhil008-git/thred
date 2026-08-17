@@ -10,7 +10,9 @@ Create a `.env` file in each of these directories:
 
 Use `.env.example` as the source. The API needs `BETTER_AUTH_URL` and
 `FRONTEND_ORIGIN` so its authentication middleware can verify the Better Auth
-session cookie.
+session cookie. In the product, configure model credentials per workspace from
+**Configure → BYOK providers**. Thred agent keys (`thrd_sk_…`) authenticate
+MCP clients and are separate from model provider keys.
 
 ```env
 DATABASE_URL=

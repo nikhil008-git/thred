@@ -75,7 +75,7 @@ function parseLongTerm(value: unknown): LongTermMemoryClaim {
     subject: requiredString(claim.subject, "longTerm.subject"),
     predicate: requiredString(claim.predicate, "longTerm.predicate"),
     value: requiredString(claim.value, "longTerm.value"),
-    ...(claim.reason === undefined
+    ...(claim.reason === undefined || claim.reason === null
       ? {}
       : { reason: requiredString(claim.reason, "longTerm.reason") }),
     confidence,
@@ -90,7 +90,7 @@ function parseWorkingMemory(value: unknown): WorkingMemoryCheckpoint {
   const nextStep = checkpoint.nextStep;
 
   if (!checkpointStatuses.has(status)) throw new Error("workingMemory.status is invalid");
-  if (nextStep !== undefined && (typeof nextStep !== "string" || !nextStep.trim())) {
+  if (nextStep !== undefined && nextStep !== null && (typeof nextStep !== "string" || !nextStep.trim())) {
     throw new Error("workingMemory.nextStep must be a non-empty string when provided");
   }
 
@@ -114,7 +114,7 @@ export function parseExtractedRelevantContext(value: unknown): ExtractedRelevant
 
   return {
     longTerm: extracted.longTerm.map(parseLongTerm),
-    ...(extracted.workingMemory === undefined
+    ...(extracted.workingMemory === undefined || extracted.workingMemory === null
       ? {}
       : { workingMemory: parseWorkingMemory(extracted.workingMemory) }),
   };

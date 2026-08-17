@@ -63,7 +63,7 @@ set of disconnected facts. It is a time-ordered revision history.
 
 | Store | Responsibility |
 | --- | --- |
-| PostgreSQL + Prisma | Product metadata: Better Auth records, workspaces, memberships, API keys, agent connections, agent-session metadata, working checkpoints, evidence/audit events, eval runs/results. |
+| PostgreSQL + Prisma | Product metadata: Better Auth records, workspaces, memberships, Thred agent keys, encrypted BYOK provider credentials, agent connections, agent-session metadata, working checkpoints, evidence/audit events, eval runs/results. |
 | HydraDB | Thred's long-term memory brain: extracted memories, entities, facts, decisions, temporal/revision context, provenance references, and retrieval. |
 
 Memory, Fact, Decision, and Revision are deliberately **not** Prisma models;
@@ -154,7 +154,9 @@ One Thread MCP server exposes exactly these initial tools:
 | `thread_checkpoint` | Save the current coding/working state. |
 | `thread_resume` | Restore the latest checkpoint plus relevant long-term memory. |
 
-An MCP client authenticates with a workspace API key (`thrd_sk_…`). The API
+An MCP client authenticates with a workspace Thred agent key (`thrd_sk_…`). Model
+provider credentials are separate workspace-scoped BYOK settings and are encrypted
+at rest; they are never returned to the browser. The API
 verifies its hash, determines the workspace, and scopes all PostgreSQL and
 HydraDB reads and writes to that workspace.
 
@@ -162,7 +164,7 @@ HydraDB reads and writes to that workspace.
 
 ```text
 apps/web       Next.js product UI
-apps/api       Express API: auth, workspaces, API keys, sessions, memory,
+apps/api       Express API: auth, workspaces, Thred agent keys, sessions, memory,
                context, checkpoints, graph, evals
 apps/mcp       MCP server/client and six tools
 apps/evals     dataset adapters, baseline and Thread runners, metrics
@@ -205,7 +207,7 @@ context dump.
 
 ## Demo acceptance flow
 
-1. Sign in, create a workspace, and generate an API key.
+1. Sign in, create a workspace, generate a Thred agent key, and configure a BYOK model provider.
 2. Connect Claude through Thread MCP.
 3. Save a database decision, then update it from MongoDB to PostgreSQL; show
    the `SUPERSEDED_BY` graph and historical answer.
@@ -223,7 +225,7 @@ handoff experience.
 
 ## Build order
 
-1. Workspace, auth, API keys, and session metadata.
+1. Workspace, auth, Thred agent keys, BYOK provider credentials, and session metadata.
 2. Prisma working-checkpoint and evidence-event models, plus workspace scoping.
 3. HydraDB adapter and workspace scoping for long-term memory.
 4. Claim schema, extraction, entity/revision resolution, and memory writes.

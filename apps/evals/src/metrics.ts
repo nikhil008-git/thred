@@ -16,7 +16,7 @@ export function summarizeMetrics(results: MetricInput[]) {
   const answer = results.flatMap((item) => item.score.answerCorrect === null ? [] : [item.score.answerCorrect]);
   const temporal = results.flatMap((item) => item.score.temporalCorrect === null ? [] : [item.score.temporalCorrect]);
   const revision = results.flatMap((item) => item.score.revisionCorrect === null ? [] : [item.score.revisionCorrect]);
-  const abstention = results.map((item) => item.score.abstentionCorrect);
+  const abstention = results.flatMap((item) => item.score.isAbstention ? [item.score.abstentionCorrect] : []);
   const latency = results.map((item) => item.result.retrievalLatencyMs);
   return {
     accuracy: ratio(answer),

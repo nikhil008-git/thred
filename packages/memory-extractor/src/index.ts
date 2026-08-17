@@ -6,6 +6,7 @@ export {
   type SessionMessage,
 } from "./extractor.js";
 export { OpenAIMemoryExtractionModel } from "./openai.js";
+export { resolveModelConfig, type ModelConfig, type ModelProvider } from "./provider.js";
 export {
   parseExtractedRelevantContext,
   type ExtractedRelevantContext,
