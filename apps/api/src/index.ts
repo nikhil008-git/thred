@@ -8,6 +8,11 @@ const app = express();
 const port = Number(process.env.PORT ?? 8080);
 const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:3000";
 const authUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const rateLimitWindowMs = 60_000;
+const rateLimitMaxRequests = 120;
+
+type RateLimitBucket = { count: number; resetAt: number };
+const rateLimitBuckets = new Map<string, RateLimitBucket>();
 
 type AuthenticatedRequest = Request & {
     user?: { id: string; email: string; name: string };
@@ -20,6 +25,38 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
     if (req.method === "OPTIONS") return res.sendStatus(204);
+    next();
+});
+
+/**
+ * Lightweight per-process protection for the public API. For multi-instance
+ * deployments, replace this Map with a shared store (such as Redis).
+ */
+app.use("/api", (req, res, next) => {
+    const now = Date.now();
+    const client = req.ip || req.socket.remoteAddress || "unknown";
+    const current = rateLimitBuckets.get(client);
+    const bucket = !current || current.resetAt <= now
+        ? { count: 0, resetAt: now + rateLimitWindowMs }
+        : current;
+
+    bucket.count += 1;
+    rateLimitBuckets.set(client, bucket);
+
+    if (rateLimitBuckets.size > 10_000) {
+        for (const [key, entry] of rateLimitBuckets) {
+            if (entry.resetAt <= now) rateLimitBuckets.delete(key);
+        }
+    }
+
+    res.setHeader("X-RateLimit-Limit", rateLimitMaxRequests);
+    res.setHeader("X-RateLimit-Remaining", Math.max(0, rateLimitMaxRequests - bucket.count));
+    res.setHeader("X-RateLimit-Reset", Math.ceil(bucket.resetAt / 1000));
+
+    if (bucket.count > rateLimitMaxRequests) {
+        res.setHeader("Retry-After", Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)));
+        return res.status(429).json({ error: "Too many requests. Please try again shortly." });
+    }
     next();
 });
 

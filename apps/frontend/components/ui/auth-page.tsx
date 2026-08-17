@@ -67,20 +67,20 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
         </div>
       </aside>
 
-      <section className="relative flex min-h-screen flex-col justify-center bg-[#fcfcfb] px-5 py-10 sm:px-10 lg:px-[clamp(3rem,9vw,9rem)]">
-        <Button variant="ghost" className="absolute left-4 top-5 text-[#4e504c] hover:bg-transparent hover:text-[#171717] sm:left-7 sm:top-7" asChild>
+      <section className="relative flex min-h-screen flex-col justify-start bg-[#fcfcfb] px-5 pb-10 pt-28 sm:px-10 lg:justify-center lg:px-[clamp(3rem,9vw,9rem)] lg:py-10">
+        <Button variant="ghost" className="absolute left-4 top-5 h-9 rounded-[7px] px-2.5 text-[12px] text-[#4e504c] transition-colors hover:bg-[#eef1ed] hover:text-[#171717] sm:left-7 sm:top-7" asChild>
           <Link href="/"><ChevronLeft className="size-4" />Home</Link>
         </Button>
         <div className="relative mx-auto w-full max-w-[360px]">
-          <div className="mb-8 lg:hidden">
+          {mode !== "sign-in" && <div className="mb-8 lg:hidden">
             <Link href="/" className="flex w-fit items-center gap-2 text-[15px] font-semibold tracking-[-0.05em] text-[#253228]">
               <span className="grid size-7 place-items-center rounded-[8px] bg-[#243026] text-[10px] font-semibold text-white">t</span>
               thred
             </Link>
-          </div>
+          </div>}
           {mode !== "sign-in" && <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#858680]">{copy.eyebrow}</p>}
-          {mode === "sign-in" && <ThreadMark className="mb-5 size-9" />}
-          <h1 className={`${mode === "sign-in" ? "text-[28px] sm:text-[33px]" : "mt-3 text-[32px] sm:text-[38px]"} font-normal leading-[1.03] tracking-[-0.055em] text-[#171717]`}>{copy.title}</h1>
+          {mode === "sign-in" && <ThreadMark className="mb-5 hidden size-9 lg:block" />}
+          <h1 className={`${mode === "sign-in" ? "text-[24px] sm:text-[28px]" : "mt-3 text-[32px] sm:text-[38px]"} font-normal leading-[1.03] tracking-[-0.055em] text-[#171717]`}>{copy.title}</h1>
           <p className="mt-4 text-sm leading-6 text-[#70726e]">{copy.description}</p>
 
           {error && <p role="alert" className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
