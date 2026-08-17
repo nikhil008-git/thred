@@ -1,0 +1,27 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @repo/evals@0.1.0 eval
+> tsx src/run.ts --dataset longmemeval --input /private/tmp/test.json --workspace cmswupgt50009bi8oj8m55wmv --stratified 2 --concurrency 1
+
+[dotenv@17.3.1] injecting env (18) from ../../.env -- tip: 🛡️ auth for agents: https://vestauth.com
+[dotenv@17.3.1] injecting env (0) from ../../.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Stratified sample: 10 cases (2 per category when available)
+(node:91772) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[VECTOR_RAG] run=cmsxqjlod0000t88of161hsk5 cases=10
+[VECTOR_RAG] 10/10
+[VECTOR_RAG] complete run=cmsxqjlod0000t88of161hsk5
+[THRED] run=cmsxqkrzy000bt88odt1d2cr0 cases=10
+[THRED] case=gpt4_70e84552_abs error=Request timed out.
+[THRED] case=gpt4_93159ced_abs error=429 Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kxsw1czje6ats5qeypb3882w` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199269, Requested 5471. Please try again in 34m7.679999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing
+[THRED] case=gpt4_2655b836 error=Connection error.
+[THRED] case=gpt4_2487a7cb error=429 Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kxsw1czje6ats5qeypb3882w` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198198, Requested 7475. Please try again in 40m50.736s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing
+[THRED] case=6a1eabeb error=429 Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kxsw1czje6ats5qeypb3882w` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 197436, Requested 7525. Please try again in 35m43.152s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing
+[THRED] case=6aeb4375 error=429 Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kxsw1czje6ats5qeypb3882w` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 196658, Requested 7339. Please try again in 28m46.704s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing

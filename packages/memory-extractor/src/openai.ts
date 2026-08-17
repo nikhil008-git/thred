@@ -4,8 +4,11 @@ import { resolveModelConfig } from "./provider.js";
 
 function retryDelayMs(error: unknown, attempt: number): number | null {
   const details = error as { status?: number; message?: string };
-  if (details.status !== 429 && (!details.status || details.status < 500)) return null;
-  const requestedDelaySeconds = /try again in ([0-9.]+)s/i.exec(details.message ?? "")?.[1];
+  const status = details.status;
+  const message = details.message ?? "";
+  if (status !== 429 && status !== 413 && (!status || status < 500)
+    && !/413|request too large|tokens per minute/i.test(message)) return null;
+  const requestedDelaySeconds = /try again in ([0-9.]+)s/i.exec(message)?.[1];
   const requestedDelayMs = requestedDelaySeconds ? Math.ceil(Number(requestedDelaySeconds) * 1000) : 0;
   return Math.max(requestedDelayMs + 1_000, Math.min(60_000, 5_000 * 2 ** attempt));
 }
@@ -74,21 +77,42 @@ type OpenAIMemoryExtractionOptions = {
 export class OpenAIMemoryExtractionModel implements MemoryExtractionModel {
   private readonly client: OpenAI;
   private readonly model: string;
+  private readonly provider: string;
 
   constructor(options: OpenAIMemoryExtractionOptions = {}) {
-    const config = resolveModelConfig(options);
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 60_000, maxRetries: 0 });
+    const config = resolveModelConfig({ ...options, providerEnv: "MEMORY_EXTRACTION_PROVIDER" });
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
     this.model = options.model ?? process.env.MEMORY_EXTRACTION_MODEL ?? config.model;
+    this.provider = config.provider;
   }
 
   async extract(request: MemoryExtractionRequest, instructions: string): Promise<unknown> {
-    const response = await withRetry(() => this.client.chat.completions.create({
-      model: this.model,
-      messages: [{ role: "system", content: instructions }, { role: "user", content: JSON.stringify(request) }],
-      response_format: { type: "json_schema", json_schema: { name: "thred_memory_extraction", strict: true, schema: extractionJsonSchema } },
-    }));
-    const output = response.choices[0]?.message?.content?.trim();
-    if (!output) throw new Error("Memory extraction returned no structured output");
-    return JSON.parse(output.replace(/^```json\s*|\s*```$/g, "")) as unknown;
+    // Gemini hangs on strict json_schema; Groq's gpt-oss often omits required
+    // fields like `files`, which json_schema then rejects. json_object + the
+    // tolerant parser handles both.
+    const responseFormat = this.provider === "gemini" || this.provider === "groq"
+      ? { type: "json_object" as const }
+      : { type: "json_schema" as const, json_schema: { name: "thred_memory_extraction", strict: true, schema: extractionJsonSchema } };
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const response = await withRetry(() => this.client.chat.completions.create({
+        model: this.model,
+        max_completion_tokens: 4_096,
+        messages: [{ role: "system", content: instructions }, { role: "user", content: JSON.stringify(request) }],
+        response_format: responseFormat,
+      }));
+      const output = response.choices[0]?.message?.content?.trim();
+      if (!output) {
+        lastError = new Error("Memory extraction returned no structured output");
+      } else {
+        try {
+          return JSON.parse(output.replace(/^```json\s*|\s*```$/g, "")) as unknown;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+    throw lastError instanceof Error ? lastError : new Error("Memory extraction returned invalid structured output");
   }
 }

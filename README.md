@@ -1,193 +1,46 @@
-# Turborepo Better Auth starter
+# Thred
 
-## Environment Variables
+Cross-session agent memory with revision-aware graph storage, first-class abstention, and reproducible LongMemEval benchmarks.
 
-Create a `.env` file in each of these directories:
+**Track 03 submission:** see [TRACK_03.md](./TRACK_03.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-1. `packages/database`
-2. `apps/frontend`
-3. `apps/api`
+## Quick start
 
-Use `.env.example` as the source. The API needs `BETTER_AUTH_URL` and
-`FRONTEND_ORIGIN` so its authentication middleware can verify the Better Auth
-session cookie. In the product, configure model credentials per workspace from
-**Configure → BYOK providers**. Thred agent keys (`thrd_sk_…`) authenticate
-MCP clients and are separate from model provider keys.
-
-```env
-DATABASE_URL=
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=
+```bash
+npm install
+npm run db:generate --workspace=@repo/db
+npm run db:migrate --workspace=@repo/db
+npm run dev
 ```
 
-You can find a template in `.env.example` at the root of the project.
+Configure `.env` with `DATABASE_URL`, `HYDRA_DB_API_KEY`, and a model provider key (`GROQ_API_KEY` or `OPENAI_API_KEY`).
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Run evals
 
-## Authentication and protected API
-
-- Better Auth is served by Next.js at `/api/auth/*`, with email/password sign-up and sign-in.
-- The frontend has `/sign-up`, `/sign-in`, and a session-gated `/dashboard`.
-- The Express API exposes `GET /health` and a protected `GET /api/me` endpoint.
-  It verifies the incoming Better Auth cookie through the auth service before allowing
-  the request through `requireAuth` middleware.
-
-Copy `.env.example` into `apps/frontend/.env`, `packages/database/.env`, and
-`apps/api/.env`, then run `npm install`, `npm run db:generate --workspace=@repo/db`,
-`npm run db:migrate --workspace=@repo/db`, and `npm run dev`.
-
-## Using this example
-
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```bash
+npm run eval --workspace=@repo/evals -- \
+  --dataset longmemeval \
+  --input /path/to/longmemeval.json \
+  --workspace <workspace-id> \
+  --stratified 2 \
+  --concurrency 1
 ```
 
-## What's inside?
+Reports: `apps/evals/reports/`.
 
-This Turborepo includes the following packages/apps:
+## Monorepo
 
-### Apps and Packages
+| App / Package | Role |
+| --- | --- |
+| `apps/mcp` | MCP tools: remember, context, history, checkpoint, resume |
+| `apps/evals` | LongMemEval / BEAM runners + Vector-RAG baseline |
+| `packages/memory-engine` | Extraction pipeline, revision resolver, abstention |
+| `packages/hydra` | HydraDB long-term memory adapter |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Tests
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+npm run test --workspace=@repo/evals
+npm run test --workspace=@repo/memory-extractor
+npm run test --workspace=@repo/memory-engine
 ```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)

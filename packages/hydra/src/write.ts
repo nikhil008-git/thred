@@ -1,4 +1,4 @@
-import { getHydraClient } from "./client.js";
+import { getHydraClient, hydraWithRetry } from "./client.js";
 import { workspaceDatabaseId } from "./tenant.js";
 import type { HydraMemoryWriteResponse, LongTermMemoryInput } from "./types.js";
 
@@ -33,12 +33,12 @@ export async function writeLongTermMemory(
       : undefined,
   ].filter(Boolean).join("; ");
 
-  return getHydraClient().context.ingest({
+  return hydraWithRetry(() => getHydraClient().context.ingest({
     database: workspaceDatabaseId(input.workspaceId),
     collection: longTermCollection,
     type: "memory",
     memories: JSON.stringify([{
       text: `${input.text.trim()}\n\n[Thred provenance: ${provenance}]`,
     }]),
-  });
+  }), "ingest");
 }

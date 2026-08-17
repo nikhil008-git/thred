@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "eval": "tsx src/run.ts",
+    "eval:stratified": "tsx src/run.ts --stratified 2",
     "check-types": "tsc --noEmit",
     "test": "tsx --test src/*.test.ts"
   },

@@ -22,20 +22,35 @@ async function withRetry<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
+/** Parses a judge reply; thinking models may bury CORRECT/INCORRECT after reasoning. */
+export function parseJudgeVerdict(content: string | null | undefined): boolean {
+  if (!content?.trim()) return false;
+  const trimmed = content.trim();
+  const upper = trimmed.toUpperCase();
+  if (upper === "CORRECT") return true;
+  if (upper === "INCORRECT" || upper.startsWith("INCORRECT")) return false;
+  const lastLine = trimmed.split(/\n/).pop()?.trim().toUpperCase() ?? "";
+  if (lastLine === "CORRECT" || lastLine.startsWith("CORRECT")) return true;
+  if (lastLine === "INCORRECT" || lastLine.startsWith("INCORRECT")) return false;
+  if (/\bCORRECT\b/.test(upper) && !/\bINCORRECT\b/.test(upper)) return true;
+  return false;
+}
+
 /** Shared answer model for both strategies; keeps the benchmark comparison fair. */
 export class OpenAIAnswerModel implements AnswerModel {
   readonly name: string;
   private readonly client: OpenAI;
 
   constructor(model = process.env.EVAL_ANSWER_MODEL ?? undefined) {
-    const config = resolveModelConfig(model ? { model } : {});
+    const config = resolveModelConfig(model ? { model } : { providerEnv: "EVAL_MODEL_PROVIDER" });
     this.name = config.model;
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 60_000, maxRetries: 0 });
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
   }
 
   async answer(input: { question: string; context: string }) {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
+      max_completion_tokens: 512,
       messages: [
         { role: "system", content: "Answer only from the supplied context. If context does not support the answer, reply exactly NOT_FOUND." },
         { role: "user", content: `Question:\n${input.question}\n\nContext:\n${input.context}` },
@@ -58,25 +73,28 @@ export class OpenAIAnswerModel implements AnswerModel {
 export class OpenAIAnswerJudge implements AnswerJudge {
   readonly name: string;
   private readonly client: OpenAI;
+  private readonly provider: string;
 
   constructor(model = process.env.EVAL_JUDGE_MODEL ?? process.env.EVAL_ANSWER_MODEL ?? undefined) {
-    const config = resolveModelConfig(model ? { model } : {});
+    const config = resolveModelConfig(model ? { model } : { providerEnv: "EVAL_MODEL_PROVIDER" });
     this.name = config.model;
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 60_000, maxRetries: 0 });
+    this.provider = config.provider;
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
   }
 
   async judge(input: { question: string; expectedAnswer: string; answer: string }): Promise<boolean> {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
-      temperature: 0,
+      ...(this.provider === "gemini" ? {} : { temperature: 0 }),
+      max_completion_tokens: 128,
       messages: [
         {
           role: "system",
-          content: "Decide whether the candidate answer correctly answers the question according to the reference answer. Accept concise equivalent paraphrases, but reject partial, contradictory, unsupported, or NOT_FOUND answers. Reply with exactly CORRECT or INCORRECT.",
+          content: "Decide whether the candidate answer correctly answers the question according to the reference answer. Accept concise equivalent paraphrases, but reject partial, contradictory, unsupported, or NOT_FOUND answers. Reply with exactly one word on the final line: CORRECT or INCORRECT.",
         },
         { role: "user", content: `Question: ${input.question}\nReference answer: ${input.expectedAnswer}\nCandidate answer: ${input.answer}` },
       ],
     }));
-    return response.choices[0]?.message?.content?.trim().toUpperCase() === "CORRECT";
+    return parseJudgeVerdict(response.choices[0]?.message?.content);
   }
 }

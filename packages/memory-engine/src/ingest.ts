@@ -11,6 +11,8 @@ export type IngestSessionInput = {
   workspaceId: string;
   sessionId: string;
   evidenceEventIds?: string[];
+  /** Evaluation runs use isolated HydraDB stores, not product Workspace rows. */
+  persistWorkingMemory?: boolean;
   extractionRequest: MemoryExtractionRequest;
 };
 
@@ -44,7 +46,7 @@ export async function ingestSession(
     result.hydraResponse?.data?.results?.flatMap((item) => item.id ? [item.id] : []) ?? [],
   );
 
-  const checkpoint = extracted.workingMemory
+  const checkpoint = input.persistWorkingMemory !== false && extracted.workingMemory
     ? await saveCheckpoint({
         workspaceId: input.workspaceId,
         sessionId: input.sessionId,

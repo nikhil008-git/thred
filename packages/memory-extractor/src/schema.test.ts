@@ -11,8 +11,10 @@ test("accepts evidence-backed claims and a compact checkpoint", () => {
   assert.equal(result.workingMemory?.nextStep, "Run migration");
 });
 
-test("rejects a claim without a valid confidence score", () => {
-  assert.throws(() => parseExtractedRelevantContext({
-    longTerm: [{ kind: "fact", subject: "A", predicate: "is", value: "B", confidence: 2, sourceMessageIds: [], files: [] }],
-  }), /confidence/);
+test("defaults invalid kind and confidence instead of rejecting the claim", () => {
+  const result = parseExtractedRelevantContext({
+    longTerm: [{ kind: "note", subject: "A", predicate: "is", value: "B", confidence: 2, sourceMessageIds: [], files: [] }],
+  });
+  assert.equal(result.longTerm[0]?.kind, "fact");
+  assert.equal(result.longTerm[0]?.confidence, 0.5);
 });

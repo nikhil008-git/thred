@@ -1,4 +1,4 @@
-import { getHydraClient } from "./client.js";
+import { getHydraClient, hydraWithRetry } from "./client.js";
 import { workspaceDatabaseId } from "./tenant.js";
 import type { HydraMemoryQueryResponse, RecallLongTermMemoryInput } from "./types.js";
 
@@ -10,7 +10,7 @@ export async function recallLongTermMemory(
 ): Promise<HydraMemoryQueryResponse> {
   if (!input.query.trim()) throw new Error("query is required for long-term recall");
 
-  return getHydraClient().query({
+  return hydraWithRetry(() => getHydraClient().query({
     database: workspaceDatabaseId(input.workspaceId),
     collection: longTermCollection,
     type: "memory",
@@ -20,5 +20,5 @@ export async function recallLongTermMemory(
     maxResults: input.maxResults ?? 8,
     graphContext: true,
     queryForcefulRelations: true,
-  });
+  }), "recall");
 }

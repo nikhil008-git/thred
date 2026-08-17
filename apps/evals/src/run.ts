@@ -5,6 +5,7 @@ import { config as loadEnv } from "dotenv";
 import { OpenAIMemoryExtractionModel } from "@repo/memory-extractor";
 import { getWorkspaceDatabaseStatus, provisionWorkspaceDatabase } from "@repo/hydra";
 import { loadDataset } from "./datasets/loaders.js";
+import { stratifiedSample } from "./datasets/stratified.js";
 import { summarizeMetrics } from "./metrics.js";
 import { OpenAIAnswerJudge, OpenAIAnswerModel } from "./models/openai-answer.js";
 import { completeEvalRun, createEvalRun, saveCaseResult } from "./persistence.js";
@@ -28,10 +29,24 @@ const inputPath = option("--input");
 const workspaceId = option("--workspace");
 const limitValue = option("--limit");
 const limit = limitValue ? Number(limitValue) : undefined;
+const stratifiedValue = option("--stratified");
+const stratifiedPerCategory = stratifiedValue ? Number(stratifiedValue) : undefined;
 const concurrencyValue = option("--concurrency");
-const concurrency = concurrencyValue ? Number(concurrencyValue) : 4;
+const concurrency = concurrencyValue ? Number(concurrencyValue) : 1;
+const strategyOption = option("--strategy");
+const allowedStrategies = ["VECTOR_RAG", "THRED"] as const;
+type EvalStrategy = (typeof allowedStrategies)[number];
+const strategyFilter: EvalStrategy[] = strategyOption
+  ? allowedStrategies.filter((value): value is EvalStrategy => value === strategyOption)
+  : [...allowedStrategies];
+if (strategyOption && strategyFilter.length === 0) {
+  throw new Error(`--strategy must be one of: ${allowedStrategies.join(", ")}`);
+}
 if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
   throw new Error("--limit must be a positive integer");
+}
+if (stratifiedPerCategory !== undefined && (!Number.isInteger(stratifiedPerCategory) || stratifiedPerCategory < 1)) {
+  throw new Error("--stratified must be a positive integer (cases per category)");
 }
 if (!Number.isInteger(concurrency) || concurrency < 1) {
   throw new Error("--concurrency must be a positive integer");
@@ -40,7 +55,12 @@ if (!dataset || !inputPath || !workspaceId) {
   throw new Error("Usage: npm run eval --workspace=@repo/evals -- --dataset longmemeval-v2 --input path/to/data.json --workspace workspace-id");
 }
 
-const evalCases = (await loadDataset(inputPath, dataset)).slice(0, limit);
+let evalCases = await loadDataset(inputPath, dataset);
+if (stratifiedPerCategory !== undefined) {
+  evalCases = stratifiedSample(evalCases, stratifiedPerCategory);
+  console.log(`Stratified sample: ${evalCases.length} cases (${stratifiedPerCategory} per category when available)`);
+}
+evalCases = evalCases.slice(0, limit);
 if (!evalCases.length) throw new Error("No evaluation cases found in the supplied dataset.");
 const answerModel = new OpenAIAnswerModel();
 const answerJudge = new OpenAIAnswerJudge();
@@ -49,16 +69,20 @@ type RunResult = { evalCase: EvalCase; score: Awaited<ReturnType<typeof scoreCas
 const all = { VECTOR_RAG: [] as RunResult[], THRED: [] as RunResult[] };
 
 async function waitForHydraDatabase(workspace: string) {
-  await provisionWorkspaceDatabase(workspace);
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  try {
+    await provisionWorkspaceDatabase(workspace);
+  } catch {
+    // A ConflictError means provisioning already started; keep polling status.
+  }
+  for (let attempt = 0; attempt < 180; attempt += 1) {
     try {
       const status = await getWorkspaceDatabaseStatus(workspace);
       const ready = Boolean((status.data as { infra?: { readyForIngestion?: boolean } } | undefined)?.infra?.readyForIngestion);
       if (ready) return;
     } catch {
-      // Provisioning is asynchronous; retry until the service reports readiness.
+      // Status may be unavailable while the database is still initializing.
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   throw new Error(`HydraDB workspace ${workspace} did not become ready in time`);
 }
@@ -74,21 +98,51 @@ async function runWithConcurrency<T>(items: T[], worker: (item: T) => Promise<vo
   }));
 }
 
-for (const strategy of ["VECTOR_RAG", "THRED"] as const) {
+for (const strategy of strategyFilter) {
   const run = await createEvalRun({ workspaceId, dataset, strategy, answerModel: answerModel.name, config: { inputPath, answerJudge: answerJudge.name } });
+  console.log(`[${strategy}] run=${run.id} cases=${evalCases.length}`);
+  let completedCases = 0;
   await runWithConcurrency(evalCases, async (evalCase) => {
     // Every LongMemEval record is an independent history. Reusing one memory
     // database would allow facts from an earlier case to answer a later case.
     const caseWorkspaceId = `${workspaceId}_eval_${run.id}_${evalCase.id}`;
-    if (strategy === "THRED") await waitForHydraDatabase(caseWorkspaceId);
-    const result = strategy === "VECTOR_RAG"
-      ? await runVectorRag(evalCase, answerModel)
-      : await runThred({ evalCase, workspaceId: caseWorkspaceId, extractor, answerModel });
-    const score = await scoreCase(evalCase, result, answerJudge);
+    let result: EvaluatedAnswer;
+    let score: Awaited<ReturnType<typeof scoreCase>>;
+    try {
+      if (strategy === "THRED") await waitForHydraDatabase(caseWorkspaceId);
+      result = strategy === "VECTOR_RAG"
+        ? await runVectorRag(evalCase, answerModel)
+        : await runThred({ evalCase, workspaceId: caseWorkspaceId, extractor, answerModel });
+      score = await scoreCase(evalCase, result, answerJudge);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result = {
+        answer: "EVAL_ERROR",
+        abstained: false,
+        evidence: { workspaceId: caseWorkspaceId, error: message },
+        writeTokens: 0,
+        readTokens: 0,
+        ingestLatencyMs: 0,
+        retrievalLatencyMs: 0,
+      };
+      score = {
+        answerCorrect: null,
+        temporalCorrect: evalCase.category === "temporal" ? null : null,
+        revisionCorrect: evalCase.category === "revision" ? null : null,
+        abstentionCorrect: false,
+        isAbstention: evalCase.shouldAbstain,
+      };
+      console.error(`[${strategy}] case=${evalCase.id} error=${message}`);
+    }
     all[strategy].push({ evalCase, score, result });
     await saveCaseResult({ evalRunId: run.id, evalCase, result, score });
+    completedCases += 1;
+    if (completedCases === evalCases.length || completedCases % 10 === 0) {
+      console.log(`[${strategy}] ${completedCases}/${evalCases.length}`);
+    }
   });
   await completeEvalRun(run.id);
+  console.log(`[${strategy}] complete run=${run.id}`);
 }
 
 const report = renderComparisonReport({
@@ -96,7 +150,7 @@ const report = renderComparisonReport({
   vectorRag: summarizeMetrics(all.VECTOR_RAG),
   thred: summarizeMetrics(all.THRED),
   vectorRagFailures: all.VECTOR_RAG
-    .filter((item) => item.score.answerCorrect === false)
+    .filter((item) => item.result.answer !== "EVAL_ERROR" && item.score.answerCorrect === false)
     .slice(0, 20)
     .map((item) => ({
       id: item.evalCase.id,
@@ -106,17 +160,47 @@ const report = renderComparisonReport({
       abstained: item.result.abstained,
     })),
   thredFailures: all.THRED
-    .filter((item) => item.score.answerCorrect === false)
+    .filter((item) => item.result.answer !== "EVAL_ERROR" && item.score.answerCorrect === false)
     .slice(0, 20)
     .map((item) => {
-      const evidence = item.result.evidence as { retrieval?: { reason?: string } };
+      const evidence = item.result.evidence as { retrieval?: { reason?: string }; error?: string };
       return {
         id: item.evalCase.id,
         question: item.evalCase.question,
         expectedAnswer: item.evalCase.expectedAnswer,
         answer: item.result.answer,
         abstained: item.result.abstained,
-        ...(evidence.retrieval?.reason ? { reason: evidence.retrieval.reason } : {}),
+        ...(evidence.retrieval?.reason
+          ? { reason: evidence.retrieval.reason }
+          : evidence.error ? { reason: evidence.error } : {}),
+      };
+    }),
+  vectorRagErrors: all.VECTOR_RAG
+    .filter((item) => item.result.answer === "EVAL_ERROR")
+    .slice(0, 20)
+    .map((item) => {
+      const evidence = item.result.evidence as { error?: string };
+      return {
+        id: item.evalCase.id,
+        question: item.evalCase.question,
+        expectedAnswer: item.evalCase.expectedAnswer,
+        answer: item.result.answer,
+        abstained: item.result.abstained,
+        ...(evidence.error ? { reason: evidence.error } : {}),
+      };
+    }),
+  thredErrors: all.THRED
+    .filter((item) => item.result.answer === "EVAL_ERROR")
+    .slice(0, 20)
+    .map((item) => {
+      const evidence = item.result.evidence as { error?: string };
+      return {
+        id: item.evalCase.id,
+        question: item.evalCase.question,
+        expectedAnswer: item.evalCase.expectedAnswer,
+        answer: item.result.answer,
+        abstained: item.result.abstained,
+        ...(evidence.error ? { reason: evidence.error } : {}),
       };
     }),
 });
