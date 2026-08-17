@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { AuthPage } from "@/components/ui/auth-page";
 import { useSession } from "@/lib/auth-client";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-
 /** The post-login onboarding step deliberately reuses the split auth composition. */
 export default function WorkspaceOnboardingPage() {
   const router = useRouter();
@@ -23,7 +21,7 @@ export default function WorkspaceOnboardingPage() {
     setError(null);
     setIsSubmitting(true);
     const form = new FormData(event.currentTarget);
-    const response = await fetch(`${apiUrl}/api/workspaces`, {
+    const response = await fetch("/api/workspaces", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

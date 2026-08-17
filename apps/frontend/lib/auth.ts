@@ -1,6 +1,13 @@
+import { config } from "dotenv";
+import path from "node:path";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@repo/db";
+
+// Next runs this workspace with apps/frontend as its cwd; credentials live in
+// the monorepo root alongside the API and MCP configuration.
+config({ path: path.resolve(process.cwd(), ".env") });
+config({ path: path.resolve(process.cwd(), "../../.env") });
 
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL,

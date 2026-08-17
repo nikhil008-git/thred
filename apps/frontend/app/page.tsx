@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { SiClaude, SiCline, SiCursor, SiGithub, SiModelcontextprotocol, SiWindsurf, SiX } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
+import { useSession } from "@/lib/auth-client";
 
 function ThreadMark({ className = "" }: { className?: string }) {
   return (
@@ -45,6 +48,8 @@ function ToolFlow({ left, right }: { left: ReactNode; right: ReactNode }) {
 }
 
 export default function Home() {
+  const { data: session } = useSession();
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#fcfcfb] text-[#171717]">
       <nav className="mx-auto flex h-[86px] max-w-[1760px] items-center justify-between px-6 sm:px-10">
@@ -60,8 +65,7 @@ export default function Home() {
           <a href="#docs" className="nav-link text-[#6f716d] hover:text-[#171717]">docs</a>
         </div>
         <div className="flex items-center gap-5">
-          <Link href="/sign-in" className="nav-link hidden text-[13px] text-[#4e504c] hover:text-[#171717] sm:block">sign in</Link>
-          <Link href="/sign-up" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">create workspace <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link>
+          {session?.user ? <Link href="/dashboard" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">dashboard <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link> : <Link href="/sign-in" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">sign in <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link>}
         </div>
       </nav>
 
@@ -75,7 +79,7 @@ export default function Home() {
             Thread gives Claude, Codex, and Cursor shared memory for decisions, revisions, and unfinished work—so the next agent starts where the last one stopped.
           </p>
           <div className="ui-enter ui-enter-delay-2 mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link href="/sign-up" className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">Create a workspace <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
+            <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">{session?.user ? "Open dashboard" : "Sign in"} <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
             <a href="#how-it-works" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore the memory flow <ArrowRight className="size-3" strokeWidth={1.6} /></a>
           </div>
         </div>

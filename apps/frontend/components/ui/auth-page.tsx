@@ -46,8 +46,8 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
 
   return (
     <main className="relative min-h-screen bg-[#fcfcfb] md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
-      <aside className="thread-product-mesh isolate relative hidden h-full overflow-hidden border-r border-[#dce7dd] p-10 lg:flex lg:flex-col xl:p-14">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.88),transparent_30%),radial-gradient(circle_at_80%_78%,rgba(217,232,218,0.34),transparent_34%)]" />
+      <aside className="isolate relative hidden h-full overflow-hidden border-r border-[#dce7dd] p-10 lg:flex lg:flex-col xl:p-14" style={{ background: "radial-gradient(ellipse at 12% 88%, rgba(145,184,167,.72), transparent 46%), radial-gradient(ellipse at 84% 18%, rgba(145,184,167,.66), transparent 44%), radial-gradient(ellipse at 92% 82%, rgba(145,184,167,.48), transparent 40%), radial-gradient(ellipse at 36% 18%, rgba(145,184,167,.56), transparent 42%), #e8f0ec" }}>
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.48),transparent_30%),radial-gradient(circle_at_80%_78%,rgba(217,232,218,0.18),transparent_34%)]" />
         <Link href="/" className="landing-link relative z-10 flex w-fit items-center gap-2 text-[16px] font-semibold tracking-[-0.055em] text-[#1d2b20]">
           <ThreadMark className="size-7 shrink-0" />
           thred
