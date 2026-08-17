@@ -4,9 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { SiClaude, SiCline, SiCursor, SiGithub, SiModelcontextprotocol, SiWindsurf, SiX } from "react-icons/si";
+import { SiClaude, SiCline, SiCursor, SiModelcontextprotocol, SiWindsurf } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
 import { useSession } from "@/lib/auth-client";
+import DashboardPage from "./dashboard/page";
 
 function ThreadMark({ className = "" }: { className?: string }) {
   return (
@@ -57,45 +58,36 @@ export default function Home() {
           <ThreadMark className="size-7 shrink-0" />
           thred
         </Link>
-        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 text-[13px] text-[#6f716d] lg:flex">
-          <a href="#memory" className="nav-link text-[#6f716d] hover:text-[#171717]">memory</a>
-          <a href="#how-it-works" className="nav-link text-[#6f716d] hover:text-[#171717]">how it works</a>
-          <a href="#mcp" className="nav-link text-[#6f716d] hover:text-[#171717]">MCP</a>
-          <a href="#evals" className="nav-link text-[#6f716d] hover:text-[#171717]">evals</a>
-          <a href="#docs" className="nav-link text-[#6f716d] hover:text-[#171717]">docs</a>
-        </div>
         <div className="flex items-center gap-5">
           {session?.user ? <Link href="/dashboard" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">dashboard <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link> : <Link href="/sign-in" className="nav-link text-[13px] font-medium text-[#171717] hover:text-[#171717]">sign in <ArrowRight className="inline size-3.5" strokeWidth={1.6} /></Link>}
         </div>
       </nav>
 
-      <section className="relative mx-auto max-w-[1760px] overflow-hidden px-6 pb-4 pt-14 sm:px-10 sm:pt-18 lg:pb-6 lg:pt-20">
-        <div className="relative max-w-[980px] lg:ml-8">
-          <h1 className="ui-enter max-w-[18ch] text-[42px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[50px] lg:text-[60px] lg:leading-[0.96]">
+      <section className="relative min-h-[calc(100svh-86px)] max-w-none overflow-hidden bg-[#fcfcfb] px-6 py-14 sm:px-10 sm:py-18 lg:grid lg:min-h-0 lg:grid-cols-[minmax(360px,440px)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:py-10 lg:pr-0">
+        <div className="relative z-10 mx-auto max-w-[440px] text-center lg:mx-0 lg:self-center lg:text-left">
+          <h1 className="max-w-none text-[30px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[34px] lg:text-[35px] lg:leading-[0.96]">
             <span className="block text-[#111111]">Context that carries your</span>
             <span className="block text-[#6b6e69]">work forward.</span>
           </h1>
-          <p className="ui-enter ui-enter-delay-1 mt-5 max-w-[640px] text-pretty text-[13px] leading-[1.6] text-[#70726e] sm:text-[15px]">
+          <p className="mt-5 max-w-[440px] text-pretty text-[12px] leading-[1.65] text-[#70726e] sm:text-[13px]">
             Thread gives Claude, Codex, and Cursor shared memory for decisions, revisions, and unfinished work—so the next agent starts where the last one stopped.
           </p>
-          <div className="ui-enter ui-enter-delay-2 mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start">
             <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">{session?.user ? "Open dashboard" : "Sign in"} <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
-            <a href="#how-it-works" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore the memory flow <ArrowRight className="size-3" strokeWidth={1.6} /></a>
+            <a href="#mcp" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore MCP <ArrowRight className="size-3" strokeWidth={1.6} /></a>
           </div>
         </div>
-      </section>
-
-      <section id="how-it-works" className="mx-auto max-w-[1400px] px-6 pb-8 pt-0 sm:px-10 sm:pb-12">
-        <div className="image-outline mx-auto w-full max-w-[1360px] overflow-hidden rounded-[18px] bg-white shadow-[0_1px_2px_rgba(35,48,40,0.05),0_20px_60px_rgba(35,48,40,0.12)]">
-            <Image
-              src="/temporary-saas-preview.png"
-              alt="Temporary SaaS landing page preview"
-              width={1587}
-              height={993}
-              sizes="(min-width: 640px) 1360px, 84vw"
-              className="h-auto w-full"
-            />
+        <div id="how-it-works" className="relative mx-auto mt-12 h-[390px] w-full overflow-hidden sm:h-[560px] lg:mt-0 lg:h-[760px]">
+          <div className="pointer-events-none absolute left-0 top-0 w-[1440px] origin-top-left scale-[0.42] sm:scale-[0.6] lg:scale-[0.84]">
+            <DashboardPage preview />
+          </div>
+          <Link
+            href={session?.user ? "/dashboard" : "/sign-in"}
+            aria-label="Open the Thred dashboard"
+            className="absolute inset-0 z-10"
+          />
         </div>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-[#fcfcfb]/95 via-[#fcfcfb]/55 to-transparent backdrop-blur-[1px] sm:h-24" />
       </section>
 
       <div className="mx-auto max-w-[1000px] border-x border-[#e8e8e4]">
@@ -147,26 +139,23 @@ export default function Home() {
           <div className="space-y-0">
             {[
               {
-                title: "Continue coding",
-                body: "Pick up the task with the files, failures, and next step already in view.",
-                image: "/preview-code-editor.png",
-                alt: "Code workspace with an assistant and task status",
+                title: "Start every agent with context",
+                body: "Copy the instructions for the agent you use, then let Thred carry the decisions and next step forward.",
+                dashboardView: "prompts",
                 left: <SiCursor className="size-[18px]" />,
                 right: <RiOpenaiFill className="size-[18px]" />,
               },
               {
-                title: "Resolve what changed",
-                body: "Trace the current decision back through the evidence and revisions behind it.",
-                image: "/preview-memory-graph.png",
-                alt: "Temporal decision graph with supporting evidence",
+                title: "Resume a handoff",
+                body: "Every saved checkpoint is ready for the next agent to pick up without losing the work in motion.",
+                dashboardView: "handoffs",
                 left: <SiClaude className="size-[18px]" />,
                 right: <SiModelcontextprotocol className="size-[18px]" />,
               },
               {
-                title: "Hand work to the next agent",
-                body: "Give every connected agent one current context stream through MCP.",
-                image: "/preview-agent-handoff.png",
-                alt: "Agent handoff dashboard with connected developer tools",
+                title: "Connect Thred through MCP",
+                body: "Use your real MCP configuration to bring shared workspace memory into the tools your agents already use.",
+                dashboardView: "mcp",
                 left: <SiWindsurf className="size-[18px]" />,
                 right: <SiCline className="size-[18px]" />,
               },
@@ -181,7 +170,12 @@ export default function Home() {
                     <ToolFlow left={card.left} right={card.right} />
                   </div>
                   <div className="mx-auto h-[220px] max-w-[900px] overflow-hidden rounded-t-[11px] border-x border-t border-[#e2e4df] bg-white shadow-[0_-6px_24px_rgba(35,48,40,0.1)] sm:h-[350px]">
-                    <Image src={card.image} alt={card.alt} width={1440} height={1080} sizes="(min-width: 1024px) 950px, 100vw" className="h-full w-full object-cover object-top" />
+                    <iframe
+                      src={`/dashboard?preview=hero&view=${card.dashboardView}`}
+                      title={`${card.title} in Thred`}
+                      tabIndex={-1}
+                      className="pointer-events-none h-[950px] w-[1280px] origin-top-left scale-[0.49] border-0 sm:scale-[0.7]"
+                    />
                   </div>
                 </div>
               </article>
@@ -190,7 +184,7 @@ export default function Home() {
       </section>
 
       <footer className="mx-auto max-w-[1000px] border-x border-t border-[#e8e8e4] px-6 py-10 sm:px-8 sm:py-12">
-        <div className="grid gap-9 sm:grid-cols-[1.3fr_repeat(4,1fr)] sm:gap-6">
+        <div className="grid gap-9 sm:grid-cols-[1.3fr_1fr] sm:gap-6">
           <div>
             <Link href="/" className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.04em]">
               <ThreadMark className="size-5" />
@@ -198,26 +192,17 @@ export default function Home() {
             </Link>
             <p className="mt-3 max-w-[150px] text-[11px] leading-5 text-[#7b7d78]">Memory that carries work across agents.</p>
           </div>
-          {[
-            ["Product", ["Memory", "MCP", "Evals"]],
-            ["Developers", ["Documentation", "GitHub", "Changelog"]],
-            ["Company", ["About", "Contact"]],
-            ["Legal", ["Privacy", "Terms"]],
-          ].map(([label, links]) => (
-            <div key={label as string}>
-              <p className="text-[11px] text-[#90928d]">{label}</p>
-              <div className="mt-3 space-y-2">
-                {(links as string[]).map((link) => <a key={link} href="#" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">{link}</a>)}
-              </div>
+          <div>
+            <p className="text-[11px] text-[#90928d]">Explore</p>
+            <div className="mt-3 space-y-2">
+              <a href="#memory" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">Memory</a>
+              <a href="#how-it-works" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">How it works</a>
+              <Link href="/dashboard" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">MCP</Link>
             </div>
-          ))}
+          </div>
         </div>
         <div className="mt-10 flex items-center justify-between border-t border-[#e8e8e4] pt-5 text-[11px] text-[#858781]">
           <p>© 2026 thred</p>
-          <div className="flex items-center gap-4">
-            <a href="#" aria-label="Thred on GitHub" className="transition-colors hover:text-[#171717]"><SiGithub className="size-4" /></a>
-            <a href="#" aria-label="Thred on X" className="transition-colors hover:text-[#171717]"><SiX className="size-[13px]" /></a>
-          </div>
         </div>
       </footer>
     </main>
