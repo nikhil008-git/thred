@@ -82,13 +82,26 @@ export class OpenAIMemoryExtractionModel implements MemoryExtractionModel {
   }
 
   async extract(request: MemoryExtractionRequest, instructions: string): Promise<unknown> {
-    const response = await withRetry(() => this.client.chat.completions.create({
-      model: this.model,
-      messages: [{ role: "system", content: instructions }, { role: "user", content: JSON.stringify(request) }],
-      response_format: { type: "json_schema", json_schema: { name: "thred_memory_extraction", strict: true, schema: extractionJsonSchema } },
-    }));
-    const output = response.choices[0]?.message?.content?.trim();
-    if (!output) throw new Error("Memory extraction returned no structured output");
-    return JSON.parse(output.replace(/^```json\s*|\s*```$/g, "")) as unknown;
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const response = await withRetry(() => this.client.chat.completions.create({
+        model: this.model,
+        max_completion_tokens: 4_096,
+        messages: [{ role: "system", content: instructions }, { role: "user", content: JSON.stringify(request) }],
+        response_format: { type: "json_schema", json_schema: { name: "thred_memory_extraction", strict: true, schema: extractionJsonSchema } },
+      }));
+      const output = response.choices[0]?.message?.content?.trim();
+      if (!output) {
+        lastError = new Error("Memory extraction returned no structured output");
+      } else {
+        try {
+          return JSON.parse(output.replace(/^```json\s*|\s*```$/g, "")) as unknown;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+    throw lastError instanceof Error ? lastError : new Error("Memory extraction returned invalid structured output");
   }
 }

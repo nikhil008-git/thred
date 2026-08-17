@@ -20,6 +20,7 @@ export async function runThred(input: {
     const outcome = await ingestSession({
       workspaceId: input.workspaceId,
       sessionId: session.id,
+      persistWorkingMemory: false,
       extractionRequest: { messages: session.messages, changedFiles: [], testResults: [], evidenceReferences: [] },
     }, { model: input.extractor });
     ingestion.push({

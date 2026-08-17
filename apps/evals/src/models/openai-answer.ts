@@ -36,6 +36,7 @@ export class OpenAIAnswerModel implements AnswerModel {
   async answer(input: { question: string; context: string }) {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
+      max_completion_tokens: 512,
       messages: [
         { role: "system", content: "Answer only from the supplied context. If context does not support the answer, reply exactly NOT_FOUND." },
         { role: "user", content: `Question:\n${input.question}\n\nContext:\n${input.context}` },
@@ -69,6 +70,7 @@ export class OpenAIAnswerJudge implements AnswerJudge {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
       temperature: 0,
+      max_completion_tokens: 8,
       messages: [
         {
           role: "system",

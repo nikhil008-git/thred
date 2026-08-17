@@ -76,19 +76,49 @@ async function runWithConcurrency<T>(items: T[], worker: (item: T) => Promise<vo
 
 for (const strategy of ["VECTOR_RAG", "THRED"] as const) {
   const run = await createEvalRun({ workspaceId, dataset, strategy, answerModel: answerModel.name, config: { inputPath, answerJudge: answerJudge.name } });
+  console.log(`[${strategy}] run=${run.id} cases=${evalCases.length}`);
+  let completedCases = 0;
   await runWithConcurrency(evalCases, async (evalCase) => {
     // Every LongMemEval record is an independent history. Reusing one memory
     // database would allow facts from an earlier case to answer a later case.
     const caseWorkspaceId = `${workspaceId}_eval_${run.id}_${evalCase.id}`;
     if (strategy === "THRED") await waitForHydraDatabase(caseWorkspaceId);
-    const result = strategy === "VECTOR_RAG"
-      ? await runVectorRag(evalCase, answerModel)
-      : await runThred({ evalCase, workspaceId: caseWorkspaceId, extractor, answerModel });
-    const score = await scoreCase(evalCase, result, answerJudge);
+    let result: EvaluatedAnswer;
+    let score: Awaited<ReturnType<typeof scoreCase>>;
+    try {
+      result = strategy === "VECTOR_RAG"
+        ? await runVectorRag(evalCase, answerModel)
+        : await runThred({ evalCase, workspaceId: caseWorkspaceId, extractor, answerModel });
+      score = await scoreCase(evalCase, result, answerJudge);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result = {
+        answer: "EVAL_ERROR",
+        abstained: false,
+        evidence: { workspaceId: caseWorkspaceId, error: message },
+        writeTokens: 0,
+        readTokens: 0,
+        ingestLatencyMs: 0,
+        retrievalLatencyMs: 0,
+      };
+      score = {
+        answerCorrect: false,
+        temporalCorrect: evalCase.category === "temporal" ? false : null,
+        revisionCorrect: evalCase.category === "revision" ? false : null,
+        abstentionCorrect: false,
+        isAbstention: evalCase.shouldAbstain,
+      };
+      console.error(`[${strategy}] case=${evalCase.id} error=${message}`);
+    }
     all[strategy].push({ evalCase, score, result });
     await saveCaseResult({ evalRunId: run.id, evalCase, result, score });
+    completedCases += 1;
+    if (completedCases === evalCases.length || completedCases % 10 === 0) {
+      console.log(`[${strategy}] ${completedCases}/${evalCases.length}`);
+    }
   });
   await completeEvalRun(run.id);
+  console.log(`[${strategy}] complete run=${run.id}`);
 }
 
 const report = renderComparisonReport({
@@ -109,14 +139,16 @@ const report = renderComparisonReport({
     .filter((item) => item.score.answerCorrect === false)
     .slice(0, 20)
     .map((item) => {
-      const evidence = item.result.evidence as { retrieval?: { reason?: string } };
+      const evidence = item.result.evidence as { retrieval?: { reason?: string }; error?: string };
       return {
         id: item.evalCase.id,
         question: item.evalCase.question,
         expectedAnswer: item.evalCase.expectedAnswer,
         answer: item.result.answer,
         abstained: item.result.abstained,
-        ...(evidence.retrieval?.reason ? { reason: evidence.retrieval.reason } : {}),
+        ...(evidence.retrieval?.reason
+          ? { reason: evidence.retrieval.reason }
+          : evidence.error ? { reason: evidence.error } : {}),
       };
     }),
 });
