@@ -35,11 +35,43 @@ Do not invent facts. If evidence is insufficient, return an empty longTerm array
 workingMemory. Every long-term claim needs sourceMessageIds and confidence from 0 to 1.
 `.trim();
 
+function approximateTokens(value: string): number {
+  return Math.max(1, Math.ceil(value.length / 4));
+}
+
+/** Groq free-tier TPM is 8k–20k; keep each extraction call well under that. */
+const extractionChunkTokens = 3_500;
+
+export function chunkMessages(messages: SessionMessage[], maxTokens = extractionChunkTokens): SessionMessage[][] {
+  const chunks: SessionMessage[][] = [];
+  let current: SessionMessage[] = [];
+  let tokens = 0;
+  for (const message of messages) {
+    const size = approximateTokens(message.content);
+    if (current.length && tokens + size > maxTokens) {
+      chunks.push(current);
+      current = [];
+      tokens = 0;
+    }
+    current.push(message);
+    tokens += size;
+  }
+  if (current.length) chunks.push(current);
+  return chunks.length ? chunks : [[]];
+}
+
 /** Extracts and validates the two relevant outputs from raw session material. */
 export async function extractRelevantContext(
   model: MemoryExtractionModel,
   request: MemoryExtractionRequest,
 ): Promise<ExtractedRelevantContext> {
-  const result = await model.extract(request, extractionInstructions);
-  return parseExtractedRelevantContext(result);
+  const chunks = chunkMessages(request.messages);
+  const merged: ExtractedRelevantContext = { longTerm: [] };
+  for (const messages of chunks) {
+    const result = await model.extract({ ...request, messages }, extractionInstructions);
+    const parsed = parseExtractedRelevantContext(result);
+    merged.longTerm.push(...parsed.longTerm);
+    if (parsed.workingMemory) merged.workingMemory = parsed.workingMemory;
+  }
+  return merged;
 }

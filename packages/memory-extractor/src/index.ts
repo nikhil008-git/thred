@@ -1,6 +1,7 @@
 export {
   extractRelevantContext,
   extractionInstructions,
+  chunkMessages,
   type MemoryExtractionModel,
   type MemoryExtractionRequest,
   type SessionMessage,

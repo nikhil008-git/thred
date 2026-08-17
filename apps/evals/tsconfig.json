@@ -1,5 +1,6 @@
 {
   "extends": "@repo/typescript-config/backend.json",
   "compilerOptions": { "outDir": "dist" },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/_diag*.ts", "src/_poll.ts"]
 }

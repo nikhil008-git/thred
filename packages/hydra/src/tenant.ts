@@ -1,4 +1,4 @@
-import { getHydraClient } from "./client.js";
+import { getHydraClient, hydraWithRetry } from "./client.js";
 import type { HydraResponse } from "./types.js";
 
 const databasePrefix = "thred_workspace_";
@@ -19,13 +19,13 @@ export function workspaceDatabaseId(workspaceId: string): string {
  * callers should check status before the first ingest.
  */
 export async function provisionWorkspaceDatabase(workspaceId: string): Promise<HydraResponse> {
-  return getHydraClient().databases.create({
+  return hydraWithRetry(() => getHydraClient().databases.create({
     database: workspaceDatabaseId(workspaceId),
-  });
+  }), "provision");
 }
 
 export async function getWorkspaceDatabaseStatus(workspaceId: string): Promise<HydraResponse> {
-  return getHydraClient().databases.status({
+  return hydraWithRetry(() => getHydraClient().databases.status({
     database: workspaceDatabaseId(workspaceId),
-  });
+  }), "status");
 }
