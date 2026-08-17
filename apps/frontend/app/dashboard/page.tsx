@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,11 +36,21 @@ type ApiKey = {
   lastUsedAt: string | null;
   revokedAt: string | null;
 };
+type ProviderCredential = {
+  id: string;
+  provider: string;
+  label: string;
+  model: string;
+  baseUrl: string | null;
+  keyHint: string;
+  updatedAt: string;
+};
 type View =
   | "overview"
   | "handoffs"
   | "mcp"
   | "apiKeys"
+  | "providers"
   | "prompts"
   | "docs"
   | "settings";
@@ -223,7 +233,7 @@ function ApiKeys({
   const create = async () => {
     const response = await request(
       `/api/workspaces/${workspace.slug}/api-keys`,
-      { method: "POST", body: JSON.stringify({ name: "MCP key" }) },
+      { method: "POST", body: JSON.stringify({ name: "Thred agent key" }) },
     );
     if (!response.ok) return;
     const result = (await response.json()) as {
@@ -248,7 +258,7 @@ function ApiKeys({
       <div className="flex items-end justify-between gap-5">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">
-            API keys
+            Thred agent keys
           </p>
           <h2 className="mt-2 text-[26px] tracking-[-.05em] text-[#20221f]">
             Keys for your agents.
@@ -270,7 +280,7 @@ function ApiKeys({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[13px] font-medium text-[#2a2d28]">
-                Your new API key
+                Your new Thred agent key
               </p>
               <p className="mt-1 text-[11px] text-[#72766e]">
                 Copy it now — it will not be shown again.
@@ -338,6 +348,81 @@ function ApiKeys({
   );
 }
 
+const providerOptions = [
+  { id: "openai", label: "OpenAI", model: "gpt-5-mini", baseUrl: "https://api.openai.com/v1", needsKey: true },
+  { id: "groq", label: "Groq (free tier)", model: "openai/gpt-oss-20b", baseUrl: "https://api.groq.com/openai/v1", needsKey: true },
+  { id: "xai", label: "xAI / Grok", model: "grok-4-1-fast-reasoning", baseUrl: "https://api.x.ai/v1", needsKey: true },
+  { id: "openrouter", label: "OpenRouter", model: "openai/gpt-oss-20b:free", baseUrl: "https://openrouter.ai/api/v1", needsKey: true },
+  { id: "ollama", label: "Ollama (local, no key)", model: "llama3.2", baseUrl: "http://localhost:11434/v1", needsKey: false },
+  { id: "custom", label: "Custom OpenAI-compatible", model: "", baseUrl: "", needsKey: true },
+] as const;
+
+function ProviderKeys({
+  workspace,
+  request,
+}: {
+  workspace: Workspace;
+  request: (path: string, init?: RequestInit) => Promise<Response>;
+}) {
+  const [credentials, setCredentials] = useState<ProviderCredential[]>([]);
+  const [provider, setProvider] = useState("groq");
+  const selected = providerOptions.find((item) => item.id === provider)!;
+  const [model, setModel] = useState<string>(selected.model);
+  const [baseUrl, setBaseUrl] = useState<string>(selected.baseUrl);
+  const [label, setLabel] = useState<string>(selected.label);
+  const [key, setKey] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    const response = await request(`/api/workspaces/${workspace.slug}/providers`);
+    if (response.ok) setCredentials(((await response.json()) as { providers: ProviderCredential[] }).providers);
+  };
+  useEffect(() => { void load(); }, [workspace.slug]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changeProvider = (value: string) => {
+    const next = providerOptions.find((item) => item.id === value)!;
+    setProvider(value); setModel(next.model); setBaseUrl(next.baseUrl); setLabel(next.label); setKey(""); setMessage(null);
+  };
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault(); setSaving(true); setMessage(null);
+    const response = await request(`/api/workspaces/${workspace.slug}/providers`, {
+      method: "PUT", body: JSON.stringify({ provider, model, baseUrl, label, key: key || undefined }),
+    });
+    const result = await response.json().catch(() => ({})) as { provider?: ProviderCredential; error?: string };
+    if (response.ok && result.provider) { setCredentials((current) => [result.provider!, ...current.filter((item) => item.provider !== provider)]); setKey(""); setMessage("Saved securely."); }
+    else setMessage(result.error ?? "Could not save provider.");
+    setSaving(false);
+  };
+  const remove = async (item: ProviderCredential) => {
+    const response = await request(`/api/workspaces/${workspace.slug}/providers?provider=${encodeURIComponent(item.provider)}`, { method: "DELETE" });
+    if (response.ok) setCredentials((current) => current.filter((entry) => entry.provider !== item.provider));
+  };
+  return (
+    <section className="mx-auto mt-8 max-w-[620px] border-t border-[#e2e6df] pt-7 text-left">
+      <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">BYOK · model providers</p>
+      <h2 className="mt-2 text-[22px] tracking-[-.05em] text-[#20221f]">Bring your own model key.</h2>
+      <p className="mt-2 text-[12px] leading-5 text-[#73776f]">Keys are encrypted before storage and never returned. Ollama runs locally without a key; Groq and OpenRouter often have free models with provider limits.</p>
+      <div className="mt-5 space-y-2">
+        {credentials.map((item) => (
+          <div key={item.provider} className="flex items-center gap-3 rounded-[8px] bg-[#f4f5f2] px-3 py-2.5 text-[12px]">
+            <span className="min-w-0 flex-1"><strong className="font-medium text-[#30332e]">{item.label}</strong><span className="ml-2 text-[#777d75]">{item.model} · {item.keyHint}</span></span>
+            <button type="button" onClick={() => void remove(item)} className="text-[#8a4f47] hover:text-[#6d302b]">Remove</button>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={(event) => void save(event)} className="mt-5 grid gap-3 rounded-[10px] bg-[#f4f5f2] p-4">
+        <label className="text-[11px] font-medium text-[#454a43]">Provider<select value={provider} onChange={(event) => changeProvider(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal">{providerOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Model<input value={model} onChange={(event) => setModel(event.target.value)} required className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder="Model ID" /></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Base URL<input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} required={provider === "custom"} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder="https://api.example.com/v1" /></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Label<input value={label} onChange={(event) => setLabel(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" /></label>
+        {selected.needsKey && <label className="text-[11px] font-medium text-[#454a43]">Provider API key<input type="password" value={key} onChange={(event) => setKey(event.target.value)} required={!credentials.some((item) => item.provider === provider)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder={credentials.some((item) => item.provider === provider) ? "Leave blank to keep current key" : "Paste provider key"} /></label>}
+        {message && <p className={`text-[11px] ${message.includes("securely") ? "text-[#477152]" : "text-red-600"}`}>{message}</p>}
+        <button disabled={saving} className="mt-1 w-fit rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white disabled:opacity-50">{saving ? "Saving…" : "Save provider"}</button>
+      </form>
+    </section>
+  );
+}
+
 function AgentPrompts({ workspace }: { workspace: Workspace }) {
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
@@ -350,17 +435,17 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
     {
       name: "Claude Code",
       icon: "claude",
-      prompt: `Connect to Thred for the ${workspace.name} workspace using the THRED_API_KEY I provide. Before starting work, retrieve the current workspace context. Before you finish or hand work off, call thred_checkpoint with the goal, progress, decisions, evidence, blockers, and exact next step.`,
+      prompt: `Connect to Thred for the ${workspace.name} workspace using the THRED_API_KEY I provide. Before starting work, retrieve the current workspace context. Before you finish or hand work off, call thred_checkpoint with the goal, progress, decisions, evidence, blockers, and exact next step. Configure model credentials separately under BYOK providers.`,
     },
     {
       name: "Cursor",
       icon: "cursor",
-      prompt: `Connect to Thred for ${workspace.name} using my THRED_API_KEY. Read the workspace context before making changes. When the work is ready to hand off, save a thred_checkpoint with the changed files, decisions, evidence, blockers, and next step so the next agent can continue immediately.`,
+      prompt: `Connect to Thred for ${workspace.name} using my THRED_API_KEY. Read the workspace context before making changes. When the work is ready to hand off, save a thred_checkpoint with the changed files, decisions, evidence, blockers, and next step so the next agent can continue immediately. The model provider is configured separately with BYOK.`,
     },
     {
       name: "Codex",
       icon: "codex",
-      prompt: `Use Thred as the shared memory for ${workspace.name}. Configure it with the THRED_API_KEY I provide, then retrieve the current context before you begin. At each meaningful handoff, call thred_checkpoint with a concise summary, decisions, verification, open risks, and next action.`,
+      prompt: `Use Thred as the shared memory for ${workspace.name}. Configure it with the THRED_API_KEY I provide, then retrieve the current context before you begin. At each meaningful handoff, call thred_checkpoint with a concise summary, decisions, verification, open risks, and next action. Provider credentials are configured separately under BYOK.`,
     },
   ];
 
@@ -430,6 +515,7 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
 const docsNav = [
   ["quickstart", "Quickstart"],
   ["codebase", "In your codebase"],
+  ["providers", "BYOK providers"],
   ["prompt", "In your agent prompt"],
   ["save", "Save a handoff"],
   ["resume", "Resume a handoff"],
@@ -526,7 +612,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         >
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
-              "Create an API key",
+      "Create a Thred agent key",
               "Add the MCP config",
               "Save your first handoff",
             ].map((item, index) => (
@@ -547,8 +633,9 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
           title="Add Thred to the agent you already use."
         >
           <p className="mt-4 text-[14px] leading-6 text-[#424740]">
-            Paste this into your MCP client configuration, then add the API key
-            from this workspace. It works with Claude Code, Cursor, and Codex.
+            Paste this into your MCP client configuration, then add the Thred
+            agent key from this workspace. Provider keys are configured
+            separately under BYOK providers.
           </p>
           <div className="mt-6 flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-[12px] bg-[#D87551] text-[#FFF7F1]">
@@ -564,8 +651,27 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
           <Code name="config">{config}</Code>
         </Section>
         <Section
+          id="providers"
+          eyebrow="02 · BYOK model providers"
+          title="Bring your own model key."
+        >
+          <p className="mt-4 text-[14px] leading-6 text-[#424740]">
+            Configure the model key Thred should use for extraction and
+            evaluation. Keys are encrypted before storage and never returned.
+            Ollama runs locally without a key; Groq and OpenRouter often have
+            free models with provider limits.
+          </p>
+          <Code name="byok">{`Provider: Groq (free tier)
+Model: openai/gpt-oss-20b
+Base URL: https://api.groq.com/openai/v1
+Label: Groq (free tier)
+API key: Paste provider key
+
+Save provider`}</Code>
+        </Section>
+        <Section
           id="prompt"
-          eyebrow="03 · In your agent prompt"
+          eyebrow="04 · In your agent prompt"
           title="Tell the agent when memory matters."
         >
           <p className="mt-4 text-[14px] leading-6 text-[#424740]">
@@ -576,7 +682,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         </Section>
         <Section
           id="save"
-          eyebrow="04 · Save a handoff"
+          eyebrow="05 · Save a handoff"
           title="Checkpoint work before the context disappears."
         >
           <p className="mt-4 text-[14px] leading-6 text-[#424740]">
@@ -593,7 +699,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         </Section>
         <Section
           id="resume"
-          eyebrow="05 · Resume a handoff"
+          eyebrow="06 · Resume a handoff"
           title="Pick up exactly where work stopped."
         >
           <p className="mt-4 text-[14px] leading-6 text-[#424740]">
@@ -615,7 +721,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         </Section>
         <Section
           id="reference"
-          eyebrow="06 · MCP reference"
+          eyebrow="07 · MCP reference"
           title="The small toolset behind the handoff."
         >
           <div className="mt-5 divide-y divide-[#e7eae5] rounded-[10px] bg-[#f4f5f2] px-4">
@@ -646,7 +752,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
   );
 }
 
-export default function DashboardPage({ preview = false }: { preview?: boolean }) {
+function DashboardContent({ preview = false }: { preview?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const previewView = searchParams.get("view");
@@ -655,6 +761,7 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
     previewView === "handoffs" ||
     previewView === "mcp" ||
     previewView === "apiKeys" ||
+    previewView === "providers" ||
     previewView === "prompts" ||
     previewView === "docs" ||
     previewView === "settings"
@@ -815,7 +922,7 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
   return (
     <main className="min-h-screen bg-white text-[#242622] lg:grid lg:grid-cols-[224px_minmax(0,1fr)]">
       <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] min-h-screen flex-col bg-[#f1f2f0] px-4 py-3 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:static lg:z-auto lg:h-screen lg:w-auto lg:min-h-0 lg:translate-x-0 lg:overflow-y-auto lg:shadow-none`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] min-h-screen flex-col bg-[#f1f2f0] px-4 py-3 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}>
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -867,7 +974,14 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
               className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "apiKeys" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
             >
               <KeyRound className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              API keys
+              Thred agent keys
+            </button>
+            <button
+              onClick={() => setView("providers")}
+              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "providers" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
+            >
+              <SlidersHorizontal className="size-4 text-[#7b8079]" strokeWidth={1.8} />
+              BYOK providers
             </button>
             <button
               onClick={() => setView("prompts")}
@@ -975,7 +1089,17 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                     <span className="grid size-4 shrink-0 place-items-center">
                       <KeyRound className="size-3.5" />
                     </span>
-                    API keys
+                    Thred agent keys
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      setView("providers");
+                    }}
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[10px] text-[#60645e] hover:bg-[#f4f5f2] hover:text-[#20221f]"
+                  >
+                    <span className="grid size-4 shrink-0 place-items-center"><SlidersHorizontal className="size-3.5" /></span>
+                    BYOK providers
                   </button>
                   <button
                     onClick={async () => {
@@ -1087,8 +1211,8 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                   <button
                     type="button"
                     onClick={() => setView("apiKeys")}
-                    title="Create and copy an API key"
-                    aria-label="Open API keys"
+                    title="Create and copy a Thred agent key"
+                    aria-label="Open Thred agent keys"
                     className="grid size-9 cursor-pointer place-items-center rounded-full border border-[#e0e4de] bg-white transition hover:border-[#abb5a8] hover:bg-[#f3f6f1] hover:text-[#596857]"
                   ><KeyRound className="size-3.5" /></button>
                   <span className="h-px flex-1 bg-[#dfe4dd]" />
@@ -1119,7 +1243,7 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                     <p className="mt-1 text-[12px] leading-5 text-[#73776f]">
                       {overview?.metrics.agentCount
                         ? `${overview.metrics.checkpointCount} resumable handoff${overview.metrics.checkpointCount === 1 ? "" : "s"} in this workspace.`
-                        : "Create an MCP key to connect your first agent."}
+                        : "Create a Thred agent key to connect your first agent."}
                     </p>
                   </div>
                   <button
@@ -1211,8 +1335,9 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                   Bring Thred into your agent.
                 </h1>
                 <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">
-                  Create an API key, then add this configuration to Codex,
-                  Claude, or Cursor.
+                  Create a Thred agent key, then add this configuration to
+                  Codex, Claude, or Cursor. Configure your model provider
+                  separately under BYOK providers.
                 </p>
                 <div className="mx-auto mt-8 grid max-w-[760px] gap-2 sm:grid-cols-3">
                   {[
@@ -1241,13 +1366,13 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
             {view === "apiKeys" && (
               <>
                 <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  API keys
+                  Thred agent keys
                 </p>
                 <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
                   Give your agent access.
                 </h1>
                 <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">
-                  Create one key for each agent or environment. The secret is
+                  Create one Thred agent key for each agent or environment. The secret is
                   shown only once.
                 </p>
                 <ApiKeys workspace={workspace} request={request} />
@@ -1362,6 +1487,14 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                 </form>
               </>
             )}
+            {view === "providers" && (
+              <>
+                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">Configure · BYOK</p>
+                <h1 className="mx-auto mt-3 max-w-[560px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">Bring your own model key.</h1>
+                <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">Choose the model provider Thred should use for extraction and evaluation. Your provider key stays encrypted in this workspace.</p>
+                <ProviderKeys workspace={workspace} request={request} />
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -1447,8 +1580,9 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                 Let’s start with a key.
               </h2>
               <p className="mt-3 text-[13px] leading-5 text-[#73776f]">
-                Create an API key first. Then add Thred to your agent and it can
-                save the context for the next handoff.
+                Create a Thred agent key first. Then add Thred to your agent;
+                configure a BYOK model provider separately when you want Thred
+                to use your own model account.
               </p>
               <div className="mt-7 flex items-center justify-between gap-4">
                 <button
@@ -1464,7 +1598,7 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
                   }}
                   className="landing-cta cursor-pointer rounded-[7px] bg-[#1b1d1b] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#343733]"
                 >
-                  Create API key
+                  Create Thred agent key
                 </button>
               </div>
             </div>
@@ -1550,5 +1684,13 @@ export default function DashboardPage({ preview = false }: { preview?: boolean }
         </div>
       )}
     </main>
+  );
+}
+
+export default function DashboardPage({ preview = false }: { preview?: boolean }) {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent preview={preview} />
+    </Suspense>
   );
 }

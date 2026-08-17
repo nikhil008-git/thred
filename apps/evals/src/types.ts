@@ -16,6 +16,8 @@ export type EvalCase = {
   question: string;
   expectedAnswer: string | null;
   shouldAbstain: boolean;
+  /** Official LongMemEval evidence-session labels, when supplied by the dataset. */
+  answerSessionIds?: string[];
   category?: EvalCategory;
 };
 
@@ -24,6 +26,16 @@ export type Usage = { inputTokens: number; outputTokens: number };
 export type AnswerModel = {
   name: string;
   answer(input: { question: string; context: string }): Promise<{ answer: string; usage: Usage }>;
+};
+
+/** A single, shared semantic judge makes answer matching independent of strategy. */
+export type AnswerJudge = {
+  name: string;
+  judge(input: {
+    question: string;
+    expectedAnswer: string;
+    answer: string;
+  }): Promise<boolean>;
 };
 
 export type EvaluatedAnswer = {
@@ -41,4 +53,5 @@ export type CaseScore = {
   temporalCorrect: boolean | null;
   revisionCorrect: boolean | null;
   abstentionCorrect: boolean;
+  isAbstention: boolean;
 };

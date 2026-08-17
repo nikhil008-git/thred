@@ -30,13 +30,18 @@ function messages(value: unknown, sessionIndex: number) {
   });
 }
 
-function sessions(value: unknown): EvalSession[] {
+function sessions(value: unknown, dateValue?: unknown, idValue?: unknown): EvalSession[] {
+  const dates = array(dateValue);
+  const ids = array(idValue);
   return array(value).flatMap((session, index) => {
     const item = record(session);
-    const result = messages(item.messages ?? item.turns ?? item.conversation ?? item.dialogue, index);
+    const turnSource = Array.isArray(session)
+      ? session
+      : item.messages ?? item.turns ?? item.conversation ?? item.dialogue;
+    const result = messages(turnSource, index);
     return result.length ? [{
-      id: string(item.id ?? item.session_id, `session-${index + 1}`),
-      occurredAt: string(item.occurredAt ?? item.date_time ?? item.datetime ?? item.timestamp, new Date(0).toISOString()),
+      id: string(item.id ?? item.session_id ?? ids[index], `session-${index + 1}`),
+      occurredAt: string(item.occurredAt ?? item.date_time ?? item.datetime ?? item.timestamp ?? dates[index], new Date(0).toISOString()),
       messages: result,
     }] : [];
   });
@@ -47,7 +52,10 @@ export function normalizeDatasetRecord(source: unknown, dataset: EvalDataset, in
   const item = record(source);
   const expectedAnswer = string(item.expectedAnswer ?? item.answer ?? item.gold_answer ?? item.reference_answer) || null;
   const rawCategory = string(item.category ?? item.question_type).toLowerCase();
+  const answerSessionIds = array(item.answer_session_ids ?? item.answerSessionIds)
+    .map((value) => string(value)).filter(Boolean);
   const shouldAbstain = Boolean(item.shouldAbstain ?? item.should_abstain)
+    || string(item.id ?? item.question_id ?? item.uuid).toLowerCase().endsWith("_abs")
     || rawCategory.includes("abstain") || rawCategory.includes("unanswerable") || expectedAnswer === null;
   const category: EvalCategory | undefined = shouldAbstain ? "abstention"
     : rawCategory.includes("temporal") ? "temporal"
@@ -58,10 +66,15 @@ export function normalizeDatasetRecord(source: unknown, dataset: EvalDataset, in
   return {
     id: string(item.id ?? item.question_id ?? item.uuid, `${dataset}-${index + 1}`),
     dataset,
-    sessions: sessions(item.sessions ?? item.haystack_sessions ?? item.history ?? item.conversations),
+    sessions: sessions(
+      item.sessions ?? item.haystack_sessions ?? item.history ?? item.conversations,
+      item.occurredAt ?? item.haystack_dates,
+      item.session_ids ?? item.haystack_session_ids,
+    ),
     question: string(item.question ?? item.query),
     expectedAnswer,
     shouldAbstain,
+    ...(answerSessionIds.length ? { answerSessionIds } : {}),
     ...(category ? { category } : {}),
   };
 }

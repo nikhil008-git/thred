@@ -10,10 +10,30 @@ test("normalizes a LongMemEval-style session record", () => {
   assert.equal(result.sessions[0]?.messages[0]?.content, "We use PostgreSQL.");
 });
 
-test("scores abstention and reports aggregate cost and latency", () => {
+test("recognizes official LongMemEval abstention ids and evidence sessions", () => {
+  const result = normalizeDatasetRecord({
+    question_id: "q_abs",
+    question_type: "single-session-user",
+    question: "Unknown?",
+    answer: "Not mentioned",
+    answer_session_ids: ["s1"],
+    haystack_dates: ["2023/01/01"],
+    haystack_session_ids: ["s1"],
+    haystack_sessions: [[{ role: "user", content: "Known fact." }]],
+  }, "longmemeval", 0);
+  assert.equal(result.shouldAbstain, true);
+  assert.deepEqual(result.answerSessionIds, ["s1"]);
+  assert.equal(result.sessions[0]?.occurredAt, "2023/01/01");
+});
+
+test("scores abstention and reports aggregate cost and latency", async () => {
   const evalCase = { id: "q", dataset: "beam" as const, sessions: [], question: "Unknown?", expectedAnswer: null, shouldAbstain: true, category: "abstention" as const };
   const answer = { answer: "NOT_FOUND", abstained: true, evidence: [], writeTokens: 10, readTokens: 5, ingestLatencyMs: 2, retrievalLatencyMs: 7 };
-  const score = scoreCase(evalCase, answer);
+  const score = await scoreCase(evalCase, answer, { name: "test", judge: async () => false });
   assert.equal(score.abstentionCorrect, true);
   assert.equal(summarizeMetrics([{ score, result: answer }]).p95LatencyMs, 7);
+  assert.equal(summarizeMetrics([{
+    score: { ...score, isAbstention: false },
+    result: answer,
+  }]).abstentionAccuracy, null);
 });
