@@ -11,6 +11,6 @@ export async function POST(_request: Request, context: { params: Promise<{ slug:
     where: { id: keyId, workspace: { slug, members: { some: { userId: session.user.id } } } },
   });
   if (!key) return NextResponse.json({ error: "API key not found" }, { status: 404 });
-  await prisma.apiKey.update({ where: { id: key.id }, data: { revokedAt: new Date() } });
+  await prisma.apiKey.delete({ where: { id: key.id } });
   return NextResponse.json({ ok: true });
 }
