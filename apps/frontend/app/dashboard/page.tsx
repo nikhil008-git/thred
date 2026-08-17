@@ -14,7 +14,6 @@ import {
   LogOut,
   Settings,
   SlidersHorizontal,
-  UserRound,
 } from "lucide-react";
 import { SiClaude, SiModelcontextprotocol } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
@@ -147,13 +146,7 @@ function ApiKeys({
       { method: "POST" },
     );
     if (response.ok)
-      setKeys((current) =>
-        current.map((item) =>
-          item.id === key.id
-            ? { ...item, revokedAt: new Date().toISOString() }
-            : item,
-        ),
-      );
+      setKeys((current) => current.filter((item) => item.id !== key.id));
   };
 
   return (
@@ -178,8 +171,12 @@ function ApiKeys({
         <div className="mt-6 rounded-[10px] bg-[#f4f5f1] p-4 sm:p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-[#2a2d28]">Your new API key</p>
-              <p className="mt-1 text-[11px] text-[#72766e]">Copy it now — it will not be shown again.</p>
+              <p className="text-[13px] font-medium text-[#2a2d28]">
+                Your new API key
+              </p>
+              <p className="mt-1 text-[11px] text-[#72766e]">
+                Copy it now — it will not be shown again.
+              </p>
             </div>
             <button
               onClick={async () => {
@@ -436,24 +433,7 @@ export default function DashboardPage() {
           <div className="relative">
             {accountMenuOpen && (
               <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-30 rounded-[13px] border border-[#e2e5e0] bg-white p-2 shadow-[0_12px_28px_rgba(29,40,31,.13)]">
-                <div className="flex items-center gap-2 px-2 pb-2">
-                  <span className="relative grid size-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#e8ece7] text-[8px] font-medium text-[#555a53]">
-                    {(session?.user?.name ?? session?.user?.email ?? "T")
-                      .slice(0, 1)
-                      .toUpperCase()}
-                    {session?.user?.image ? (
-                      <img
-                        src={session.user.image}
-                        alt=""
-                        onError={(event) => {
-                          event.currentTarget.style.display = "none";
-                        }}
-                        className="absolute inset-0 size-full object-cover"
-                      />
-                    ) : (
-                      <UserRound className="size-3" />
-                    )}
-                  </span>
+                <div className="px-2 pb-2">
                   <p className="min-w-0 truncate text-[11px] font-medium text-[#252824]">
                     {session?.user?.name ?? session?.user?.email}
                   </p>
@@ -500,25 +480,8 @@ export default function DashboardPage() {
             )}
             <button
               onClick={() => setAccountMenuOpen((open) => !open)}
-              className="flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-left text-[11px] text-[#656963] transition-colors hover:bg-[#eff1ee]"
+              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-left text-[11px] text-[#656963] transition-colors hover:bg-[#e7eae5] ${accountMenuOpen ? "bg-[#e7eae5]" : ""}`}
             >
-              <span className="relative grid size-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#e8ece7] text-[10px] font-medium text-[#555a53]">
-                {(session?.user?.name ?? session?.user?.email ?? "T")
-                  .slice(0, 1)
-                  .toUpperCase()}
-                {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt=""
-                    onError={(event) => {
-                      event.currentTarget.style.display = "none";
-                    }}
-                    className="absolute inset-0 size-full object-cover"
-                  />
-                ) : (
-                  <UserRound className="size-3.5" />
-                )}
-              </span>
               <span className="min-w-0 flex-1 truncate">
                 {session?.user?.name ?? session?.user?.email}
               </span>
@@ -530,14 +493,17 @@ export default function DashboardPage() {
         </div>
       </aside>
       <section className="min-w-0 bg-white">
-        <header className="flex h-[64px] items-center bg-[#f1f2f0] px-7 sm:px-12">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">
-              Workspace
-            </p>
-            <p className="mt-1 text-[13px] font-medium text-[#30322f]">
-              {workspace.name}
-            </p>
+        <header className="sticky top-0 z-10 flex h-[64px] items-center bg-[#f1f2f0] px-7 sm:px-12">
+          <div className="flex items-center gap-2.5">
+            <Mark className="size-7 shrink-0" />
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-[.16em] text-[#8a8d87]">
+                Workspace
+              </p>
+              <p className="mt-0.5 text-[13px] font-medium text-[#30322f]">
+                {workspace.name}
+              </p>
+            </div>
           </div>
         </header>
         <div className="min-h-[calc(100vh-64px)] rounded-tl-[60px] bg-white">
