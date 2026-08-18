@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "thred": {
+      "type": "local",
+      "command": ["npx", "tsx", "apps/mcp/src/index.ts"],
+      "enabled": true,
+      "env": {
+        "THRED_API_URL": "http://localhost:8080"
+      }
+    }
+  }
+}

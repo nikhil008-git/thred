@@ -3,6 +3,7 @@ import "dotenv/config";
 import { createHash, randomBytes } from "node:crypto";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { prisma } from "@repo/db";
+import { mcpRouter } from "./mcp-routes.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 8080);
@@ -86,6 +87,8 @@ async function requireAuth(
 }
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
+app.use("/api/mcp", mcpRouter);
 
 app.get("/api/me", requireAuth, (req: AuthenticatedRequest, res) => {
     res.json({ user: req.user });

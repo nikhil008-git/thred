@@ -13,6 +13,8 @@
   "description": "",
   "dependencies": {
     "@repo/db": "*",
+    "@repo/memory-engine": "*",
+    "@repo/memory-extractor": "*",
     "@types/express": "^5.0.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",

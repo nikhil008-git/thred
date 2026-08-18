@@ -27,6 +27,24 @@ import {
 import { SiClaude, SiCursor, SiModelcontextprotocol } from "react-icons/si";
 import { signOut, useSession } from "@/lib/auth-client";
 
+const MCP_PACKAGE = "@thred_nick_01/thred-mcp";
+const MCP_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+
+function mcpServerConfig() {
+  return `{
+  "mcpServers": {
+    "thred": {
+      "command": "npx",
+      "args": ["-y", "${MCP_PACKAGE}"],
+      "env": {
+        "THRED_API_KEY": "thrd_sk_…",
+        "THRED_API_URL": "${MCP_API_URL}"
+      }
+    }
+  }
+}`;
+}
+
 type Workspace = { id: string; name: string; slug: string };
 type ApiKey = {
   id: string;
@@ -528,15 +546,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
     await navigator.clipboard.writeText(text);
     setCopied(name);
   };
-  const config = `{
-  "mcpServers": {
-    "thred": {
-      "command": "npx",
-      "args": ["@thred/mcp"],
-      "env": { "THRED_API_KEY": "thrd_sk_…" }
-    }
-  }
-}`;
+  const config = mcpServerConfig();
   const prompt = `Before you begin, retrieve the current Thred context. When work is ready to pass on, call thred_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
   const Code = ({ name, children }: { name: string; children: string }) => (
     <div className="relative mt-5 overflow-hidden rounded-[11px] bg-[#20221f] p-5 pr-20 font-mono text-[11px] leading-6 text-[#e9ece7] shadow-[0_12px_28px_rgba(25,30,26,.1)]">
@@ -752,11 +762,27 @@ Save provider`}</Code>
   );
 }
 
-function DashboardContent({ preview = false }: { preview?: boolean }) {
-  const router = useRouter();
+function DashboardFromQuery() {
   const searchParams = useSearchParams();
-  const previewView = searchParams.get("view");
-  const isHeroPreview = preview || searchParams.get("preview") === "hero";
+  return (
+    <DashboardContent
+      isHeroFromQuery={searchParams.get("preview") === "hero"}
+      previewView={searchParams.get("view")}
+    />
+  );
+}
+
+function DashboardContent({
+  preview = false,
+  isHeroFromQuery = false,
+  previewView = null,
+}: {
+  preview?: boolean;
+  isHeroFromQuery?: boolean;
+  previewView?: string | null;
+}) {
+  const router = useRouter();
+  const isHeroPreview = preview || isHeroFromQuery;
   const initialView: View =
     previewView === "handoffs" ||
     previewView === "mcp" ||
@@ -918,11 +944,13 @@ function DashboardContent({ preview = false }: { preview?: boolean }) {
     setSavingSettings(false);
   };
 
-  if ((!isHeroPreview && (isPending || loading || !workspace)) || !workspace) return <DashboardSkeleton />;
+  if (!isHeroPreview && (isPending || loading || !workspace)) return <DashboardSkeleton />;
+  if (!isHeroPreview && !workspace) return <DashboardSkeleton />;
+  if (!workspace) return null;
   return (
-    <main className={`${isHeroPreview ? "h-[1100px] min-h-0 overflow-hidden" : "min-h-screen"} bg-[#f1f2f0] text-[#242622] lg:grid lg:grid-cols-[224px_minmax(0,1fr)]`}>
-      <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${isHeroPreview ? "min-h-full" : "min-h-screen"} ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto ${isHeroPreview ? "lg:h-full" : "lg:h-screen"} lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}>
+    <main className={`${isHeroPreview ? "grid h-[1100px] min-h-0 grid-cols-[224px_minmax(0,1fr)] overflow-hidden" : "min-h-screen lg:grid lg:grid-cols-[224px_minmax(0,1fr)]"} bg-[#f1f2f0] text-[#242622]`}>
+      {!isHeroPreview && <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />}
+      <aside className={`flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 ${isHeroPreview ? "relative h-full min-h-full w-auto translate-x-0 shadow-none" : `fixed inset-y-0 left-0 z-50 min-h-screen shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}`}>
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -1355,7 +1383,7 @@ function DashboardContent({ preview = false }: { preview?: boolean }) {
                   ))}
                 </div>
                 <pre className="mx-auto mt-3 max-w-[760px] overflow-x-auto rounded-[12px] bg-[#20221f] p-5 text-left text-[12px] leading-6 text-[#e8ebe6] shadow-[0_12px_30px_rgba(25,30,26,.12)]">
-                  <code>{`{\n  "mcpServers": {\n    "thred": {\n      "command": "npx",\n      "args": ["@thred/mcp"],\n      "env": { "THRED_API_KEY": "thrd_sk_…" }\n    }\n  }\n}`}</code>
+                  <code>{mcpServerConfig()}</code>
                 </pre>
                 <p className="mx-auto mt-4 flex max-w-[760px] items-center gap-2 text-[12px] leading-5 text-[#747970]">
                   <CircleCheck className="size-4 shrink-0 text-[#66806b]" />
@@ -1688,9 +1716,10 @@ function DashboardContent({ preview = false }: { preview?: boolean }) {
 }
 
 export default function DashboardPage({ preview = false }: { preview?: boolean }) {
+  if (preview) return <DashboardContent preview />;
   return (
     <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardContent preview={preview} />
+      <DashboardFromQuery />
     </Suspense>
   );
 }
