@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 
-const DEFAULT_API_URL = "http://localhost:8080";
+const DEFAULT_API_URL = "https://api.thred.fun";
 
 function apiBaseUrl(): string {
   return (process.env.THRED_API_URL ?? DEFAULT_API_URL).replace(/\/$/, "");
