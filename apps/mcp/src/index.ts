@@ -1,60 +1,39 @@
-import { config } from "dotenv";
-import { createHash } from "node:crypto";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+#!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { prisma } from "@repo/db";
-import {
-  buildMemoryContext,
-  buildMemoryHistory,
-  HydraMemoryLookup,
-  ingestSession,
-  inspectMemory,
-  processLongTermClaim,
-  resumeWithMemory,
-} from "@repo/memory-engine";
-import { OpenAIMemoryExtractionModel } from "@repo/memory-extractor";
 import * as z from "zod/v4";
 
-const sourceDirectory = path.dirname(fileURLToPath(import.meta.url));
-config({ path: path.resolve(sourceDirectory, "../../../.env") });
+const DEFAULT_API_URL = "http://localhost:8080";
 
-async function getWorkspaceId(): Promise<string> {
-  const secret = process.env.THRED_API_KEY?.trim();
-  if (!secret) throw new Error("THRED_API_KEY is required");
-
-  const keyHash = createHash("sha256").update(secret).digest("hex");
-  const apiKey = await prisma.apiKey.findFirst({
-    where: {
-      keyHash,
-      revokedAt: null,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-    },
-    select: { id: true, workspaceId: true },
-  });
-  if (!apiKey) throw new Error("THRED_API_KEY is invalid, revoked, or expired");
-
-  await prisma.apiKey.update({
-    where: { id: apiKey.id },
-    data: { lastUsedAt: new Date() },
-  });
-  return apiKey.workspaceId;
+function apiBaseUrl(): string {
+  return (process.env.THRED_API_URL ?? DEFAULT_API_URL).replace(/\/$/, "");
 }
 
-async function getAgentSession(workspaceId: string, externalId: string): Promise<string> {
-  const existing = await prisma.agentSession.findFirst({
-    where: { workspaceId, externalId },
-    select: { id: true },
-    orderBy: { startedAt: "desc" },
-  });
-  if (existing) return existing.id;
+function apiKey(): string {
+  const secret = process.env.THRED_API_KEY?.trim();
+  if (!secret) throw new Error("THRED_API_KEY is required");
+  return secret;
+}
 
-  const session = await prisma.agentSession.create({
-    data: { workspaceId, externalId, agent: "CODEX" },
-    select: { id: true },
+async function callMcp<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${apiBaseUrl()}/api/mcp/${path}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey()}`,
+    },
+    body: JSON.stringify(body),
   });
-  return session.id;
+
+  const payload = await response.json().catch(() => null) as T | { error?: string } | null;
+  if (!response.ok) {
+    const message = payload && typeof payload === "object" && "error" in payload && payload.error
+      ? payload.error
+      : `Thred API request failed (${response.status})`;
+    throw new Error(message);
+  }
+
+  return payload as T;
 }
 
 function createServer() {
@@ -72,17 +51,8 @@ function createServer() {
       }),
     },
     async ({ query }) => {
-      const result = await buildMemoryContext({
-        workspaceId: await getWorkspaceId(),
-        query,
-      });
-
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(result),
-        }],
-      };
+      const result = await callMcp("context", { query });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
 
@@ -104,23 +74,7 @@ function createServer() {
       }),
     },
     async (input) => {
-      const workspaceId = await getWorkspaceId();
-      const sessionId = await getAgentSession(workspaceId, input.sessionId);
-      const result = await processLongTermClaim(new HydraMemoryLookup(), {
-        workspaceId,
-        sessionId,
-        evidenceEventIds: input.evidenceEventIds,
-        claim: {
-          kind: input.kind,
-          subject: input.subject,
-          predicate: input.predicate,
-          value: input.value,
-          ...(input.reason ? { reason: input.reason } : {}),
-          confidence: input.confidence,
-          sourceMessageIds: input.sourceMessageIds,
-          files: input.files,
-        },
-      });
+      const result = await callMcp("remember", input);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
@@ -132,11 +86,7 @@ function createServer() {
       inputSchema: z.object({ query: z.string().min(1), maxResults: z.number().int().min(1).max(100).optional() }),
     },
     async ({ query, maxResults }) => {
-      const result = await buildMemoryHistory({
-        workspaceId: await getWorkspaceId(),
-        query,
-        ...(maxResults === undefined ? {} : { maxResults }),
-      });
+      const result = await callMcp("history", { query, ...(maxResults === undefined ? {} : { maxResults }) });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
@@ -148,7 +98,7 @@ function createServer() {
       inputSchema: z.object({ memoryId: z.string().min(1) }),
     },
     async ({ memoryId }) => {
-      const result = await inspectMemory({ workspaceId: await getWorkspaceId(), memoryId });
+      const result = await callMcp("inspect", { memoryId });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
@@ -167,36 +117,12 @@ function createServer() {
         changedFiles: z.array(z.string()).default([]),
         testResults: z.array(z.string()).default([]),
         evidenceReferences: z.array(z.string()).default([]),
-        evidenceEventIds: z.array(z.string()).default([]),
+        evidenceEventIds: z.array(z.string().min(1)).default([]),
       }),
     },
     async (input) => {
-      const workspaceId = await getWorkspaceId();
-      const sessionId = await getAgentSession(workspaceId, input.sessionId);
-      const result = await ingestSession(
-        {
-          workspaceId,
-          sessionId,
-          evidenceEventIds: input.evidenceEventIds,
-          extractionRequest: {
-            messages: input.messages,
-            changedFiles: input.changedFiles,
-            testResults: input.testResults,
-            evidenceReferences: input.evidenceReferences,
-          },
-        },
-        { model: new OpenAIMemoryExtractionModel() },
-      );
-
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify({
-            checkpointId: result.checkpoint?.id ?? null,
-            longTermDecisions: result.processed.map((item) => item.decision),
-          }),
-        }],
-      };
+      const result = await callMcp("checkpoint", input);
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
 
@@ -209,19 +135,8 @@ function createServer() {
       }),
     },
     async ({ taskKey }) => {
-      const handoff = await resumeWithMemory({
-        workspaceId: await getWorkspaceId(),
-        ...(taskKey ? { taskKey } : {}),
-      });
-
-      return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(
-            handoff ?? { status: "NOT_FOUND", message: "No resumable task found." },
-          ),
-        }],
-      };
+      const result = await callMcp("resume", taskKey ? { taskKey } : {});
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
 
