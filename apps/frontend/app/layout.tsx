@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     siteName: "thred",
     images: [
       {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
+        url: "/og-image.jpg",
+        width: 1024,
+        height: 625,
         alt: "Context stays with the work — Thred shared memory for AI agents",
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "thred — shared memory for AI agents",
     description: "Shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.",
-    images: ["/opengraph-image"],
+    images: ["/og-image.jpg"],
   },
 };
 
