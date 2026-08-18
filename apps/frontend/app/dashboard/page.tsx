@@ -10,7 +10,6 @@ import {
   Check,
   ChevronDown,
   CircleCheck,
-  Coffee,
   Copy,
   GitFork,
   KeyRound,
@@ -1175,18 +1174,6 @@ function DashboardContent({
             <span className="text-[12px] font-semibold leading-none">𝕏</span>
             <span className="hidden sm:inline">Share Thred</span>
           </button>
-          <a
-            href="upi://pay?pa=dhansinghrajpurohit1977@okaxis"
-            title="dhansinghrajpurohit1977@okaxis"
-            onClick={(event) => {
-              void navigator.clipboard?.writeText("dhansinghrajpurohit1977@okaxis");
-              if (!/Android|iPhone|iPad/i.test(navigator.userAgent)) event.preventDefault();
-            }}
-            className="hidden items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[11px] font-medium text-[#545950] transition-colors hover:bg-[#e4e7e2] hover:text-[#20231f] sm:inline-flex"
-          >
-            <Coffee className="size-3.5" strokeWidth={2} />
-            Buy us a coffee
-          </a>
           </div>
         </header>
         <div className={`bg-white ${isHeroPreview ? "min-h-[calc(1100px-48px)]" : "min-h-[calc(100vh-48px)] lg:rounded-tl-[80px]"}`}>
@@ -1576,7 +1563,7 @@ function DashboardContent({
                   Maybe later
                 </button>
                 <a
-                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just joined Thred — shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.\n\nOne stream. Every handoff. 👀\n\n@hydra_db @abhirupvg @contextkingceo\n\nhttps://thred.fun/share`)}`}
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just joined Thred — shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.\n\nOne stream. Every handoff. 👀\n\n@hydra_db @abhirupvg @contextkingceo\n\nhttps://thred.fun`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="landing-cta inline-flex items-center gap-2 rounded-[7px] bg-[#1b1d1b] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#343733]"
@@ -1589,7 +1576,7 @@ function DashboardContent({
         </div>
       )}
       {setupOpen && (
-        <div
+        <div 
           onClick={() => setSetupOpen(false)}
           className="fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
         >
