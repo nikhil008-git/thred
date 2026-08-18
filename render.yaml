@@ -1,6 +1,7 @@
 # Thred on Render — Blueprint deploy
 # Dashboard → New → Blueprint → connect repo → set sync:false secrets in Render UI.
-# After first deploy: add Google OAuth redirect URLs for your thred-web.onrender.com domain.
+# After first deploy: add custom domains `thred.fun` and `api.thred.fun`, then
+# update Google OAuth redirect URLs to use `https://thred.fun/api/auth/callback/google`.
 
 databases:
   - name: thred-db

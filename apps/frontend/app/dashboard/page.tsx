@@ -28,7 +28,7 @@ import { SiClaude, SiCursor, SiModelcontextprotocol } from "react-icons/si";
 import { signOut, useSession } from "@/lib/auth-client";
 
 const MCP_PACKAGE = "@thred_nick_01/thred-mcp";
-const MCP_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const MCP_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.thred.fun";
 
 function mcpServerConfig() {
   return `{
@@ -1573,7 +1573,7 @@ function DashboardContent({
                   Maybe later
                 </button>
                 <a
-                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I just set up Thred for ${workspace.name} — shared memory that lets every agent pick up the work with the context it needs. https://thred.dev/share`)}`}
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I just set up Thred for ${workspace.name} — shared memory that lets every agent pick up the work with the context it needs. https://thred.fun/share`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="landing-cta inline-flex items-center gap-2 rounded-[7px] bg-[#1b1d1b] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#343733]"
