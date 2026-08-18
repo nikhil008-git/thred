@@ -27,9 +27,23 @@ import { SiClaude, SiCursor, SiModelcontextprotocol } from "react-icons/si";
 import { signOut, useSession } from "@/lib/auth-client";
 
 const MCP_PACKAGE = "@thred_nick_01/thred-mcp";
-const MCP_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.thred.fun";
+const DEFAULT_PRODUCTION_MCP_API_URL = "https://api.thred.fun";
+
+function mcpApiUrl(): string {
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  if (isLocalHost) {
+    const configured = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+    return configured || "http://localhost:8080";
+  }
+
+  return DEFAULT_PRODUCTION_MCP_API_URL;
+}
 
 function mcpServerConfig() {
+  const apiUrl = mcpApiUrl();
   return `{
   "mcpServers": {
     "thred": {
@@ -37,7 +51,7 @@ function mcpServerConfig() {
       "args": ["-y", "${MCP_PACKAGE}"],
       "env": {
         "THRED_API_KEY": "thrd_sk_…",
-        "THRED_API_URL": "${MCP_API_URL}"
+        "THRED_API_URL": "${apiUrl}"
       }
     }
   }
@@ -1377,7 +1391,8 @@ function DashboardContent({
                 </pre>
                 <p className="mx-auto mt-4 flex max-w-[760px] items-center gap-2 text-[12px] leading-5 text-[#747970]">
                   <CircleCheck className="size-4 shrink-0 text-[#66806b]" />
-                  Your agent can now retrieve context before work and save a checkpoint when it hands work over.
+                  Replace <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">thrd_sk_…</code> with your Thred agent key. The MCP server calls{" "}
+                  <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">THRED_API_URL</code> — keep both env vars set for tools to work.
                 </p>
               </>
             )}
