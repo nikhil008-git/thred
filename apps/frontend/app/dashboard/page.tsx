@@ -1576,7 +1576,7 @@ function DashboardContent({
         </div>
       )}
       {setupOpen && (
-        <div
+        <div 
           onClick={() => setSetupOpen(false)}
           className="fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
         >
