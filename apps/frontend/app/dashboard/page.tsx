@@ -1176,9 +1176,12 @@ function DashboardContent({
             <span className="hidden sm:inline">Share Thred</span>
           </button>
           <a
-            href="https://buymeacoffee.com/"
-            target="_blank"
-            rel="noreferrer"
+            href="upi://pay?pa=dhansinghrajpurohit1977@okaxis"
+            title="dhansinghrajpurohit1977@okaxis"
+            onClick={(event) => {
+              void navigator.clipboard?.writeText("dhansinghrajpurohit1977@okaxis");
+              if (!/Android|iPhone|iPad/i.test(navigator.userAgent)) event.preventDefault();
+            }}
             className="hidden items-center gap-1.5 rounded-[6px] px-2.5 py-1.5 text-[11px] font-medium text-[#545950] transition-colors hover:bg-[#e4e7e2] hover:text-[#20231f] sm:inline-flex"
           >
             <Coffee className="size-3.5" strokeWidth={2} />
@@ -1573,7 +1576,7 @@ function DashboardContent({
                   Maybe later
                 </button>
                 <a
-                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I just set up Thred for ${workspace.name} — shared memory that lets every agent pick up the work with the context it needs. https://thred.fun/share`)}`}
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just joined Thred — shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.\n\nOne stream. Every handoff. 👀\n\n@hydra_db @abhirupvg @contextkingceo\n\nhttps://thred.fun/share`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="landing-cta inline-flex items-center gap-2 rounded-[7px] bg-[#1b1d1b] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#343733]"
