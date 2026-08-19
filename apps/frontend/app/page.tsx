@@ -67,7 +67,7 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-[440px] text-center lg:mx-0 lg:self-center lg:text-left">
           <div style={{ marginBottom: 24 }}>
             <a href="https://www.producthunt.com/products/thred-5?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-thred-4" target="_blank" rel="noopener noreferrer">
-              <img alt="thred - shared memory for decisions, revisions, and unfinished work | Product Hunt" width={155} height={34} src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1226452&theme=light&t=1787121230353" style={{ display: "block", border: "none" }} />
+              <img alt="thred - shared memory for decisions, revisions, and unfinished work | Product Hunt" width={121} height={34} src="/product-hunt-badge.svg" style={{ display: "block", border: "none" }} />
             </a>
           </div>
           <h1 className="max-w-none text-[30px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[34px] lg:text-[35px] lg:leading-[0.96]">
