@@ -28,12 +28,54 @@ longTerm contains only durable, evidence-backed facts, decisions, architecture k
 lessons, or stable preferences. Every claim must use atomic subject, predicate, and value fields;
 reason is optional. Ignore greetings, temporary chatter, guesses, and raw logs.
 
+Extraction quality rules:
+- Use exact sourceMessageIds from the provided messages array for every claim.
+- Keep values complete: preserve lists, counts with item names, times with units, and
+  preferences with product names. Never collapse a list into a bare number.
+- For a collection, emit one claim per item plus one summary claim holding the full list,
+  so a later "how many" or "which ones" question can be answered from memory alone.
+- Always record the concrete thing the exchange is about — the product, project, model,
+  place, or artifact the user owns, bought, or is working on — as its own claim, even when
+  most of the exchange is advice. Advice without the subject it applies to is not recallable.
+- Record problems the user reports — faults, breakages, complaints, and things that did not
+  work — as their own claims naming what was affected and when, separately from any later fix.
+  A claim that only records the repair cannot answer a question about the fault.
+- When a later message updates an earlier fact, emit both claims in message order using the
+  same subject and predicate, oldest value first, so the revision stays traceable.
+- Prefer specific subjects ("personal best 5K time", "model kits") over vague ones ("user").
+- Record preferences explicitly, including what the user does not want.
+
 workingMemory is a concise coding handoff: current task, status, completed work, changed
 files, tests, blockers, and the next step. It may be omitted when there is no active task.
 
 Do not invent facts. If evidence is insufficient, return an empty longTerm array and omit
 workingMemory. Every long-term claim needs sourceMessageIds and confidence from 0 to 1.
 `.trim();
+
+/**
+ * Only exact repeats are dropped. Two claims that share a subject and predicate
+ * but differ in value are either list items or a revision, and the revision
+ * resolver needs both to emit a SUPERSEDES edge.
+ */
+function claimKey(claim: { subject: string; predicate: string; value: string }): string {
+  return [claim.subject, claim.predicate, claim.value]
+    .map((part) => part.trim().toLowerCase())
+    .join("::");
+}
+
+function backfillSourceMessageIds<T extends { sourceMessageIds: string[] }>(
+  claims: T[],
+  messages: SessionMessage[],
+): T[] {
+  const lastUser = [...messages].reverse().find((message) => message.role === "user")?.id;
+  const fallback = lastUser ?? messages.at(-1)?.id;
+  return claims.map((claim) => ({
+    ...claim,
+    sourceMessageIds: claim.sourceMessageIds.length
+      ? claim.sourceMessageIds
+      : fallback ? [fallback] : [],
+  }));
+}
 
 function approximateTokens(value: string): number {
   return Math.max(1, Math.ceil(value.length / 4));
@@ -67,11 +109,19 @@ export async function extractRelevantContext(
 ): Promise<ExtractedRelevantContext> {
   const chunks = chunkMessages(request.messages);
   const merged: ExtractedRelevantContext = { longTerm: [] };
+  const seen = new Set<string>();
+  const claims: ExtractedRelevantContext["longTerm"] = [];
   for (const messages of chunks) {
     const result = await model.extract({ ...request, messages }, extractionInstructions);
     const parsed = parseExtractedRelevantContext(result);
-    merged.longTerm.push(...parsed.longTerm);
+    for (const claim of parsed.longTerm) {
+      const key = claimKey(claim);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      claims.push(claim);
+    }
     if (parsed.workingMemory) merged.workingMemory = parsed.workingMemory;
   }
+  merged.longTerm = backfillSourceMessageIds(claims, request.messages);
   return merged;
 }

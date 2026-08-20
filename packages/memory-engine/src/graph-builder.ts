@@ -5,7 +5,7 @@ import type { RevisionDecision } from "./revision-resolver.js";
 export function buildHydraMemory(
   claim: LongTermMemoryClaim,
   decision: RevisionDecision,
-  scope: { workspaceId: string; sessionId: string; evidenceEventIds: string[] },
+  scope: { workspaceId: string; sessionId: string; evidenceEventIds: string[]; occurredAt?: string },
 ): LongTermMemoryInput {
   const revisionNote = decision.operation === "SUPERSEDE"
     ? ` This supersedes memory ${decision.supersededMemoryId}.`
@@ -31,7 +31,7 @@ export function buildHydraMemory(
     kind: claim.kind,
     // Keep the assertion first: HydraMemoryLookup can still identify a claim by
     // subject + predicate, while the remaining fields make recall inspectable.
-    text: `${claim.subject} ${claim.predicate} ${claim.value}. Kind: ${claim.kind}. Confidence: ${claim.confidence}.${reason}${revisionNote} Source messages: ${sourceMessages}. Evidence events: ${evidence}. Files: ${files}.`,
+    text: `${claim.subject} ${claim.predicate} ${claim.value}. Kind: ${claim.kind}. Confidence: ${claim.confidence}.${scope.occurredAt ? ` Recorded at: ${scope.occurredAt}.` : ""}${reason}${revisionNote} Source messages: ${sourceMessages}. Evidence events: ${evidence}. Files: ${files}.`,
     confidence: claim.confidence,
     evidenceEventIds: scope.evidenceEventIds,
     sourceMessageIds: claim.sourceMessageIds,

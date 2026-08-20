@@ -15,6 +15,52 @@ function percentage(value: number | null) {
   return value === null ? "n/a" : `${(value * 100).toFixed(1)}%`;
 }
 
+function higherWins(
+  label: string,
+  vector: number | null,
+  thred: number | null,
+  lowerIsBetter = false,
+): string | null {
+  if (vector === null || thred === null) return null;
+  if (vector === thred) return null;
+  const thredWins = lowerIsBetter ? thred < vector : thred > vector;
+  const winner = thredWins ? "Thred" : "Vector-RAG";
+  const delta = lowerIsBetter ? vector - thred : thred - vector;
+  const formatted = label.includes("latency") || label.includes("tokens")
+    ? `${Math.round(Math.abs(delta))}${label.includes("latency") ? "ms" : ""}`
+    : `${(Math.abs(delta) * 100).toFixed(1)}pp`;
+  return `- **${label}:** ${winner} (+${formatted})`;
+}
+
+function renderHeadline(vectorRag: Summary, thred: Summary): string[] {
+  const wins = [
+    higherWins("Accuracy", vectorRag.accuracy, thred.accuracy),
+    higherWins("Temporal accuracy", vectorRag.temporalAccuracy, thred.temporalAccuracy),
+    higherWins("Revision accuracy", vectorRag.revisionAccuracy, thred.revisionAccuracy),
+    higherWins("Abstention accuracy", vectorRag.abstentionAccuracy, thred.abstentionAccuracy),
+    higherWins("Read tokens", vectorRag.readTokens, thred.readTokens, true),
+    higherWins("p50 retrieval latency", vectorRag.p50LatencyMs, thred.p50LatencyMs, true),
+  ].filter((line): line is string => line !== null);
+
+  // The metric label is bold Markdown (`**Accuracy:**`), so the winner is
+  // preceded by `:**`, not a plain colon. Match the rendered winner token.
+  const thredTrack03 = wins.filter((line) => line.includes("** Thred ("));
+  const vectorOps = wins.filter((line) => line.includes("** Vector-RAG ("));
+
+  return [
+    "## Track 03 headline",
+    "",
+    "Metrics the hackathon brief cares about (accuracy, chronology, revisions, abstention):",
+    "",
+    ...(thredTrack03.length ? thredTrack03 : ["- Thred did not lead on scored accuracy dimensions in this run."]),
+    "",
+    "Expected tradeoffs (Vector-RAG has no extraction layer):",
+    "",
+    ...(vectorOps.length ? vectorOps : ["- No operational wins for Vector-RAG in this sample."]),
+    "",
+  ];
+}
+
 export function renderComparisonReport(input: {
   dataset: EvalDataset;
   vectorRag: Summary;
@@ -61,6 +107,7 @@ export function renderComparisonReport(input: {
     "Both strategies use the same answer model. The vector baseline is deterministic hashed-vector retrieval.",
     "Accuracy excludes EVAL_ERROR cases; see eval-error summaries below.",
     "",
+    ...renderHeadline(input.vectorRag, input.thred),
     ...failures("Vector-RAG", input.vectorRagFailures ?? []),
     "",
     ...failures("Thred", input.thredFailures ?? []),

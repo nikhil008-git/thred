@@ -1,0 +1,32 @@
+=== START longmemeval-v2 2026-08-20T19:31:16+05:30 ===
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @repo/evals@0.1.0 eval
+> tsx src/run.ts --dataset longmemeval-v2 --input /private/tmp/thred-benchmarks/longmemeval-data/longmemeval_s_cleaned.json --workspace cmswupgt50009bi8oj8m55wmv --stratified 1 --concurrency 1
+
+[dotenv@17.3.1] injecting env (16) from ../../.env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.3.1] injecting env (0) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+Stratified sample: 5 cases (1 per category when available)
+(node:98722) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[VECTOR_RAG] run=cmt1l9gol00006av3u98btup3 cases=5
+[VECTOR_RAG] 5/5
+[VECTOR_RAG] complete run=cmt1l9gol00006av3u98btup3
+[THRED] run=cmt1l9xfd00066av3j23th1zg cases=5
+[THRED] case=0862e8bf_abs error=workingMemory.taskKey must be a non-empty string
+[THRED] case=gpt4_59149c77 error=workingMemory.taskKey must be a non-empty string
+[THRED] case=6a1eabeb error=Request timed out.
+npm error Lifecycle script `eval` failed with error:
+npm error code 143
+npm error path /Users/nikhilrajpurohit/Developer/thred/apps/evals
+npm error workspace @repo/evals@0.1.0
+npm error location /Users/nikhilrajpurohit/Developer/thred/apps/evals
+npm error command failed
+npm error command sh -c tsx src/run.ts --dataset longmemeval-v2 --input /private/tmp/thred-benchmarks/longmemeval-data/longmemeval_s_cleaned.json --workspace cmswupgt50009bi8oj8m55wmv --stratified 1 --concurrency 1

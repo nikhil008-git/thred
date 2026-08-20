@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { normalizeBeamDataset } from "./beam.js";
 import { normalizeDatasetRecord } from "./normalize.js";
 import type { EvalCase, EvalDataset } from "../types.js";
 
@@ -15,6 +16,9 @@ function records(value: unknown): unknown[] {
 
 export async function loadDataset(path: string, dataset: EvalDataset): Promise<EvalCase[]> {
   const parsed = JSON.parse(await readFile(path, "utf8")) as unknown;
+  if (dataset === "beam") {
+    return normalizeBeamDataset(parsed, dataset).filter((item) => item.question && item.sessions.length);
+  }
   return records(parsed).map((item, index) => normalizeDatasetRecord(item, dataset, index))
     .filter((item) => item.question && item.sessions.length);
 }

@@ -11,6 +11,7 @@ export type IngestSessionInput = {
   workspaceId: string;
   sessionId: string;
   evidenceEventIds?: string[];
+  occurredAt?: string;
   /** Evaluation runs use isolated HydraDB stores, not product Workspace rows. */
   persistWorkingMemory?: boolean;
   extractionRequest: MemoryExtractionRequest;
@@ -30,16 +31,29 @@ export async function ingestSession(
   dependencies: IngestSessionDependencies,
 ) {
   const extracted = await extractRelevantContext(dependencies.model, input.extractionRequest);
-  const lookup = dependencies.memoryLookup ?? new HydraMemoryLookup();
+  const lookup: MemoryLookup = dependencies.memoryLookup ?? new HydraMemoryLookup();
   const processed: ProcessedLongTermClaim[] = [];
 
   for (const claim of extracted.longTerm) {
-    processed.push(await processLongTermClaim(lookup, {
+    const result = await processLongTermClaim(lookup, {
       workspaceId: input.workspaceId,
       sessionId: input.sessionId,
       evidenceEventIds: input.evidenceEventIds ?? [],
+      ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
       claim,
-    }));
+    });
+    processed.push(result);
+
+    const writtenId = result.hydraResponse?.data?.results?.find((item) => item.id)?.id;
+    if (writtenId && lookup.recordWrite) {
+      lookup.recordWrite({
+        workspaceId: input.workspaceId,
+        memoryId: writtenId,
+        subject: claim.subject,
+        predicate: claim.predicate,
+        value: claim.value,
+      });
+    }
   }
 
   const hydraMemoryIds = processed.flatMap((result) =>

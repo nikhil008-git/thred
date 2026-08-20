@@ -11,6 +11,15 @@ test("accepts evidence-backed claims and a compact checkpoint", () => {
   assert.equal(result.workingMemory?.nextStep, "Run migration");
 });
 
+test("keeps long-term claims when the checkpoint is incomplete", () => {
+  const result = parseExtractedRelevantContext({
+    longTerm: [{ kind: "fact", subject: "auth database", predicate: "uses", value: "PostgreSQL", confidence: 0.9, sourceMessageIds: ["m1"], files: [] }],
+    workingMemory: { task: "Migrate database", status: "IN_PROGRESS" },
+  });
+  assert.equal(result.longTerm.length, 1);
+  assert.equal(result.workingMemory, undefined);
+});
+
 test("defaults invalid kind and confidence instead of rejecting the claim", () => {
   const result = parseExtractedRelevantContext({
     longTerm: [{ kind: "note", subject: "A", predicate: "is", value: "B", confidence: 2, sourceMessageIds: [], files: [] }],

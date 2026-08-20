@@ -1,11 +1,15 @@
 import OpenAI from "openai";
 import type { MemoryExtractionModel, MemoryExtractionRequest } from "./extractor.js";
 import { resolveModelConfig } from "./provider.js";
+import { isTransientNetworkError } from "./transient.js";
 
 function retryDelayMs(error: unknown, attempt: number): number | null {
   const details = error as { status?: number; message?: string };
   const status = details.status;
   const message = details.message ?? "";
+  // A timeout or dropped connection carries no HTTP status, but losing a whole
+  // benchmark case to one transient network fault is never correct.
+  if (isTransientNetworkError(error)) return Math.min(30_000, 3_000 * 2 ** attempt);
   if (status !== 429 && status !== 413 && (!status || status < 500)
     && !/413|request too large|tokens per minute/i.test(message)) return null;
   const requestedDelaySeconds = /try again in ([0-9.]+)s/i.exec(message)?.[1];
@@ -81,7 +85,7 @@ export class OpenAIMemoryExtractionModel implements MemoryExtractionModel {
 
   constructor(options: OpenAIMemoryExtractionOptions = {}) {
     const config = resolveModelConfig({ ...options, providerEnv: "MEMORY_EXTRACTION_PROVIDER" });
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 2 });
     this.model = options.model ?? process.env.MEMORY_EXTRACTION_MODEL ?? config.model;
     this.provider = config.provider;
   }

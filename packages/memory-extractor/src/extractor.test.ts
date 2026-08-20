@@ -38,3 +38,18 @@ test("merges long-term claims across extraction chunks", async () => {
   assert.equal(calls, 2);
   assert.equal(result.longTerm.length, 2);
 });
+
+test("keeps revisions and list items in order while backfilling sourceMessageIds", async () => {
+  const messages = [{ id: "m1", role: "user" as const, content: "We switched to PostgreSQL." }];
+  const result = await extractRelevantContext({
+    extract: async () => ({
+      longTerm: [
+        { kind: "decision", subject: "auth database", predicate: "uses", value: "MongoDB", confidence: 0.8, sourceMessageIds: [], files: [] },
+        { kind: "decision", subject: "auth database", predicate: "uses", value: "PostgreSQL", confidence: 0.9, sourceMessageIds: [], files: [] },
+        { kind: "decision", subject: "auth database", predicate: "uses", value: "postgresql", confidence: 0.9, sourceMessageIds: ["m1"], files: [] },
+      ],
+    }),
+  }, { messages, changedFiles: [], testResults: [], evidenceReferences: [] });
+  assert.deepEqual(result.longTerm.map((claim) => claim.value), ["MongoDB", "PostgreSQL"]);
+  assert.deepEqual(result.longTerm[0]?.sourceMessageIds, ["m1"]);
+});

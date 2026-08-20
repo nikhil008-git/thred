@@ -27,6 +27,8 @@ function option(name: string) {
 const dataset = option("--dataset") as EvalDataset | undefined;
 const inputPath = option("--input");
 const workspaceId = option("--workspace");
+const caseId = option("--case-id");
+const hydraWorkspaceId = option("--hydra-workspace");
 const limitValue = option("--limit");
 const limit = limitValue ? Number(limitValue) : undefined;
 const stratifiedValue = option("--stratified");
@@ -54,8 +56,15 @@ if (!Number.isInteger(concurrency) || concurrency < 1) {
 if (!dataset || !inputPath || !workspaceId) {
   throw new Error("Usage: npm run eval --workspace=@repo/evals -- --dataset longmemeval-v2 --input path/to/data.json --workspace workspace-id");
 }
+if (hydraWorkspaceId && !caseId) {
+  throw new Error("--hydra-workspace requires --case-id so evaluation cases remain isolated");
+}
 
 let evalCases = await loadDataset(inputPath, dataset);
+if (caseId) {
+  evalCases = evalCases.filter((evalCase) => evalCase.id === caseId);
+  console.log(`Selected case: ${caseId}`);
+}
 if (stratifiedPerCategory !== undefined) {
   evalCases = stratifiedSample(evalCases, stratifiedPerCategory);
   console.log(`Stratified sample: ${evalCases.length} cases (${stratifiedPerCategory} per category when available)`);
@@ -105,7 +114,10 @@ for (const strategy of strategyFilter) {
   await runWithConcurrency(evalCases, async (evalCase) => {
     // Every LongMemEval record is an independent history. Reusing one memory
     // database would allow facts from an earlier case to answer a later case.
-    const caseWorkspaceId = `${workspaceId}_eval_${run.id}_${evalCase.id}`;
+    // A named single-case evaluation can reuse a pre-provisioned, isolated
+    // HydraDB database. This avoids waiting for provisioning again while never
+    // sharing memories across benchmark histories.
+    const caseWorkspaceId = hydraWorkspaceId ?? `${workspaceId}_eval_${run.id}_${evalCase.id}`;
     let result: EvaluatedAnswer;
     let score: Awaited<ReturnType<typeof scoreCase>>;
     try {

@@ -1,9 +1,12 @@
 import OpenAI from "openai";
-import { resolveModelConfig } from "@repo/memory-extractor";
+import { isTransientNetworkError, resolveModelConfig } from "@repo/memory-extractor";
 import type { AnswerJudge, AnswerModel } from "../types.js";
 
 function retryDelayMs(error: unknown, attempt: number): number | null {
   const details = error as { status?: number; message?: string };
+  // Timeouts and dropped sockets arrive without an HTTP status; retrying them
+  // keeps one transient fault from scoring a case as EVAL_ERROR.
+  if (isTransientNetworkError(error)) return Math.min(30_000, 3_000 * 2 ** attempt);
   if (details.status !== 429 && (!details.status || details.status < 500)) return null;
   const requestedDelaySeconds = /try again in ([0-9.]+)s/i.exec(details.message ?? "")?.[1];
   const requestedDelayMs = requestedDelaySeconds ? Math.ceil(Number(requestedDelaySeconds) * 1000) : 0;
@@ -40,19 +43,35 @@ export function parseJudgeVerdict(content: string | null | undefined): boolean {
 export class OpenAIAnswerModel implements AnswerModel {
   readonly name: string;
   private readonly client: OpenAI;
+  private readonly provider: string;
 
   constructor(model = process.env.EVAL_ANSWER_MODEL ?? undefined) {
-    const config = resolveModelConfig(model ? { model } : { providerEnv: "EVAL_MODEL_PROVIDER" });
+    const config = resolveModelConfig(model
+      ? { model, providerEnv: "EVAL_MODEL_PROVIDER" }
+      : { providerEnv: "EVAL_MODEL_PROVIDER" });
     this.name = config.model;
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
+    this.provider = config.provider;
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 2 });
   }
 
   async answer(input: { question: string; context: string }) {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
+      // Greedy decoding: a benchmark comparison has to be reproducible, and at
+      // the default temperature the same context can score differently per run.
+      ...(this.provider === "gemini" ? {} : { temperature: 0 }),
       max_completion_tokens: 512,
       messages: [
-        { role: "system", content: "Answer only from the supplied context. If context does not support the answer, reply exactly NOT_FOUND." },
+        {
+          role: "system",
+          content: [
+            "Answer only from the supplied context, as briefly as the question allows.",
+            "You may state a fact the context unambiguously implies, but never one it merely makes plausible.",
+            "When the context lists several items, name all of them and give the exact count.",
+            "When the context includes a revision timeline, answer with the most recent value unless the question asks about an earlier one.",
+            "If the context does not contain the specific information asked for, reply exactly NOT_FOUND.",
+          ].join(" "),
+        },
         { role: "user", content: `Question:\n${input.question}\n\nContext:\n${input.context}` },
       ],
     }));
@@ -76,10 +95,12 @@ export class OpenAIAnswerJudge implements AnswerJudge {
   private readonly provider: string;
 
   constructor(model = process.env.EVAL_JUDGE_MODEL ?? process.env.EVAL_ANSWER_MODEL ?? undefined) {
-    const config = resolveModelConfig(model ? { model } : { providerEnv: "EVAL_MODEL_PROVIDER" });
+    const config = resolveModelConfig(model
+      ? { model, providerEnv: "EVAL_MODEL_PROVIDER" }
+      : { providerEnv: "EVAL_MODEL_PROVIDER" });
     this.name = config.model;
     this.provider = config.provider;
-    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 0 });
+    this.client = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseURL, timeout: 180_000, maxRetries: 2 });
   }
 
   async judge(input: { question: string; expectedAnswer: string; answer: string }): Promise<boolean> {

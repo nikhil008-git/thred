@@ -13,12 +13,21 @@ export type MemoryLookup = {
     subject: string;
     predicate: string;
   }): Promise<ExistingMemory[]>;
+  /** Implemented by lookups that track writes before HydraDB finishes indexing. */
+  recordWrite?(input: {
+    workspaceId: string;
+    memoryId: string;
+    subject: string;
+    predicate: string;
+    value: string;
+  }): void;
 };
 
 export type ProcessLongTermClaimInput = {
   workspaceId: string;
   sessionId: string;
   evidenceEventIds: string[];
+  occurredAt?: string;
   claim: LongTermMemoryClaim;
 };
 
@@ -46,6 +55,7 @@ export async function processLongTermClaim(
       workspaceId: input.workspaceId,
       sessionId: input.sessionId,
       evidenceEventIds: input.evidenceEventIds,
+      ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
     }),
   );
 
