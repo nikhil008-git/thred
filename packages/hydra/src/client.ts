@@ -34,7 +34,7 @@ export async function hydraWithRetry<T>(operation: () => Promise<T>, label = "hy
       // A dropped socket surfaces as "fetch failed" on the cause, not the error.
       const causeMessage = String((error as { cause?: { message?: string } })?.cause?.message ?? "");
       const retryable = status === 429 || (typeof status === "number" && status >= 500)
-        || /429|rate.?limit|retry|timeout|econnreset|fetch failed|connection error/i.test(`${message} ${causeMessage}`);
+        || /429|rate.?limit|retry|timeout|econnreset|fetch failed|connection error|terminated|aborted|socket hang up/i.test(`${message} ${causeMessage}`);
       if (!retryable || attempt >= 7) break;
       const requestedSeconds = /retry[_ -]?after[ :]+(\d+)/i.exec(message)?.[1]
         ?? /retry_after_seconds["']?\s*[:=]\s*(\d+)/i.exec(message)?.[1];

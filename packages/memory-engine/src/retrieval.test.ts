@@ -38,6 +38,20 @@ test("ranks a lexically matching claim above a marginally more relevant one", ()
   assert.equal(ranked[0]?.id, "on");
 });
 
+test("uses a fact's recorded event date rather than upload time for chronology", () => {
+  const ranked = rankMemories({
+    data: {
+      chunks: [{
+        id: "event",
+        chunkContent: "user attended event. Recorded at: 2023/04/01. Source messages: m1.",
+        sourceUploadTime: "2026-08-20T00:00:00.000Z",
+        relevancyScore: 0.9,
+      }],
+    },
+  } as never);
+  assert.equal(ranked[0]?.recordedAt, "2023-04-01T00:00:00.000Z");
+});
+
 test("compacts provenance out of answer context but keeps the assertion and date", () => {
   const compact = compactMemoryText(
     "auth database uses PostgreSQL. Kind: decision. Confidence: 0.9. Recorded at: 2026-03-02. Source messages: m1. Evidence events: none. Files: none.\n\n[Thred provenance: kind=decision; session=s1]",

@@ -44,6 +44,14 @@ function recencyScore(date?: string): number {
   return Math.max(0, 1 - age / (1000 * 60 * 60 * 24 * 180));
 }
 
+/** Facts carry their event time in the assertion text; upload time is not chronology. */
+function occurredAtFromMemoryText(text: string): string | undefined {
+  const value = /Recorded at:\s*([^.]*)\./i.exec(text)?.[1]?.trim();
+  if (!value) return undefined;
+  const parsed = new Date(value.replace(/\//g, "-"));
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
+
 function supersededIds(text: string): string[] {
   return [...text.matchAll(/This supersedes memory ([^.\s]+)\./gi)].map((match) => match[1]!);
 }
@@ -73,7 +81,9 @@ export function rankMemories(
       const id = chunk.id ?? chunk.chunkUuid;
       if (!text || !id) return null;
 
-      const recordedAt = chunk.sourceLastUpdatedTime ?? chunk.sourceUploadTime;
+      const recordedAt = occurredAtFromMemoryText(text)
+        ?? chunk.sourceLastUpdatedTime
+        ?? chunk.sourceUploadTime;
       const relevancyScore = Math.max(0, Math.min(1, chunk.relevancyScore ?? 0));
       const confidence = numberAfterLabel(text, "Confidence", 0.5);
       const lexical = query ? lexicalOverlap(query, text) : 0;

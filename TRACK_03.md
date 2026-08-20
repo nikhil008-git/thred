@@ -41,6 +41,7 @@ It writes `EvalRun` and `EvalCaseResult` rows, then generates a Markdown compari
 | `--workspace` | Thred workspace id |
 | `--case-id` | Run one named official case (useful for reproducible long-history verification) |
 | `--hydra-workspace` | Pre-provisioned isolated HydraDB workspace for a named single-case run |
+| `--resume` | Resume a named eval from its per-session ingestion checkpoint after a transient failure |
 | `--stratified N` | Pick N cases per category (abstention, temporal, revision, multi-session, single-session) |
 | `--limit N` | Cap total cases after stratified sampling |
 | `--strategy` | `VECTOR_RAG` or `THRED` only |
