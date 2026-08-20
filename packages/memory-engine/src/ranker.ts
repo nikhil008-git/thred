@@ -1,4 +1,5 @@
 import type { HydraMemoryQueryResponse } from "@repo/hydra";
+import { queryKeywords } from "./query-intent.js";
 
 export type RankedMemory = {
   id: string;
@@ -19,6 +20,16 @@ function listAfterLabel(text: string, label: string): string[] {
   return !value || value === "none" ? [] : value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
+function provenanceField(text: string, field: string): string[] {
+  const match = new RegExp(`${field}=([^;\\]]+)`, "i").exec(text);
+  if (!match?.[1]) return [];
+  return match[1].split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
 function numberAfterLabel(text: string, label: string, fallback: number): number {
   const match = new RegExp(`${label}:\\s*([0-9.]+)`, "i").exec(text);
   const value = Number(match?.[1]);
@@ -37,8 +48,25 @@ function supersededIds(text: string): string[] {
   return [...text.matchAll(/This supersedes memory ([^.\s]+)\./gi)].map((match) => match[1]!);
 }
 
+/**
+ * Fraction of the question's content words present in the claim. Hybrid recall
+ * scores can be flat across near-duplicates; lexical overlap breaks those ties
+ * toward the claim that actually names the asked-about entity.
+ */
+export function lexicalOverlap(query: string, text: string): number {
+  const keywords = queryKeywords(query);
+  if (!keywords.length) return 0;
+  const haystack = text.toLocaleLowerCase();
+  const matched = keywords.filter((keyword) => haystack.includes(keyword)).length;
+  return matched / keywords.length;
+}
+
 /** Scores recall chunks without inventing a new answer. */
-export function rankMemories(response: HydraMemoryQueryResponse): RankedMemory[] {
+export function rankMemories(
+  response: HydraMemoryQueryResponse,
+  options?: { query?: string },
+): RankedMemory[] {
+  const query = options?.query?.trim();
   return (response.data?.chunks ?? [])
     .map((chunk): RankedMemory | null => {
       const text = chunk.chunkContent?.trim();
@@ -48,7 +76,10 @@ export function rankMemories(response: HydraMemoryQueryResponse): RankedMemory[]
       const recordedAt = chunk.sourceLastUpdatedTime ?? chunk.sourceUploadTime;
       const relevancyScore = Math.max(0, Math.min(1, chunk.relevancyScore ?? 0));
       const confidence = numberAfterLabel(text, "Confidence", 0.5);
-      const score = relevancyScore * 0.7 + confidence * 0.2 + recencyScore(recordedAt) * 0.1;
+      const lexical = query ? lexicalOverlap(query, text) : 0;
+      const score = query
+        ? relevancyScore * 0.5 + lexical * 0.25 + confidence * 0.1 + recencyScore(recordedAt) * 0.15
+        : relevancyScore * 0.65 + confidence * 0.15 + recencyScore(recordedAt) * 0.2;
 
       return {
         id,
@@ -57,9 +88,18 @@ export function rankMemories(response: HydraMemoryQueryResponse): RankedMemory[]
         relevancyScore,
         confidence,
         ...(recordedAt ? { recordedAt } : {}),
-        sourceMessageIds: listAfterLabel(text, "Source messages"),
-        evidenceEventIds: listAfterLabel(text, "Evidence events"),
-        files: listAfterLabel(text, "Files"),
+        sourceMessageIds: unique([
+          ...listAfterLabel(text, "Source messages"),
+          ...provenanceField(text, "messages"),
+        ]),
+        evidenceEventIds: unique([
+          ...listAfterLabel(text, "Evidence events"),
+          ...provenanceField(text, "evidence"),
+        ]),
+        files: unique([
+          ...listAfterLabel(text, "Files"),
+          ...provenanceField(text, "files"),
+        ]),
         supersedesMemoryIds: supersededIds(text),
       };
     })

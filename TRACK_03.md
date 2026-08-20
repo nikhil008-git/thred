@@ -39,6 +39,8 @@ It writes `EvalRun` and `EvalCaseResult` rows, then generates a Markdown compari
 | `--dataset` | `longmemeval`, `longmemeval-v2`, or `beam` |
 | `--input` | Path to official dataset JSON |
 | `--workspace` | Thred workspace id |
+| `--case-id` | Run one named official case (useful for reproducible long-history verification) |
+| `--hydra-workspace` | Pre-provisioned isolated HydraDB workspace for a named single-case run |
 | `--stratified N` | Pick N cases per category (abstention, temporal, revision, multi-session, single-session) |
 | `--limit N` | Cap total cases after stratified sampling |
 | `--strategy` | `VECTOR_RAG` or `THRED` only |

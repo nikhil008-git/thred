@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   buildMemoryContext,
   buildMemoryHistory,
+  CachedMemoryLookup,
   HydraMemoryLookup,
   ingestSession,
   inspectMemory,
@@ -130,7 +131,7 @@ mcpRouter.post("/checkpoint", async (req: ThredRequest, res, next) => {
           evidenceReferences,
         },
       },
-      { model },
+      { model, memoryLookup: new CachedMemoryLookup(new HydraMemoryLookup()) },
     );
 
     res.json({

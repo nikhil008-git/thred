@@ -17,7 +17,7 @@ export async function recallLongTermMemory(
     query: input.query.trim(),
     queryBy: "hybrid",
     mode: "thinking",
-    maxResults: input.maxResults ?? 8,
+    maxResults: input.maxResults ?? 12,
     graphContext: true,
     queryForcefulRelations: true,
   }), "recall");

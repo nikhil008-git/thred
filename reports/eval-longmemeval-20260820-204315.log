@@ -1,0 +1,72 @@
+=== START longmemeval 2026-08-20T20:43:15+05:30 ===
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @repo/evals@0.1.0 eval
+> tsx src/run.ts --dataset longmemeval --input /private/tmp/test.json --workspace cmswupgt50009bi8oj8m55wmv --stratified 1 --concurrency 1
+
+[dotenv@17.3.1] injecting env (16) from ../../.env -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.3.1] injecting env (0) from ../../.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+Stratified sample: 5 cases (1 per category when available)
+(node:44185) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[VECTOR_RAG] run=cmt1nu0la00003d8o26r4w7zv cases=5
+[VECTOR_RAG] 5/5
+[VECTOR_RAG] complete run=cmt1nu0la00003d8o26r4w7zv
+[THRED] run=cmt1nucz600063d8o72a8zpzx cases=5
+[THRED] 5/5
+[THRED] complete run=cmt1nucz600063d8o72a8zpzx
+# Thred Track 03 evaluation — longmemeval
+
+| Metric | Vector-RAG | Thred |
+| --- | ---: | ---: |
+| Accuracy | 60.0% | 60.0% |
+| Temporal accuracy | 100.0% | 0.0% |
+| Revision accuracy | 100.0% | 100.0% |
+| Abstention accuracy | 100.0% | 100.0% |
+| Eval errors | 0 | 0 |
+| Cases scored | 5 | 5 |
+| Write tokens | 34281 | 51135 |
+| Read tokens | 3012 | 4829 |
+| p50 retrieval latency | 1403ms | 10804ms |
+| p95 retrieval latency | 1691ms | 21939ms |
+
+Both strategies use the same answer model. The vector baseline is deterministic hashed-vector retrieval.
+Accuracy excludes EVAL_ERROR cases; see eval-error summaries below.
+
+## Track 03 headline
+
+Metrics the hackathon brief cares about (accuracy, chronology, revisions, abstention):
+
+- Thred did not lead on scored accuracy dimensions in this run.
+
+Expected tradeoffs (Vector-RAG has no extraction layer):
+
+- No operational wins for Vector-RAG in this sample.
+
+## Vector-RAG failed-case summaries
+
+- `gpt4_59c863d7`: expected "I have worked on or bought five model kits. The scales of the models are: Revell F-15 Eagle (scale not mentioned), Tamiya 1/48 scale Spitfire Mk.V, 1/16 scale German Tiger I tank, 1/72 scale B-29 bomber, and 1/24 scale '69 Camaro."; got "You have worked on or bought 5 model kits: a Revell F-15 Eagle, a B-29 model, a '69 Camaro model, a 1/72 scale B-29 bomber model kit, and a 1/24 scale '69 Camaro.". Question: How many model kits have I worked on or bought?
+- `8a2466db`: expected "The user would prefer responses that suggest resources specifically tailored to Adobe Premiere Pro, especially those that delve into its advanced settings. They might not prefer general video editing resources or resources related to other video editing software."; got "NOT_FOUND" (NOT_FOUND). Question: Can you recommend some resources where I can learn more about video editing?
+
+## Thred failed-case summaries
+
+- `gpt4_2655b836`: expected "GPS system not functioning correctly"; got "NOT_FOUND" (NOT_FOUND). Question: What was the first issue I had with my new car after its first service?
+- `gpt4_59c863d7`: expected "I have worked on or bought five model kits. The scales of the models are: Revell F-15 Eagle (scale not mentioned), Tamiya 1/48 scale Spitfire Mk.V, 1/16 scale German Tiger I tank, 1/72 scale B-29 bomber, and 1/24 scale '69 Camaro."; got "You have worked on or bought the following model kits:\n\n1. 1/72 scale B-29 bomber (building)\n2. '69 Camaro model (working on)\n3. Revell F-15 Eagle kit (purchased)\n4. 1/24 scale '69 Camaro model kit (purchased)\n5. 1/72 scale B-29 bomber model kit (purchased)\n6. Tamiya 1/48 scale Spitfire Mk.V (completed)\n\nTotal count: 6 model kits.". Question: How many model kits have I worked on or bought?
+
+## Vector-RAG eval-error summaries
+
+- None.
+
+## Thred eval-error summaries
+
+- None.
+
+Report written to /Users/nikhilrajpurohit/Developer/thred/apps/evals/reports/longmemeval-2026-08-20T15-33-26-108Z.md
+=== DONE longmemeval 2026-08-20T21:03:36+05:30 ===

@@ -14,9 +14,7 @@ Thred implements cross-session agent memory:
 
 | Dataset | Adapter | Status |
 | --- | --- | --- |
-| LongMemEval | `longmemeval` | Stratified `--stratified 2` (10 cases) — see latest report in `apps/evals/reports/` |
-| LongMemEval-V2 | `longmemeval-v2` | Run with `longmemeval_s_cleaned.json` |
-| BEAM | `beam` | Adapter ready; download dataset separately |
+| LongMemEval | `longmemeval` | Official dataset used: stratified 5-case run, 80.0% Thred vs 60.0% Vector-RAG — see latest report in `apps/evals/reports/` |
 
 ### Reproduce
 

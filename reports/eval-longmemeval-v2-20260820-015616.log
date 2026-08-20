@@ -1,0 +1,20 @@
+=== START longmemeval-v2 2026-08-20T01:56:16+05:30 ===
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @repo/evals@0.1.0 eval
+> tsx src/run.ts --dataset longmemeval-v2 --input /private/tmp/thred-benchmarks/longmemeval-data/longmemeval_s_cleaned.json --workspace cmswupgt50009bi8oj8m55wmv --stratified 1 --concurrency 1
+
+[dotenv@17.3.1] injecting env (16) from ../../.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.3.1] injecting env (0) from ../../.env -- tip: ⚙️  enable debug logging with { debug: true }
+Stratified sample: 5 cases (1 per category when available)
+(node:75417) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[VECTOR_RAG] run=cmt0jkq8a00006xv390b53eig cases=5
+[VECTOR_RAG] case=gpt4_59149c77 error=429 Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kxsw1czje6ats5qeypb3882w` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199257, Requested 1990. Please try again in 8m58.704s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing

@@ -17,6 +17,7 @@ test("detects unchanged and overwritten claims", () => {
 test("abstains without provenance or relevant evidence", () => {
   assert.deepEqual(shouldAbstain([]), { abstain: true, reason: "NO_RESULTS" });
   assert.deepEqual(shouldAbstain([{ id: "x", text: "fact", score: 0.8, relevancyScore: 0.8, confidence: 0.9, sourceMessageIds: [], evidenceEventIds: [], files: [], supersedesMemoryIds: [] }]), { abstain: true, reason: "NO_PROVENANCE" });
+  assert.deepEqual(shouldAbstain([{ id: "y", text: "db uses PostgreSQL. Source messages: m1.", score: 0.8, relevancyScore: 0.8, confidence: 0.9, sourceMessageIds: [], evidenceEventIds: [], files: [], supersedesMemoryIds: [] }]), { abstain: false });
 });
 
 test("normalizes common aliases before matching entities", () => {

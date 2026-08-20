@@ -18,8 +18,8 @@ export async function buildMemoryHistory(input: {
     query: input.query,
     maxResults: input.maxResults ?? 20,
   });
-  const timeline = rankMemories(response)
-    .filter((memory) => memory.relevancyScore >= 0.35)
+  const timeline = rankMemories(response, { query: input.query })
+    .filter((memory) => memory.relevancyScore >= 0.2)
     .sort((left, right) => (left.recordedAt ?? "").localeCompare(right.recordedAt ?? ""));
 
   return timeline.length

@@ -6,6 +6,7 @@ export { buildMemoryHistory, type MemoryHistory } from "./history.js";
 export { inspectMemory } from "./inspect.js";
 export { resumeWithMemory, type ResumeWithMemory } from "./resume-context.js";
 export { HydraMemoryLookup } from "./hydra-lookup.js";
+export { CachedMemoryLookup } from "./memory-cache.js";
 export {
   ingestSession,
   type IngestSessionDependencies,
@@ -22,7 +23,14 @@ export {
   type ExistingMemory,
   type RevisionDecision,
 } from "./revision-resolver.js";
-export { rankMemories, type RankedMemory } from "./ranker.js";
+export { lexicalOverlap, rankMemories, type RankedMemory } from "./ranker.js";
+export { compactMemoryText } from "./memory-text.js";
+export {
+  deriveQueryIntent,
+  expansionQueries,
+  queryKeywords,
+  type QueryIntent,
+} from "./query-intent.js";
 export {
   TemporalGraph,
   type TemporalEdge,

@@ -110,12 +110,19 @@ function parseLongTerm(value: unknown): LongTermMemoryClaim | null {
   };
 }
 
+function normalizeCheckpointStatus(value: string): WorkingCheckpointStatus {
+  const normalized = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  if (normalized === "IN_PROGRESS" || normalized === "INPROGRESS" || normalized === "ACTIVE") return "IN_PROGRESS";
+  if (normalized === "BLOCKED") return "BLOCKED";
+  if (normalized === "DONE" || normalized === "COMPLETE" || normalized === "COMPLETED") return "DONE";
+  return "IN_PROGRESS";
+}
+
 function parseWorkingMemory(value: unknown): WorkingMemoryCheckpoint {
   const checkpoint = object(value, "workingMemory");
-  const status = requiredString(checkpoint.status, "workingMemory.status") as WorkingCheckpointStatus;
+  const status = normalizeCheckpointStatus(requiredString(checkpoint.status, "workingMemory.status"));
   const nextStep = checkpoint.nextStep;
 
-  if (!checkpointStatuses.has(status)) throw new Error("workingMemory.status is invalid");
   if (nextStep !== undefined && nextStep !== null && (typeof nextStep !== "string" || !nextStep.trim())) {
     throw new Error("workingMemory.nextStep must be a non-empty string when provided");
   }
@@ -132,16 +139,29 @@ function parseWorkingMemory(value: unknown): WorkingMemoryCheckpoint {
   };
 }
 
+/**
+ * Working memory is an optional coding handoff, so a model that returns a
+ * partial checkpoint must not discard the long-term claims extracted alongside
+ * it. Callers that need a checkpoint can validate the absence themselves.
+ */
+function parseOptionalWorkingMemory(value: unknown): WorkingMemoryCheckpoint | null {
+  if (value === undefined || value === null) return null;
+  try {
+    return parseWorkingMemory(value);
+  } catch {
+    return null;
+  }
+}
+
 /** Validates structured output from whichever LLM provider the API uses. */
 export function parseExtractedRelevantContext(value: unknown): ExtractedRelevantContext {
   const extracted = object(camelizeKeys(value), "extraction");
 
   if (!Array.isArray(extracted.longTerm)) throw new Error("longTerm must be an array");
 
+  const workingMemory = parseOptionalWorkingMemory(extracted.workingMemory);
   return {
     longTerm: extracted.longTerm.map(parseLongTerm).filter((claim): claim is LongTermMemoryClaim => claim !== null),
-    ...(extracted.workingMemory === undefined || extracted.workingMemory === null
-      ? {}
-      : { workingMemory: parseWorkingMemory(extracted.workingMemory) }),
+    ...(workingMemory ? { workingMemory } : {}),
   };
 }
