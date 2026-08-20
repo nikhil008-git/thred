@@ -14,7 +14,8 @@ Thred implements cross-session agent memory:
 
 | Dataset | Adapter | Status |
 | --- | --- | --- |
-| LongMemEval | `longmemeval` | Official dataset used: stratified 5-case run, 80.0% Thred vs 60.0% Vector-RAG — see latest report in `apps/evals/reports/` |
+| LongMemEval | `longmemeval` | Official pilot: stratified 5-case run, 80.0% Thred vs 60.0% Vector-RAG — exact sample size disclosed in the report |
+| LongMemEval V2 | `longmemeval-v2` | Successful 44-session / ~128K-token scale case: 100.0% temporal accuracy, 0 eval errors |
 
 ### Reproduce
 

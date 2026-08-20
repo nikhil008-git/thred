@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config as loadEnv } from "dotenv";
@@ -29,6 +29,7 @@ const inputPath = option("--input");
 const workspaceId = option("--workspace");
 const caseId = option("--case-id");
 const hydraWorkspaceId = option("--hydra-workspace");
+const resume = process.argv.includes("--resume");
 const limitValue = option("--limit");
 const limit = limitValue ? Number(limitValue) : undefined;
 const stratifiedValue = option("--stratified");
@@ -107,6 +108,23 @@ async function runWithConcurrency<T>(items: T[], worker: (item: T) => Promise<vo
   }));
 }
 
+type IngestionCheckpoint = { workspaceId: string; completedSessionIds: string[] };
+
+async function loadIngestionCheckpoint(pathname: string, expectedWorkspaceId: string): Promise<IngestionCheckpoint> {
+  if (!resume) {
+    await rm(pathname, { force: true });
+    return { workspaceId: expectedWorkspaceId, completedSessionIds: [] };
+  }
+  try {
+    const checkpoint = JSON.parse(await readFile(pathname, "utf8")) as IngestionCheckpoint;
+    return checkpoint.workspaceId === expectedWorkspaceId
+      ? checkpoint
+      : { workspaceId: expectedWorkspaceId, completedSessionIds: [] };
+  } catch {
+    return { workspaceId: expectedWorkspaceId, completedSessionIds: [] };
+  }
+}
+
 for (const strategy of strategyFilter) {
   const run = await createEvalRun({ workspaceId, dataset, strategy, answerModel: answerModel.name, config: { inputPath, answerJudge: answerJudge.name } });
   console.log(`[${strategy}] run=${run.id} cases=${evalCases.length}`);
@@ -124,7 +142,27 @@ for (const strategy of strategyFilter) {
       if (strategy === "THRED") await waitForHydraDatabase(caseWorkspaceId);
       result = strategy === "VECTOR_RAG"
         ? await runVectorRag(evalCase, answerModel)
-        : await runThred({ evalCase, workspaceId: caseWorkspaceId, extractor, answerModel });
+        : await (async () => {
+          const checkpointDirectory = path.resolve("reports", "checkpoints");
+          await mkdir(checkpointDirectory, { recursive: true });
+          const checkpointPath = path.join(checkpointDirectory, `${dataset}-${evalCase.id}.json`);
+          const checkpoint = await loadIngestionCheckpoint(checkpointPath, caseWorkspaceId);
+          const evaluated = await runThred({
+            evalCase,
+            workspaceId: caseWorkspaceId,
+            extractor,
+            answerModel,
+            resume: {
+              completedSessionIds: checkpoint.completedSessionIds,
+              onSessionComplete: async (sessionId) => {
+                if (!checkpoint.completedSessionIds.includes(sessionId)) checkpoint.completedSessionIds.push(sessionId);
+                await writeFile(checkpointPath, JSON.stringify(checkpoint, null, 2));
+              },
+            },
+          });
+          await rm(checkpointPath, { force: true });
+          return evaluated;
+        })();
       score = await scoreCase(evalCase, result, answerJudge);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

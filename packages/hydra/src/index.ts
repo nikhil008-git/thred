@@ -7,6 +7,7 @@ export {
   workspaceDatabaseId,
 } from "./tenant.js";
 export { writeLongTermMemory } from "./write.js";
+export { writeLongTermMemories } from "./write.js";
 export type {
   LongTermMemoryInput,
   LongTermMemoryKind,

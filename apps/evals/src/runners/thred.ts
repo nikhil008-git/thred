@@ -72,6 +72,10 @@ export async function runThred(input: {
   workspaceId: string;
   extractor: MemoryExtractionModel;
   answerModel: AnswerModel;
+  resume?: {
+    completedSessionIds: string[];
+    onSessionComplete(sessionId: string): Promise<void>;
+  };
 }): Promise<EvaluatedAnswer> {
   const ingestStart = performance.now();
   let writeTokens = 0;
@@ -79,8 +83,10 @@ export async function runThred(input: {
   // Shared across sessions so a fact revised in a later session still resolves
   // against the memory it replaces, without waiting for HydraDB to index.
   const memoryLookup = new CachedMemoryLookup(new HydraMemoryLookup());
+  const completed = new Set(input.resume?.completedSessionIds ?? []);
   for (const session of input.evalCase.sessions) {
     writeTokens += approximateTokens(session.messages.map((message) => message.content).join("\n"));
+    if (completed.has(session.id)) continue;
     const outcome = await ingestSession({
       workspaceId: input.workspaceId,
       sessionId: session.id,
@@ -94,6 +100,7 @@ export async function runThred(input: {
       writtenClaims: outcome.processed.filter((claim) => claim.hydraResponse).length,
       decisions: outcome.processed.map((claim) => claim.decision.operation),
     });
+    await input.resume?.onSessionComplete(session.id);
   }
   const ingestLatencyMs = Math.round(performance.now() - ingestStart);
 
