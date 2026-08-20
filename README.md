@@ -2,7 +2,7 @@
 
 Cross-session agent memory with revision-aware graph storage, first-class abstention, and reproducible LongMemEval benchmarks.
 
-**Track 03 submission:** see [TRACK_03.md](./TRACK_03.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
+**Hack Hydra Track 03 submission:** cross-session memory with revision-aware graph storage, correct abstention, and a reproducible LongMemEval V2 scale evaluation.
 
 ## Quick start
 
@@ -34,18 +34,17 @@ Run an official LongMemEval benchmark (a stratified sample costs roughly $5 or l
 ./scripts/run-remaining-evals.sh
 ```
 
-Paste the headline table from the resulting report into [SUBMISSION.md](./SUBMISSION.md) for judges.
+Use the resulting report in the submission form and demo video.
 
 ## Benchmark results
 
 <!-- LongMemEval is the official evaluation dataset used for this submission. -->
 
-| Dataset | Thred accuracy | Vector-RAG accuracy | Thred wins (temporal / revision / abstention) |
+| Evaluation | Thred | Vector-RAG | Evidence |
 | --- | ---: | ---: | --- |
-| LongMemEval pilot (stratified, 5 cases) | 80.0% | 60.0% | overall accuracy +20.0pp; temporal/revision/abstention tied at 100.0% |
 | LongMemEval V2 scale case | 100.0% | 100.0% | 44 sessions / ~128K tokens; temporal answer correct; 0 eval errors |
 
-Latest reports: `apps/evals/reports/`. We disclose exact sample sizes; the pilot result is not presented as full-dataset accuracy.
+Latest reports: `apps/evals/reports/`. We disclose exact sample sizes and do not present small pilot samples as full-dataset accuracy.
 
 ## How Thred uses HydraDB
 
