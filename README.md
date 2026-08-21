@@ -11,6 +11,11 @@ resumable coding handoffs.
 
 [Live deployment](https://www.thred.fun) · [MIT License](LICENSE)
 
+## Demo
+
+- [Watch the 3-minute demo on YouTube](https://www.youtube.com/watch?v=UfBfyImTVN4)
+- [Demo video and architecture image on Google Drive](https://drive.google.com/drive/folders/1lmTU528e9bDM2fb6-cei-ZJcHYLowsZ2?usp=sharing)
+
 ## The problem
 
 Cross-session agent work breaks down when the relevant information is spread
