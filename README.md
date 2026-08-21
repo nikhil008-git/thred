@@ -11,7 +11,7 @@ resumable coding handoffs.
 
 [Live deployment](https://www.thred.fun) · [MIT License](LICENSE)
 
-![Thred architecture: sessions are checkpointed, converted into evidence-backed claims and revision relationships, retrieved through hybrid graph retrieval, then either returned as grounded context or safely abstained.](docs/assets/thred-architecture.png)
+![Thred architecture: sessions become evidence-backed claims and revision relationships in HydraDB; hybrid retrieval and temporal ranking return grounded context or safely abstain.](docs/assets/thred-architecture.svg)
 
 ## The problem
 
@@ -34,14 +34,12 @@ treats abstention as a first-class result rather than an edge case.
 Thred exposes a small MCP toolset that lets agents share memory regardless of
 which client they use:
 
-| Tool                | What it does                                                                                 |
-| ------------------- | -------------------------------------------------------------------------------------------- |
-| `thread_remember`   | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
-| `thread_context`    | Retrieves verified long-term context relevant to a question.                                 |
-| `thread_history`    | Shows the chronological revision history for a fact or entity.                               |
-| `thread_inspect`    | Traverses a memory’s provenance and graph relationships.                                     |
-| `thread_checkpoint` | Saves coding progress and extracts durable project memory.                                   |
-| `thread_resume`     | Restores the latest unfinished handoff for the next agent.                                   |
+| Tool              | What it does                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `thread_remember` | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
+| `thread_context`  | Retrieves verified long-term context relevant to a question.                                 |
+| `thread_history`  | Shows the chronological revision history for a fact or entity.                               |
+| `thread_inspect`  | Traverses a memory’s provenance and graph relationships.                                     |
 
 An agent can save “we chose PostgreSQL,” another can later replace it with
 “we chose Neon Postgres,” and a third can ask both what is true now and why the
@@ -49,8 +47,7 @@ decision changed. The earlier claim is retained; it is never silently erased.
 
 ## Architecture
 
-1. An agent checkpoint or session is processed into atomic, evidence-backed
-   claims.
+1. An agent session is processed into atomic, evidence-backed claims.
 2. Claims are stored with workspace, session, source-message, entity, and file
    provenance.
 3. When a claim changes, Thred writes an explicit `SUPERSEDES` relationship to
@@ -79,15 +76,16 @@ same answer model. The official datasets are [LongMemEval](https://github.com/xi
 [LongMemEval V2](https://github.com/xiaowu0162/LongMemEval-V2), and
 [BEAM](https://github.com/mohammadtavakoli78/BEAM).
 
-| Evaluation                              | Vector-RAG |     Thred | What it demonstrates                                                               |
-| --------------------------------------- | ---------: | --------: | ---------------------------------------------------------------------------------- |
-| LongMemEval stratified sample (5 cases) |      60.0% | **80.0%** | +20pp accuracy; 100% temporal, revision, and abstention accuracy in the sample.    |
-| LongMemEval V2 scale case               |     100.0% |    100.0% | Correct temporal answer across 44 sessions / ~128K tokens; zero evaluation errors. |
+| Evaluation                | Vector-RAG |  Thred | What it demonstrates                                                               |
+| ------------------------- | ---------: | -----: | ---------------------------------------------------------------------------------- |
+| LongMemEval V2 scale case |     100.0% | 100.0% | Correct temporal answer across 44 sessions / ~128K tokens; zero evaluation errors. |
 
 Reports are committed under [`apps/evals/reports`](apps/evals/reports). Sample
 sizes are disclosed in each report; they are not presented as full-dataset
-accuracy. Thred deliberately accepts extra extraction and graph-retrieval cost
-in exchange for revision-aware, provenance-backed memory.
+accuracy. In an early five-case LongMemEval stratified run, Thred scored 80.0%
+against 60.0% for the vector baseline; this is directional only, not a
+full-dataset claim. Thred deliberately accepts extra extraction and graph-
+retrieval cost in exchange for revision-aware, provenance-backed memory.
 
 ## Run locally
 
@@ -141,9 +139,7 @@ client such as Cursor, Claude Code, Codex, or OpenCode:
 }
 ```
 
-Use the same Thred key in each client to demonstrate a real handoff: one agent
-checkpoints progress and another calls `thread_resume` and `thread_context` in a
-new session.
+Use the same Thred key in each client to access the same workspace memory.
 
 ## Run tests and evaluations
 

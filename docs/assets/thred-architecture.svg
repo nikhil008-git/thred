@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">Thred memory architecture</title>
+  <desc id="desc">Sessions become evidence-backed claims and revision edges in a HydraDB memory graph. Hybrid retrieval and temporal ranking return grounded context or NOT_FOUND.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#475569"/></marker>
+    <style>
+      .heading { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 22px Arial, sans-serif; fill: #ffffff; text-anchor: middle; dominant-baseline: middle; }
+      .detail { font: 500 18px Arial, sans-serif; fill: #334155; text-anchor: middle; }
+      .small { font: 600 16px Arial, sans-serif; fill: #64748b; text-anchor: middle; }
+      .group { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 22; }
+      .arrow { stroke: #475569; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1600" height="980" fill="#ffffff"/>
+  <text x="800" y="62" class="heading" text-anchor="middle">Thred · Revision-aware agent memory</text>
+
+  <rect x="70" y="120" width="410" height="290" class="group"/>
+  <text x="275" y="160" class="heading" text-anchor="middle">Write path</text>
+  <rect x="155" y="195" width="240" height="62" rx="10" fill="#2563eb"/>
+  <text x="275" y="226" class="label">Agent sessions</text>
+  <text x="275" y="284" class="small">facts · decisions · preferences</text>
+  <rect x="155" y="305" width="240" height="62" rx="10" fill="#2563eb"/>
+  <text x="275" y="336" class="label">Claim extractor</text>
+  <path d="M275 257 L275 305" class="arrow"/>
+  <rect x="155" y="370" width="240" height="62" rx="10" fill="#f97316"/>
+  <text x="275" y="401" class="label">Revision resolver</text>
+  <path d="M275 367 L275 370" class="arrow"/>
+
+  <rect x="585" y="120" width="500" height="290" class="group"/>
+  <text x="835" y="160" class="heading" text-anchor="middle">HydraDB memory graph</text>
+  <rect x="630" y="205" width="170" height="70" rx="10" fill="#7c3aed"/>
+  <text x="715" y="240" class="label">Memory nodes</text>
+  <rect x="870" y="205" width="170" height="70" rx="10" fill="#7c3aed"/>
+  <text x="955" y="240" class="label">Provenance</text>
+  <rect x="750" y="315" width="170" height="70" rx="10" fill="#7c3aed"/>
+  <text x="835" y="350" class="label">SUPERSEDES</text>
+  <path d="M800 240 L870 240" class="arrow"/>
+  <path d="M755 275 L800 315" class="arrow"/>
+  <path d="M955 275 L880 315" class="arrow"/>
+  <text x="835" y="402" class="small">claims retain source messages, entities, files, and revisions</text>
+  <path d="M395 401 C480 401 510 350 585 350" class="arrow"/>
+
+  <rect x="1180" y="120" width="350" height="290" class="group"/>
+  <text x="1355" y="160" class="heading" text-anchor="middle">Retrieval</text>
+  <rect x="1230" y="205" width="250" height="62" rx="10" fill="#2563eb"/>
+  <text x="1355" y="236" class="label">Hybrid retrieval</text>
+  <rect x="1230" y="300" width="250" height="62" rx="10" fill="#f97316"/>
+  <text x="1355" y="331" class="label">Temporal ranking</text>
+  <path d="M1355 267 L1355 300" class="arrow"/>
+  <path d="M1085 270 C1130 270 1150 235 1230 235" class="arrow"/>
+
+  <rect x="245" y="560" width="1110" height="290" class="group"/>
+  <text x="800" y="605" class="heading" text-anchor="middle">Evidence gate and answer</text>
+  <path d="M1355 362 C1355 460 1170 475 1030 560" class="arrow"/>
+  <polygon points="800,640 910,710 800,780 690,710" fill="#f97316"/>
+  <text x="800" y="700" class="label">Sufficient evidence?</text>
+  <path d="M690 710 L465 710" class="arrow"/>
+  <text x="575" y="688" class="small">no</text>
+  <rect x="315" y="795" width="210" height="62" rx="10" fill="#dc2626"/>
+  <text x="420" y="826" class="label">NOT_FOUND</text>
+  <path d="M910 710 L1135 710" class="arrow"/>
+  <text x="1025" y="688" class="small">yes</text>
+  <rect x="1060" y="675" width="230" height="62" rx="10" fill="#16a34a"/>
+  <text x="1175" y="706" class="label">Grounded context</text>
+  <rect x="1060" y="795" width="230" height="62" rx="10" fill="#2563eb"/>
+  <text x="1175" y="826" class="label">Answer</text>
+  <path d="M1175 737 L1175 795" class="arrow"/>
+</svg>
