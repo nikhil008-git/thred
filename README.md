@@ -1,10 +1,103 @@
 # Thred
 
-Cross-session agent memory with revision-aware graph storage, first-class abstention, and reproducible LongMemEval benchmarks.
+**Revision-aware, cross-session memory for AI agents.**
 
-**Hack Hydra Track 03 submission:** cross-session memory with revision-aware graph storage, correct abstention, and a reproducible LongMemEval V2 scale evaluation.
+> Hack Hydra 2026 · Track 03: Memory + Context Retrieval
 
-## Quick start
+Thred is a durable memory layer for agents working across Cursor, Claude Code,
+Codex, and OpenCode. It turns long, fragmented chat histories into verifiable
+memory: decisions, facts, preferences, source evidence, revisions, and
+resumable coding handoffs.
+
+![Thred architecture: sessions are checkpointed, converted into evidence-backed claims and revision relationships, retrieved through hybrid graph retrieval, then either returned as grounded context or safely abstained.](docs/assets/thred-architecture.png)
+
+## The problem
+
+Cross-session agent work breaks down when the relevant information is spread
+across dozens of conversations. Track 03 workloads can span 30–40 sessions and
+more than 115K tokens per question. A useful memory layer has to do more than
+retrieve semantically similar text:
+
+- combine facts from many sessions while retaining chronology;
+- represent facts that changed or were overwritten;
+- show where an answer came from; and
+- return `NOT_FOUND` when the answer is not supported by the history.
+
+This last behavior is crucial. Long-context models can lose accuracy on these
+tasks by inventing an answer for information that was never present. Thred
+treats abstention as a first-class result rather than an edge case.
+
+## What we built
+
+Thred exposes a small MCP toolset that lets agents share memory regardless of
+which client they use:
+
+| Tool                | What it does                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `thread_remember`   | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
+| `thread_context`    | Retrieves verified long-term context relevant to a question.                                 |
+| `thread_history`    | Shows the chronological revision history for a fact or entity.                               |
+| `thread_inspect`    | Traverses a memory’s provenance and graph relationships.                                     |
+| `thread_checkpoint` | Saves coding progress and extracts durable project memory.                                   |
+| `thread_resume`     | Restores the latest unfinished handoff for the next agent.                                   |
+
+An agent can save “we chose PostgreSQL,” another can later replace it with
+“we chose Neon Postgres,” and a third can ask both what is true now and why the
+decision changed. The earlier claim is retained; it is never silently erased.
+
+## Architecture
+
+1. An agent checkpoint or session is processed into atomic, evidence-backed
+   claims.
+2. Claims are stored with workspace, session, source-message, entity, and file
+   provenance.
+3. When a claim changes, Thred writes an explicit `SUPERSEDES` relationship to
+   the prior claim.
+4. At query time, hybrid retrieval and graph context find candidate evidence.
+5. A temporal resolver selects current or historical facts as requested.
+6. If the evidence is insufficient, the answer is `NOT_FOUND`—never a guess.
+
+## Why HydraDB matters
+
+HydraDB is Thred’s durable long-term memory layer, not an optional vector-search
+add-on. It stores the claims and their relationships, including session/source
+provenance, entities, files, and `SUPERSEDES` edges. Thred uses HydraDB hybrid
+retrieval with graph context to recover relevant evidence, then traverses those
+links to explain revisions and answer temporal questions.
+
+This graph-backed model is what makes “what changed?”, “what was true then?”,
+and “what evidence supports this?” reliable. A vector store alone can surface
+similar passages, but does not natively preserve revision history or connected
+provenance.
+
+## Benchmarks
+
+We evaluate Thred against a deterministic hashed-vector RAG baseline using the
+same answer model. The official datasets are [LongMemEval](https://github.com/xiaowu0162/LongMemEval),
+[LongMemEval V2](https://github.com/xiaowu0162/LongMemEval-V2), and
+[BEAM](https://github.com/mohammadtavakoli78/BEAM).
+
+| Evaluation                              | Vector-RAG |     Thred | What it demonstrates                                                               |
+| --------------------------------------- | ---------: | --------: | ---------------------------------------------------------------------------------- |
+| LongMemEval stratified sample (5 cases) |      60.0% | **80.0%** | +20pp accuracy; 100% temporal, revision, and abstention accuracy in the sample.    |
+| LongMemEval V2 scale case               |     100.0% |    100.0% | Correct temporal answer across 44 sessions / ~128K tokens; zero evaluation errors. |
+
+Reports are committed under [`apps/evals/reports`](apps/evals/reports). Sample
+sizes are disclosed in each report; they are not presented as full-dataset
+accuracy. Thred deliberately accepts extra extraction and graph-retrieval cost
+in exchange for revision-aware, provenance-backed memory.
+
+## Run locally
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- HydraDB API key
+- A model provider key: Groq or OpenAI
+
+Create a `.env` file with `DATABASE_URL`, `HYDRA_DB_API_KEY`, and either
+`GROQ_API_KEY` or `OPENAI_API_KEY`.
 
 ```bash
 npm install
@@ -13,9 +106,40 @@ npm run db:migrate --workspace=@repo/db
 npm run dev
 ```
 
-Configure `.env` with `DATABASE_URL`, `HYDRA_DB_API_KEY`, and a model provider key (`GROQ_API_KEY` or `OPENAI_API_KEY`).
+### Connect an MCP client
 
-## Run evals
+Create a Thred agent key in the dashboard, then add the following to an MCP
+client such as Cursor, Claude Code, Codex, or OpenCode:
+
+```json
+{
+  "mcpServers": {
+    "thred": {
+      "command": "npx",
+      "args": ["-y", "@thred_nick_01/thred-mcp"],
+      "env": {
+        "THRED_API_KEY": "thrd_sk_…",
+        "THRED_API_URL": "https://api.thred.fun"
+      }
+    }
+  }
+}
+```
+
+Use the same Thred key in each client to demonstrate a real handoff: one agent
+checkpoints progress and another calls `thread_resume` and `thread_context` in a
+new session.
+
+## Run tests and evaluations
+
+```bash
+npm run test --workspace=@repo/evals
+npm run test --workspace=@repo/memory-extractor
+npm run test --workspace=@repo/memory-engine
+```
+
+To run an official dataset locally, download its JSON first and supply its
+absolute path:
 
 ```bash
 npm run eval --workspace=@repo/evals -- \
@@ -26,56 +150,19 @@ npm run eval --workspace=@repo/evals -- \
   --concurrency 1
 ```
 
-Reports: `apps/evals/reports/` (each file includes a **Track 03 headline** section showing Thred vs Vector-RAG wins).
+The evaluator persists results and writes a timestamped Markdown report to
+`apps/evals/reports/`. See [`apps/evals/README.md`](apps/evals/README.md) for
+available datasets and flags.
 
-Run an official LongMemEval benchmark (a stratified sample costs roughly $5 or less with `gpt-4o-mini`):
+## Tech stack
 
-```bash
-./scripts/run-remaining-evals.sh
-```
-
-Use the resulting report in the submission form and demo video.
-
-## Benchmark results
-
-<!-- LongMemEval is the official evaluation dataset used for this submission. -->
-
-| Evaluation | Thred | Vector-RAG | Evidence |
-| --- | ---: | ---: | --- |
-| LongMemEval V2 scale case | 100.0% | 100.0% | 44 sessions / ~128K tokens; temporal answer correct; 0 eval errors |
-
-Latest reports: `apps/evals/reports/`. We disclose exact sample sizes and do not present small pilot samples as full-dataset accuracy.
-
-## How Thred uses HydraDB
-
-HydraDB is Thred's durable long-term memory layer, not an optional vector-search add-on.
-
-1. Each session is extracted into atomic, evidence-backed memory claims.
-2. HydraDB stores those claims together with their session, source-message, entity, and file provenance.
-3. When a fact changes, Thred records an explicit `SUPERSEDES` relation rather than deleting the older fact. This supports both current-state and historical questions.
-4. At query time, Thred uses HydraDB hybrid retrieval plus graph context, ranks the retrieved evidence by relevance and event time, and abstains with `NOT_FOUND` when evidence is insufficient.
-
-Without HydraDB, Thred would lose its connected revision history, provenance traversal, and temporal graph retrieval; a plain vector store cannot represent those relationships reliably.
-
-## Monorepo
-
-| App / Package | Role |
-| --- | --- |
-| `apps/mcp` | MCP tools: remember, context, history, checkpoint, resume |
-| `apps/evals` | LongMemEval / BEAM runners + Vector-RAG baseline |
-| `packages/memory-engine` | Extraction pipeline, revision resolver, abstention |
-| `packages/hydra` | HydraDB long-term memory adapter |
-
-## Tests
-
-```bash
-npm run test --workspace=@repo/evals
-npm run test --workspace=@repo/memory-extractor
-npm run test --workspace=@repo/memory-engine
-```
+TypeScript, Node.js, Express, Next.js, React, Model Context Protocol (MCP),
+HydraDB, Prisma/PostgreSQL, and OpenAI/Groq-compatible model providers.
 
 ## Attribution
 
-- [HydraDB](https://github.com/hydra-db/hydradb) provides the graph-backed long-term memory store used by Thred.
-- [LongMemEval](https://github.com/xiaowu0162/LongMemEval) and [LongMemEval V2](https://github.com/xiaowu0162/LongMemEval-V2) provide the evaluation data; datasets remain outside this repository.
-- OpenAI `gpt-4o-mini` was used as the configured extraction, answer, and evaluation-judge model for the reproducible benchmark runs.
+- [HydraDB](https://github.com/hydra-db/hydradb) provides the graph-backed
+  long-term memory store.
+- [LongMemEval](https://github.com/xiaowu0162/LongMemEval),
+  [LongMemEval V2](https://github.com/xiaowu0162/LongMemEval-V2), and
+  [BEAM](https://github.com/mohammadtavakoli78/BEAM) provide evaluation data.
