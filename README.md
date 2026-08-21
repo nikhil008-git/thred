@@ -11,8 +11,6 @@ resumable coding handoffs.
 
 [Live deployment](https://www.thred.fun) · [MIT License](LICENSE)
 
-![Thred architecture: sessions become evidence-backed claims and revision relationships in HydraDB; hybrid retrieval and temporal ranking return grounded context or safely abstain.](docs/assets/thred-architecture.svg)
-
 ## The problem
 
 Cross-session agent work breaks down when the relevant information is spread
