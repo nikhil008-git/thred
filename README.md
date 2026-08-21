@@ -32,6 +32,15 @@ This last behavior is crucial. Long-context models can lose accuracy on these
 tasks by inventing an answer for information that was never present. Thred
 treats abstention as a first-class result rather than an edge case.
 
+In a typical local-agent workflow, a developer can copy and paste the most
+recent session into the next agent’s prompt. That is useful for a short
+handoff, but it breaks down across 30–40 sessions: the prompt becomes too long,
+older facts are missed, and an agent may confuse a superseded decision with the
+current one. Thred turns those sessions into atomic, provenance-backed facts;
+keeps outdated facts as history with explicit `SUPERSEDES` links; and returns
+`NOT_FOUND` when the evidence does not support an answer, rather than
+hallucinating one.
+
 ## What we built
 
 Thred exposes a small MCP toolset that lets agents share memory regardless of
