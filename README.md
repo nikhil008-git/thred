@@ -9,6 +9,8 @@ Codex, and OpenCode. It turns long, fragmented chat histories into verifiable
 memory: decisions, facts, preferences, source evidence, revisions, and
 resumable coding handoffs.
 
+[Live deployment](https://www.thred.fun) · [MIT License](LICENSE)
+
 ![Thred architecture: sessions are checkpointed, converted into evidence-backed claims and revision relationships, retrieved through hybrid graph retrieval, then either returned as grounded context or safely abstained.](docs/assets/thred-architecture.png)
 
 ## The problem
@@ -96,8 +98,21 @@ in exchange for revision-aware, provenance-backed memory.
 - HydraDB API key
 - A model provider key: Groq or OpenAI
 
-Create a `.env` file with `DATABASE_URL`, `HYDRA_DB_API_KEY`, and either
-`GROQ_API_KEY` or `OPENAI_API_KEY`.
+`npm install` installs every repository dependency through the npm workspace
+lockfile. Create a `.env` file for the services you intend to run:
+
+| Variable                                   | Required for                    | Notes                                             |
+| ------------------------------------------ | ------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`                             | API, frontend, evaluations      | PostgreSQL connection string.                     |
+| `HYDRA_DB_API_KEY`                         | API, memory engine, evaluations | HydraDB access token.                             |
+| `OPENAI_API_KEY` or `GROQ_API_KEY`         | Extraction and evaluations      | Configure at least one provider.                  |
+| `BETTER_AUTH_SECRET`                       | Web authentication              | Signing/encryption secret.                        |
+| `BETTER_AUTH_URL`, `FRONTEND_ORIGIN`       | Web authentication              | Local defaults point to `http://localhost:3000`.  |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in                  | Required only when Google auth is enabled.        |
+| `PORT`, `NEXT_PUBLIC_API_URL`              | Local development               | Optional API port and frontend API URL overrides. |
+
+For MCP clients, configure `THRED_API_KEY`; `THRED_API_URL` is optional and
+defaults to the production API URL.
 
 ```bash
 npm install
@@ -159,6 +174,20 @@ available datasets and flags.
 TypeScript, Node.js, Express, Next.js, React, Model Context Protocol (MCP),
 HydraDB, Prisma/PostgreSQL, and OpenAI/Groq-compatible model providers.
 
+## Public submission checklist
+
+- **Complete source code:** this public monorepo contains the frontend, API,
+  MCP server, memory engine, HydraDB adapter, tests, and evaluation runners.
+- **Setup and run instructions:** see [Run locally](#run-locally), MCP setup,
+  and [Run tests and evaluations](#run-tests-and-evaluations).
+- **Dependencies and environment:** npm workspaces lock dependencies; required
+  and optional environment variables are listed above.
+- **Open-source license:** released under the [MIT License](LICENSE).
+- **Commit eligibility:** the first participant-authored commit is dated
+  August 14, 2026, after the August 12, 2026 cutoff.
+- **No access request needed:** the repository, live deployment, architecture,
+  setup instructions, evaluation reports, and attribution are public.
+
 ## Attribution
 
 - [HydraDB](https://github.com/hydra-db/hydradb) provides the graph-backed
@@ -166,3 +195,5 @@ HydraDB, Prisma/PostgreSQL, and OpenAI/Groq-compatible model providers.
 - [LongMemEval](https://github.com/xiaowu0162/LongMemEval),
   [LongMemEval V2](https://github.com/xiaowu0162/LongMemEval-V2), and
   [BEAM](https://github.com/mohammadtavakoli78/BEAM) provide evaluation data.
+- OpenAI `gpt-4o-mini` was used as the configured extraction, answer, and
+  evaluation-judge model for the reproducible benchmark runs.
