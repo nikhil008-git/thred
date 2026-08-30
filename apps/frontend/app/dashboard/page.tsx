@@ -963,7 +963,7 @@ function DashboardContent({
   return (
     <main className={`${isHeroPreview ? "grid h-[1100px] min-h-0 grid-cols-[224px_minmax(0,1fr)] overflow-hidden" : "min-h-screen lg:grid lg:grid-cols-[224px_minmax(0,1fr)]"} bg-[#f1f2f0] text-[#242622]`}>
       {!isHeroPreview && <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />}
-      <aside className={`flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 ${isHeroPreview ? "relative h-full min-h-full w-auto translate-x-0 shadow-none" : `fixed inset-y-0 left-0 z-50 min-h-screen shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}`}>
+      <aside className={`flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 ${isHeroPreview ? "relative h-full min-h-full w-auto translate-x-0 shadow-none" : `fixed top-[var(--beta-banner-height)] bottom-0 left-0 z-50 min-h-0 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-[var(--beta-banner-height)] lg:z-auto lg:h-[calc(100vh-var(--beta-banner-height))] lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}`}>
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -1170,7 +1170,7 @@ function DashboardContent({
         </div>
       </aside>
       <section className="min-w-0 bg-white">
-        <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-2 bg-[#f1f2f0] px-4 sm:px-5 lg:justify-end lg:px-8">
+        <header className={`sticky z-10 flex h-12 items-center justify-between gap-2 bg-[#f1f2f0] px-4 sm:px-5 lg:justify-end lg:px-8 ${isHeroPreview ? "top-0" : "top-[var(--beta-banner-height)]"}`}>
           <div className="flex items-center gap-2 lg:hidden">
             <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#4d534c] transition hover:bg-[#e3e7e1]">
               <Menu className="size-4" />
