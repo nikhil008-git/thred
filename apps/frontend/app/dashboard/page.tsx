@@ -1,30 +1,24 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
-  BookOpen,
   Check,
   ChevronDown,
   CircleCheck,
   Copy,
-  GitFork,
   KeyRound,
-  LayoutDashboard,
   Layers3,
   Link2,
-  LogOut,
   Menu,
-  MessageSquareText,
-  Settings,
-  SlidersHorizontal,
-  X,
 } from "lucide-react";
 import { SiClaude, SiCursor, SiModelcontextprotocol } from "react-icons/si";
 import { signOut, useSession } from "@/lib/auth-client";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { useClickOutside } from "@/lib/use-click-outside";
 
 const MCP_PACKAGE = "@thred_nick_01/thred-mcp";
 const DEFAULT_PRODUCTION_MCP_API_URL = "https://api.thred.fun";
@@ -152,6 +146,23 @@ function Mark({ className = "size-8 shrink-0" }: { className?: string }) {
   );
 }
 
+/** Outline Thred glyph for small icon buttons (matches key / MCP stroke style). */
+function MarkGlyph({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 28 28" className={className} fill="none">
+      <path
+        d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="7.25" cy="9.1" r="1.55" fill="currentColor" />
+      <circle cx="20.75" cy="20.57" r="1.55" fill="currentColor" />
+    </svg>
+  );
+}
+
 function HydraMark() {
   return (
     <span
@@ -188,9 +199,9 @@ function DashboardSkeleton() {
     <main
       aria-busy="true"
       aria-label="Loading dashboard"
-      className="min-h-screen bg-white text-[#242622] lg:grid lg:grid-cols-[224px_minmax(0,1fr)]"
+      className="min-h-screen bg-white text-[#242622]"
     >
-      <aside className="hidden min-h-screen bg-[#f1f2f0] px-4 py-3 lg:block">
+      <aside className="fixed top-0 bottom-0 left-0 hidden w-[18rem] bg-[#f1f2f0] px-4 py-3 lg:block">
         <div className="flex items-center gap-2.5 px-2">
           <div className="size-8 animate-pulse rounded-[8px] bg-[#dfe2dd]" />
           <div className="h-5 w-12 animate-pulse rounded bg-[#dfe2dd]" />
@@ -206,7 +217,7 @@ function DashboardSkeleton() {
           <div className="h-9 animate-pulse rounded-[9px] bg-[#e5e7e3]" />
         </div>
       </aside>
-      <section className="min-w-0 bg-white">
+      <section className="min-w-0 bg-white lg:ml-[18rem]">
         <header className="h-12 bg-[#f1f2f0]" />
         <div className="min-h-[calc(100vh-48px)] rounded-tl-[80px] bg-white">
           <div className="mx-auto max-w-[940px] px-7 py-14 sm:px-12 sm:py-16">
@@ -811,7 +822,11 @@ function DashboardContent({
   const [workspace, setWorkspace] = useState<Workspace | null>(isHeroPreview ? heroPreviewWorkspace : null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
+  const [sidebarWorkspaceOpen, setSidebarWorkspaceOpen] = useState(false);
+  const [settingsWorkspaceOpen, setSettingsWorkspaceOpen] = useState(false);
+  const sidebarWorkspaceRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const settingsWorkspaceRef = useRef<HTMLDivElement>(null);
   const [overview, setOverview] = useState<Overview | null>(isHeroPreview ? heroPreviewOverview : null);
   const [view, setView] = useState<View>(initialView);
   const [loading, setLoading] = useState(!isHeroPreview);
@@ -893,7 +908,20 @@ function DashboardContent({
 
   useEffect(() => {
     setMobileNavOpen(false);
+    setSidebarWorkspaceOpen(false);
+    setSettingsWorkspaceOpen(false);
+    setAccountMenuOpen(false);
   }, [view]);
+
+  const closeMenus = () => {
+    setSidebarWorkspaceOpen(false);
+    setSettingsWorkspaceOpen(false);
+    setAccountMenuOpen(false);
+  };
+
+  useClickOutside(sidebarWorkspaceRef, () => setSidebarWorkspaceOpen(false), sidebarWorkspaceOpen);
+  useClickOutside(accountMenuRef, () => setAccountMenuOpen(false), accountMenuOpen);
+  useClickOutside(settingsWorkspaceRef, () => setSettingsWorkspaceOpen(false), settingsWorkspaceOpen);
 
   const createWorkspace = async () => {
     const name = workspaceName.trim();
@@ -961,215 +989,33 @@ function DashboardContent({
   if (!isHeroPreview && !workspace) return <DashboardSkeleton />;
   if (!workspace) return null;
   return (
-    <main className={`${isHeroPreview ? "grid h-[1100px] min-h-0 grid-cols-[224px_minmax(0,1fr)] overflow-hidden" : "min-h-screen lg:grid lg:grid-cols-[224px_minmax(0,1fr)]"} bg-[#f1f2f0] text-[#242622]`}>
+    <main
+      data-hero-preview={isHeroPreview ? "true" : undefined}
+      className={`${isHeroPreview ? "grid h-[1100px] min-h-0 grid-cols-[18rem_minmax(0,1fr)] overflow-hidden" : "min-h-screen"} bg-[#f1f2f0] text-[#242622]`}
+    >
       {!isHeroPreview && <button type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} className={`fixed inset-0 z-40 bg-[#172018]/20 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:hidden ${mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} />}
-      <aside className={`flex w-[280px] flex-col bg-[#f1f2f0] px-4 py-3 ${isHeroPreview ? "relative h-full min-h-full w-auto translate-x-0 shadow-none" : `fixed top-[var(--beta-banner-height)] bottom-0 left-0 z-50 min-h-0 shadow-[18px_0_50px_rgba(20,28,22,.18)] transition-transform duration-300 ease-out will-change-transform ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} lg:sticky lg:top-[var(--beta-banner-height)] lg:z-auto lg:h-[calc(100vh-var(--beta-banner-height))] lg:w-auto lg:min-h-0 lg:translate-x-0 lg:self-start lg:overflow-y-auto lg:shadow-none`}`}>
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 px-2 text-[19px] font-semibold tracking-[-.07em]"
-          >
-            <Mark />
-            thred
-          </Link>
-          <button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#666c64] hover:bg-[#e2e6e0] lg:hidden"><X className="size-4" /></button>
-        </div>
-        <div className="mt-8">
-          <p className="px-2 text-[10px] font-medium text-[#5f635d]">
-            Workspace
-          </p>
-          <nav className="mt-2 space-y-0.5">
-            <button
-              onClick={() => setView("overview")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors ${view === "overview" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#eff1ee] hover:text-[#20221f]"}`}
-            >
-              <LayoutDashboard
-                className="size-4 text-[#7b8079]"
-                strokeWidth={1.8}
-              />
-              Overview
-            </button>
-            <button
-              onClick={() => setView("handoffs")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors ${view === "handoffs" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#eff1ee] hover:text-[#20221f]"}`}
-            >
-              <GitFork className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              Handoffs
-            </button>
-          </nav>
-        </div>
-        <div className="mt-8">
-          <p className="px-2 text-[10px] font-medium text-[#5f635d]">
-            Configure
-          </p>
-          <nav className="mt-2 space-y-0.5">
-            <button
-              onClick={() => setView("mcp")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "mcp" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <SiModelcontextprotocol className="size-4 shrink-0 text-[#4f544e]" />
-              MCP connection
-            </button>
-            <button
-              onClick={() => setView("apiKeys")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "apiKeys" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <KeyRound className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              Thred agent keys
-            </button>
-            <button
-              onClick={() => setView("providers")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "providers" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <SlidersHorizontal className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              BYOK providers
-            </button>
-            <button
-              onClick={() => setView("prompts")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "prompts" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <MessageSquareText
-                className="size-4 text-[#7b8079]"
-                strokeWidth={1.8}
-              />
-              Agent instructions
-            </button>
-          </nav>
-        </div>
-        <div className="mt-7">
-          <p className="px-2 text-[10px] font-medium text-[#5f635d]">
-            Documentation
-          </p>
-          <nav>
-            <button
-              onClick={() => setView("docs")}
-              className={`mt-2 flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors ${view === "docs" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <BookOpen className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              Docs
-            </button>
-          </nav>
-        </div>
-        <div className="mt-7">
-          <p className="px-2 text-[10px] font-medium text-[#5f635d]">
-            Workspace
-          </p>
-          <nav className="mt-2 space-y-0.5">
-            <button
-              onClick={() => setView("settings")}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2.5 text-left text-[11px] transition-colors duration-150 ${view === "settings" ? "bg-[#e5e6e4] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#e8ebe7] hover:text-[#20221f]"}`}
-            >
-              <Settings className="size-4 text-[#7b8079]" strokeWidth={1.8} />
-              Settings
-            </button>
-          </nav>
-        </div>
-        <div className="mt-auto pt-8">
-          <div className="relative mb-2">
-            {workspaceSwitcherOpen && (
-              <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-30 overflow-hidden rounded-[13px] border border-[#e2e5e0] bg-white p-1.5 shadow-[0_12px_28px_rgba(29,40,31,.13)]">
-                {workspaces.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setWorkspace(item);
-                      setWorkspaceSwitcherOpen(false);
-                    }}
-                    className={`flex w-full cursor-pointer items-center rounded-[8px] px-2.5 py-2 text-left text-[11px] transition-colors ${item.id === workspace.id ? "bg-[#eef0ed] font-medium text-[#20221f]" : "text-[#656963] hover:bg-[#f4f5f2] hover:text-[#20221f]"}`}
-                  >
-                    <span className="truncate">{item.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => setWorkspaceSwitcherOpen((open) => !open)}
-              className={`flex w-full cursor-pointer items-center gap-2 rounded-[9px] bg-[#e8ebe7] px-2 py-1.5 text-left text-[11px] transition-colors hover:bg-[#e1e5df] ${workspaceSwitcherOpen ? "bg-[#e1e5df]" : ""}`}
-              aria-expanded={workspaceSwitcherOpen}
-              aria-haspopup="menu"
-            >
-              <span className="grid size-5 shrink-0 place-items-center rounded-[5px] bg-white/80 text-[#6d746b]">
-                <Layers3 className="size-3" strokeWidth={1.8} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[#5f645d]">
-                {workspace.name}
-              </span>
-              <ChevronDown
-                className={`size-3 shrink-0 text-[#777c75] transition-transform duration-200 ${workspaceSwitcherOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          </div>
-          <div className="relative">
-            {accountMenuOpen && (
-              <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-30 rounded-[13px] border border-[#e2e5e0] bg-white p-2 shadow-[0_12px_28px_rgba(29,40,31,.13)]">
-                <div className="px-2 pb-2">
-                  <p className="min-w-0 truncate text-[11px] font-medium text-[#252824]">
-                    {accountName}
-                  </p>
-                </div>
-                <div className="space-y-0.5 border-t border-[#eceeea] pt-1">
-                  <button
-                    onClick={() => {
-                      setAccountMenuOpen(false);
-                      setView("settings");
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[10px] text-[#60645e] hover:bg-[#f4f5f2] hover:text-[#20221f]"
-                  >
-                    <span className="grid size-4 shrink-0 place-items-center">
-                      <SlidersHorizontal className="size-3.5" />
-                    </span>
-                    Workspace settings
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAccountMenuOpen(false);
-                      setView("apiKeys");
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[10px] text-[#60645e] hover:bg-[#f4f5f2] hover:text-[#20221f]"
-                  >
-                    <span className="grid size-4 shrink-0 place-items-center">
-                      <KeyRound className="size-3.5" />
-                    </span>
-                    Thred agent keys
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAccountMenuOpen(false);
-                      setView("providers");
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[10px] text-[#60645e] hover:bg-[#f4f5f2] hover:text-[#20221f]"
-                  >
-                    <span className="grid size-4 shrink-0 place-items-center"><SlidersHorizontal className="size-3.5" /></span>
-                    BYOK providers
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await signOut();
-                      router.replace("/");
-                    }}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[10px] text-[#60645e] hover:bg-[#f4f5f2] hover:text-[#20221f]"
-                  >
-                    <span className="grid size-4 shrink-0 place-items-center">
-                      <LogOut className="size-3.5" />
-                    </span>
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => setAccountMenuOpen((open) => !open)}
-              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-left text-[11px] text-[#656963] transition-colors hover:bg-[#e7eae5] ${accountMenuOpen ? "bg-[#e7eae5]" : ""}`}
-            >
-              <span className="min-w-0 flex-1 truncate">{accountName}</span>
-              <ChevronDown
-                className={`size-3 transition-transform duration-200 ${accountMenuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          </div>
-        </div>
-      </aside>
-      <section className="min-w-0 bg-white">
+      <DashboardSidebar
+        isHeroPreview={isHeroPreview}
+        mobileNavOpen={mobileNavOpen}
+        onMobileNavClose={() => setMobileNavOpen(false)}
+        view={view}
+        onViewChange={setView}
+        workspace={workspace}
+        workspaces={workspaces}
+        onWorkspaceChange={setWorkspace}
+        accountName={accountName}
+        sidebarWorkspaceOpen={sidebarWorkspaceOpen}
+        setSidebarWorkspaceOpen={setSidebarWorkspaceOpen}
+        sidebarWorkspaceRef={sidebarWorkspaceRef}
+        accountMenuOpen={accountMenuOpen}
+        setAccountMenuOpen={setAccountMenuOpen}
+        accountMenuRef={accountMenuRef}
+        onSignOut={async () => {
+          await signOut();
+          router.replace("/");
+        }}
+      />
+      <section className={`min-w-0 bg-white ${isHeroPreview ? "" : "lg:ml-[18rem]"}`}>
         <header className={`sticky z-10 flex h-12 items-center justify-between gap-2 bg-[#f1f2f0] px-4 sm:px-5 lg:justify-end lg:px-8 ${isHeroPreview ? "top-0" : "top-[var(--beta-banner-height)]"}`}>
           <div className="flex items-center gap-2 lg:hidden">
             <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#4d534c] transition hover:bg-[#e3e7e1]">
@@ -1182,7 +1028,10 @@ function DashboardContent({
           </div>
           <div className="flex items-center gap-2">
           <button
-            onClick={() => setShareOpen(true)}
+            onClick={() => {
+              closeMenus();
+              setShareOpen(true);
+            }}
             className="landing-cta inline-flex cursor-pointer items-center gap-2 rounded-[6px] bg-[#1b1d1b] px-3 py-1.5 text-[11px] font-medium text-white shadow-[0_3px_9px_rgba(25,28,25,.14)] hover:bg-[#343733]"
           >
             <span className="text-[12px] font-semibold leading-none">𝕏</span>
@@ -1253,8 +1102,8 @@ function DashboardContent({
                     onClick={() => setView("handoffs")}
                     title="View saved handoffs"
                     aria-label="Open handoffs"
-                    className="grid size-10 cursor-pointer place-items-center rounded-full border border-[#d5ddd3] bg-[#f1f4ef] transition hover:border-[#abb5a8] hover:bg-[#e9f0e7] hover:text-[#596857]"
-                  ><Mark className="size-4" /></button>
+                    className="grid size-9 cursor-pointer place-items-center rounded-full border border-[#e0e4de] bg-white text-[#9ca39a] transition hover:border-[#abb5a8] hover:bg-[#f3f6f1] hover:text-[#596857]"
+                  ><MarkGlyph className="size-3.5" /></button>
                   <span className="h-px flex-1 bg-[#dfe4dd]" />
                   <button
                     type="button"
@@ -1279,11 +1128,14 @@ function DashboardContent({
                     </p>
                   </div>
                   <button
-                    onClick={() =>
-                      overview?.metrics.agentCount
-                        ? setView("handoffs")
-                        : setSetupOpen(true)
-                    }
+                    onClick={() => {
+                      closeMenus();
+                      if (overview?.metrics.agentCount) {
+                        setView("handoffs");
+                      } else {
+                        setSetupOpen(true);
+                      }
+                    }}
                     className="landing-cta mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white shadow-[0_4px_12px_rgba(21,23,21,.14)] hover:bg-[#343733]"
                   >
                     {overview?.metrics.agentCount
@@ -1455,29 +1307,38 @@ function DashboardContent({
                       className="mt-2 w-full rounded-[7px] border border-[#dfe3dc] bg-white px-3 py-3 text-[13px] text-[#282b27] outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]"
                     />
                   </label>
-                  <div className="relative mt-5">
+                  <div ref={settingsWorkspaceRef} className="relative mt-5">
                     <p className="flex items-center gap-1.5 text-[12px] font-medium text-[#3f433d]"><Link2 className="size-3.5 text-[#777d75]" /> Switch workspace</p>
                     <button
                       type="button"
-                      onClick={() => setWorkspaceSwitcherOpen((open) => !open)}
-                      className="mt-2 flex w-full cursor-pointer items-center rounded-[7px] bg-[#f4f5f2] px-3 py-3 text-left text-[13px] text-[#282b27] transition-colors hover:bg-[#ecefea]"
+                      onClick={() => {
+                        setSidebarWorkspaceOpen(false);
+                        setAccountMenuOpen(false);
+                        setSettingsWorkspaceOpen((open) => !open);
+                      }}
+                      className={`mt-2 flex w-full cursor-pointer items-center rounded-[7px] bg-[#f4f5f2] px-3 py-3 text-left text-[13px] text-[#282b27] transition-colors hover:bg-[#ecefea] ${settingsWorkspaceOpen ? "bg-[#ecefea]" : ""}`}
+                      aria-expanded={settingsWorkspaceOpen}
+                      aria-haspopup="menu"
                     >
                       <span className="min-w-0 flex-1 truncate font-medium">
                         {workspace.name}
                       </span>
                       <ChevronDown
-                        className={`size-3.5 text-[#777b74] transition-transform duration-200 ${workspaceSwitcherOpen ? "rotate-180" : ""}`}
+                        className={`size-3.5 text-[#777b74] transition-transform duration-200 ${settingsWorkspaceOpen ? "rotate-180" : ""}`}
                       />
                     </button>
-                    {workspaceSwitcherOpen && (
-                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[9px] bg-white p-1.5 shadow-[0_12px_28px_rgba(29,40,31,.16)]">
+                    {settingsWorkspaceOpen && (
+                      <div
+                        role="menu"
+                        className="ui-popover ui-popover-down absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[9px] border border-[#e8ebe7] bg-white p-1.5 shadow-[0_12px_28px_rgba(29,40,31,.16)]"
+                      >
                         {workspaces.map((item) => (
                           <button
                             key={item.id}
                             type="button"
                             onClick={() => {
                               setWorkspace(item);
-                              setWorkspaceSwitcherOpen(false);
+                              setSettingsWorkspaceOpen(false);
                             }}
                             className={`flex w-full cursor-pointer items-center rounded-[6px] px-2.5 py-2 text-left text-[12px] transition-colors ${item.id === workspace.id ? "bg-[#eef0ed] font-medium text-[#20221f]" : "text-[#62665f] hover:bg-[#f5f6f3]"}`}
                           >
@@ -1509,6 +1370,7 @@ function DashboardContent({
                     <button
                       type="button"
                       onClick={() => {
+                        closeMenus();
                         setWorkspaceError(null);
                         setNewWorkspaceOpen(true);
                       }}
@@ -1534,11 +1396,11 @@ function DashboardContent({
       {shareOpen && (
         <div
           onClick={() => setShareOpen(false)}
-          className="fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
+          className="ui-overlay fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
         >
           <section
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-[520px] cursor-default overflow-hidden rounded-[22px] bg-white shadow-[0_28px_90px_rgba(24,32,26,.22)]"
+            className="ui-modal-panel w-full max-w-[520px] cursor-default overflow-hidden rounded-[22px] bg-white shadow-[0_28px_90px_rgba(24,32,26,.22)]"
           >
             <div className="relative overflow-hidden bg-[radial-gradient(circle_at_15%_18%,rgba(187,234,224,.82),transparent_38%),radial-gradient(circle_at_86%_73%,rgba(203,219,126,.64),transparent_42%),radial-gradient(circle_at_52%_96%,rgba(78,154,101,.56),transparent_48%),linear-gradient(135deg,#c6e4d3,#9cc98e)] px-8 py-10">
               <div className="pointer-events-none absolute inset-0 opacity-[.13] [background-image:linear-gradient(90deg,rgba(255,255,255,.85)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.85)_1px,transparent_1px)] [background-size:10px_10px]" />
@@ -1578,7 +1440,7 @@ function DashboardContent({
                   Maybe later
                 </button>
                 <a
-                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just joined Thred — shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.\n\nOne stream. Every handoff. 👀\n\n@hydra_db @abhirupvg @contextkingceo\n\nhttps://www.thred.fun`)}`}
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(`Just joined Thred — shared memory for Claude, Cursor, and Codex so context carries across tools and sessions.\n\nOne stream. Every handoff. 👀\n\nhttps://www.thred.fun`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="landing-cta inline-flex items-center gap-2 rounded-[7px] bg-[#1b1d1b] px-4 py-2.5 text-[12px] font-medium text-white hover:bg-[#343733]"
@@ -1593,11 +1455,11 @@ function DashboardContent({
       {setupOpen && (
         <div 
           onClick={() => setSetupOpen(false)}
-          className="fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
+          className="ui-overlay fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/20 p-5 backdrop-blur-[5px]"
         >
           <section
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-[480px] cursor-default overflow-hidden rounded-[22px] bg-white shadow-[0_28px_90px_rgba(24,32,26,.22)]"
+            className="ui-modal-panel w-full max-w-[480px] cursor-default overflow-hidden rounded-[22px] bg-white shadow-[0_28px_90px_rgba(24,32,26,.22)]"
           >
             <div className="relative overflow-hidden bg-[radial-gradient(circle_at_16%_20%,rgba(187,234,224,.8),transparent_38%),radial-gradient(circle_at_84%_74%,rgba(203,219,126,.62),transparent_42%),linear-gradient(135deg,#c6e4d3,#9cc98e)] px-7 py-8">
               <div className="pointer-events-none absolute inset-0 opacity-[.13] [background-image:linear-gradient(90deg,rgba(255,255,255,.85)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.85)_1px,transparent_1px)] [background-size:10px_10px]" />
@@ -1641,7 +1503,7 @@ function DashboardContent({
       {newWorkspaceOpen && (
         <div
           onClick={() => setNewWorkspaceOpen(false)}
-          className="fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/25 p-5 backdrop-blur-[5px]"
+          className="ui-overlay fixed inset-0 z-50 grid cursor-pointer place-items-center bg-[#172018]/25 p-5 backdrop-blur-[5px]"
         >
           <form
             onClick={(event) => event.stopPropagation()}
@@ -1649,7 +1511,7 @@ function DashboardContent({
               event.preventDefault();
               void createWorkspace();
             }}
-            className="w-full max-w-[560px] cursor-default overflow-hidden rounded-[24px] border border-white/70 bg-[#fcfcfb] shadow-[0_28px_90px_rgba(24,32,26,.22)]"
+            className="ui-modal-panel w-full max-w-[560px] cursor-default overflow-hidden rounded-[24px] border border-white/70 bg-[#fcfcfb] shadow-[0_28px_90px_rgba(24,32,26,.22)]"
           >
             <div className="relative overflow-hidden bg-[radial-gradient(circle_at_18%_12%,rgba(177,234,224,.96),transparent_40%),radial-gradient(circle_at_83%_78%,rgba(199,211,111,.8),transparent_42%),radial-gradient(circle_at_53%_88%,rgba(56,145,84,.82),transparent_47%),linear-gradient(135deg,#b8e0ca,#79b78d)] px-8 py-11 sm:px-12 sm:py-12">
               <div className="pointer-events-none absolute inset-0 opacity-[.16] [background-image:linear-gradient(90deg,rgba(255,255,255,.8)_1px,transparent_1px),linear-gradient(rgba(255,255,255,.8)_1px,transparent_1px)] [background-size:10px_10px]" />
