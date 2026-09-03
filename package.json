@@ -1,12 +1,12 @@
 {
-  "name": "riftnew",
+  "name": "thred",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "postinstall": "npm run db:generate --workspace=@repo/db",
     "lint": "turbo run lint",
-    "test": "npm run test --workspace=@repo/memory-extractor && npm run test --workspace=@repo/memory-engine && npm run test --workspace=@repo/evals",
+    "test": "npm run test --workspace=@repo/memory-extractor && npm run test --workspace=@repo/memory-engine && npm run test --workspace=@repo/evals && npm run test --workspace=@thred_nick_01/thred-mcp",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },

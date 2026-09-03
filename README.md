@@ -31,12 +31,14 @@ honest abstention when the evidence isn't there.
 
 Thred exposes a small MCP toolset — use the same memory from any agent client:
 
-| Tool              | What it does                                                                                 |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| `thread_remember` | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
-| `thread_context`  | Retrieves verified long-term context relevant to a question.                                 |
-| `thread_history`  | Shows the chronological revision history for a fact or entity.                               |
-| `thread_inspect`  | Traverses a memory’s provenance and graph relationships.                                     |
+| Tool                | What it does                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `thread_remember`   | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
+| `thread_context`    | Retrieves verified long-term context relevant to a question.                                 |
+| `thread_history`    | Shows the chronological revision history for a fact or entity.                               |
+| `thread_inspect`    | Traverses a memory’s provenance and graph relationships.                                     |
+| `thread_checkpoint` | Saves coding progress and extracts durable long-term memory from a session.                  |
+| `thread_resume`     | Restores the latest unfinished coding checkpoint with relevant context.                      |
 
 Save "we chose PostgreSQL" in one session. Update to "we chose Neon Postgres" in
 another. Ask what’s true now — or why it changed — in a third. Nothing gets
@@ -119,9 +121,16 @@ Evaluated against a hashed-vector RAG baseline on
 Full reports in [`apps/evals/reports`](apps/evals/reports).
 
 ```bash
+npm test
+```
+
+Or run individual suites:
+
+```bash
 npm run test --workspace=@repo/evals
 npm run test --workspace=@repo/memory-extractor
 npm run test --workspace=@repo/memory-engine
+npm run test --workspace=@thred_nick_01/thred-mcp
 ```
 
 ## Tech stack

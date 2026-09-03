@@ -136,6 +136,13 @@ mcpRouter.post("/checkpoint", async (req: ThredRequest, res, next) => {
 
     res.json({
       checkpointId: result.checkpoint?.id ?? null,
+      checkpointStatus: result.checkpoint ? "SAVED" : "NO_WORKING_MEMORY",
+      ...(result.checkpoint
+        ? {}
+        : {
+            message:
+              "Long-term memories were extracted, but no resumable working-memory handoff was detected in this session.",
+          }),
       longTermDecisions: result.processed.map((item) => item.decision),
     });
   } catch (error) {

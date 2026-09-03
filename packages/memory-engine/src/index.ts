@@ -24,7 +24,7 @@ export {
   type RevisionDecision,
 } from "./revision-resolver.js";
 export { lexicalOverlap, rankMemories, type RankedMemory } from "./ranker.js";
-export { compactMemoryText } from "./memory-text.js";
+export { compactMemoryText, parseProvenanceBlock, type EmbeddedProvenance } from "./memory-text.js";
 export {
   deriveQueryIntent,
   expansionQueries,
