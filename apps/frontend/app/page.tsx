@@ -187,27 +187,30 @@ export default function Home() {
           </div>
       </section>
 
-      <footer className="mx-auto max-w-[1000px] border-x border-t border-[#e8e8e4] px-6 py-10 sm:px-8 sm:py-12">
-        <div className="grid gap-9 sm:grid-cols-[1.3fr_1fr] sm:gap-6">
+      <footer className="mx-auto max-w-[1000px] overflow-hidden border-x border-t border-[#e8e8e4]">
+        <div className="flex flex-col gap-8 px-6 pt-12 sm:flex-row sm:items-start sm:justify-between sm:px-8">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.04em]">
+            <Link href="/" className="landing-link flex items-center gap-2 text-[14px] font-semibold tracking-[-0.04em]">
               <ThreadMark className="size-5" />
               thred
             </Link>
-            <p className="mt-3 max-w-[150px] text-[11px] leading-5 text-[#7b7d78]">Memory that carries work across agents.</p>
+            <p className="mt-3 max-w-[240px] text-[13px] leading-6 text-[#70726e]">Memory that carries work across agents.</p>
           </div>
-          <div>
-            <p className="text-[11px] text-[#90928d]">Explore</p>
-            <div className="mt-3 space-y-2">
-              <a href="#memory" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">Memory</a>
-              <a href="#how-it-works" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">How it works</a>
-              <Link href="/dashboard" className="block text-[11px] text-[#373936] transition-colors hover:text-[#6b866f]">MCP</Link>
-            </div>
-          </div>
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
+            <a href="#memory" className="landing-link text-[12px] text-[#5f625d] hover:text-[#171717]">Memory</a>
+            <a href="#how-it-works" className="landing-link text-[12px] text-[#5f625d] hover:text-[#171717]">How it works</a>
+            <a href="#mcp" className="landing-link text-[12px] text-[#5f625d] hover:text-[#171717]">MCP</a>
+            <a href="https://github.com/nikhil008-git/thred" target="_blank" rel="noreferrer" className="landing-link text-[12px] text-[#5f625d] hover:text-[#171717] inline-flex items-center gap-1">GitHub <ArrowUpRight className="size-3" strokeWidth={1.7} /></a>
+            <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-link text-[12px] text-[#5f625d] hover:text-[#171717]">{session?.user ? "Dashboard" : "Sign in"}</Link>
+          </nav>
         </div>
-        <div className="mt-10 flex items-center justify-between border-t border-[#e8e8e4] pt-5 text-[11px] text-[#858781]">
+        <div className="mt-14 flex items-center justify-between px-6 text-[11px] text-[#9a9c96] sm:px-8">
           <p>© 2026 thred</p>
+          <a href="#" className="landing-link hover:text-[#171717]">Back to top ↑</a>
         </div>
+        <p aria-hidden="true" className="pointer-events-none mt-4 translate-y-[18%] select-none text-center text-[clamp(110px,24vw,250px)] font-medium leading-[0.8] tracking-[-0.08em] text-[#efefeb]">
+          thred
+        </p>
       </footer>
     </main>
   );

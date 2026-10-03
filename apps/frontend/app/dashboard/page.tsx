@@ -12,6 +12,8 @@ import {
   PixelCopy,
   PixelFolder,
   PixelKey,
+  PixelLoader,
+  PixelTrash,
   PixelMenu,
 } from "@/components/pixel-icons";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -283,7 +285,7 @@ function ToolTray({ items }: { items: Array<{ label: string; node: React.ReactNo
   );
 }
 
-function CodeBlock({ children }: { children: string }) {
+function CodeBlock({ children, filename }: { children: string; filename?: string }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -291,13 +293,17 @@ function CodeBlock({ children }: { children: string }) {
     return () => window.clearTimeout(timer);
   }, [copied]);
   return (
-    <div className="overflow-hidden rounded-[10px] border border-[#2c2f2b] bg-[#1d1f1c] shadow-[0_12px_28px_rgba(25,30,26,.1)]">
+    <div className="overflow-hidden rounded-[10px] bg-[#1d1f1c]">
       <div className="flex items-center justify-between border-b border-white/[.06] px-4 py-2">
-        <div className="flex gap-1.5" aria-hidden="true">
-          <span className="size-2 rounded-full bg-white/15" />
-          <span className="size-2 rounded-full bg-white/15" />
-          <span className="size-2 rounded-full bg-white/15" />
-        </div>
+        {filename ? (
+          <span className="font-mono text-[11px] text-white/45">{filename}</span>
+        ) : (
+          <div className="flex gap-1.5" aria-hidden="true">
+            <span className="size-2 rounded-full bg-white/15" />
+            <span className="size-2 rounded-full bg-white/15" />
+            <span className="size-2 rounded-full bg-white/15" />
+          </div>
+        )}
         <button
           type="button"
           onClick={async () => {
@@ -310,7 +316,7 @@ function CodeBlock({ children }: { children: string }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="overflow-x-auto p-5 font-mono text-[12px] leading-6 text-[#e8ebe6]">
+      <pre className="whitespace-pre-wrap break-words p-5 font-mono text-[12px] leading-6 text-[#e8ebe6]">
         <code>{children}</code>
       </pre>
     </div>
@@ -342,40 +348,13 @@ function HandoffList({ checkpoints }: { checkpoints: Checkpoint[] }) {
 }
 
 function DashboardSkeleton() {
-  const bar = "animate-pulse rounded bg-[#ebece8]";
-
   return (
     <main
       aria-busy="true"
       aria-label="Loading dashboard"
-      className="min-h-screen bg-[#fcfcfb] text-[#242622]"
+      className="grid min-h-screen place-items-center bg-[#fcfcfb]"
     >
-      <aside className="fixed top-0 bottom-0 left-0 hidden w-[3.625rem] border-r border-[#e2e5e0] bg-[#f1f2f0] px-2.5 py-3.5 lg:block">
-        <div className="mx-auto size-7 animate-pulse rounded-[8px] bg-[#dfe2dd]" />
-        <div className="mt-8 space-y-2">
-          {[0, 1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="mx-auto size-[2.375rem] animate-pulse rounded-[9px] bg-[#e5e7e3]" />
-          ))}
-        </div>
-      </aside>
-      <section className="min-w-0 lg:ml-[3.625rem]">
-        <div className="mx-auto min-h-screen max-w-[880px] border-x border-[#e8e8e4]">
-          <div className="space-y-3 border-b border-[#e8e8e4] px-6 pb-10 pt-14 sm:px-10 sm:pt-16">
-            <div className={`${bar} h-8 w-[52%]`} />
-            <div className={`${bar} h-8 w-[38%]`} />
-            <div className={`${bar} mt-5 h-3 w-[46%]`} />
-          </div>
-          {[0, 1].map((row) => (
-            <div key={row} className="grid gap-5 border-b border-[#e8e8e4] px-6 py-9 sm:px-10 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-10">
-              <div className="space-y-2">
-                <div className={`${bar} h-3 w-24`} />
-                <div className={`${bar} h-2.5 w-36`} />
-              </div>
-              <div className={`${bar} h-24 w-full`} />
-            </div>
-          ))}
-        </div>
-      </section>
+      <PixelLoader className="size-4 animate-spin text-[#a3a59f]" />
     </main>
   );
 }
@@ -391,6 +370,12 @@ function ApiKeys({
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!confirmingId) return;
+    const timer = window.setTimeout(() => setConfirmingId(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirmingId]);
 
   const load = async () => {
     setLoading(true);
@@ -465,13 +450,10 @@ function ApiKeys({
       <Section
         id="api-keys"
         title="Active keys"
-        description={loading ? "Loading…" : `${keys.length} key${keys.length === 1 ? "" : "s"} in this workspace.`}
+        description={loading ? undefined : `${keys.length} key${keys.length === 1 ? "" : "s"} in this workspace.`}
       >
         {loading ? (
-          <div className="space-y-3">
-            <div className="h-12 animate-pulse rounded-[8px] bg-[#ebece8]" />
-            <div className="h-12 animate-pulse rounded-[8px] bg-[#ebece8]" />
-          </div>
+          <PixelLoader className="size-4 animate-spin text-[#a3a59f]" />
         ) : keys.length ? (
           <div className="divide-y divide-[#e8e8e4]">
             {keys.map((key) => (
@@ -485,13 +467,27 @@ function ApiKeys({
                       : "· not used yet"}
                   </p>
                 </div>
-                {key.revokedAt ? (
-                  <span className="text-[11px] text-[#9a9c96]">Revoked</span>
-                ) : (
-                  <button type="button" onClick={() => void revoke(key)} className={ui.secondary}>
-                    Revoke
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirmingId === key.id) {
+                      setConfirmingId(null);
+                      void revoke(key);
+                    } else {
+                      setConfirmingId(key.id);
+                    }
+                  }}
+                  aria-label={confirmingId === key.id ? `Confirm delete ${key.name}` : `Delete ${key.name}`}
+                  title={confirmingId === key.id ? "Click again to delete" : "Delete key"}
+                  className={`landing-cta inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-[6px] text-[12px] font-medium transition-colors ${
+                    confirmingId === key.id
+                      ? "bg-[#b4473b] px-2.5 text-white hover:bg-[#9c3b30]"
+                      : "w-8 text-[#8a8c86] hover:bg-[#f4e9e7] hover:text-[#b4473b]"
+                  }`}
+                >
+                  <PixelTrash className="size-3.5" />
+                  {confirmingId === key.id && "Delete?"}
+                </button>
               </div>
             ))}
           </div>
@@ -712,150 +708,116 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
   );
 }
 
-const docsNav = [
-  ["quickstart", "Quickstart"],
-  ["codebase", "In your codebase"],
-  ["providers", "BYOK providers"],
-  ["prompt", "In your agent prompt"],
-  ["save", "Save a handoff"],
-  ["resume", "Resume a handoff"],
-  ["reference", "MCP reference"],
+const docsClients = [
+  {
+    id: "claude",
+    label: "Claude Code",
+    filename: ".mcp.json",
+    config: () => mcpServerConfig(),
+  },
+  {
+    id: "cursor",
+    label: "Cursor",
+    filename: ".cursor/mcp.json",
+    config: () => mcpServerConfig(),
+  },
+  {
+    id: "codex",
+    label: "Codex",
+    filename: "~/.codex/config.toml",
+    config: () => `[mcp_servers.thred]
+command = "npx"
+args = ["-y", "${MCP_PACKAGE}"]
+
+[mcp_servers.thred.env]
+THRED_API_KEY = "thrd_sk_…"
+THRED_API_URL = "${mcpApiUrl()}"`,
+  },
 ] as const;
 
-function DocsPage({ workspace }: { workspace: Workspace }) {
-  const config = mcpServerConfig();
-  const prompt = `Before you begin, retrieve the current Thred context. When work is ready to pass on, call thread_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
-  const DocSection = ({
-    id,
-    number,
-    title,
-    children,
-  }: {
-    id: string;
-    number: string;
-    title: string;
-    children: React.ReactNode;
-  }) => (
-    <section id={id} className="scroll-mt-6 border-b border-[#e8e8e4] px-6 py-10 last:border-b-0 sm:px-10">
-      <p className="font-mono text-[11px] text-[#9a9c96]">{number}</p>
-      <h2 className="mt-2 text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724]">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-  const body = "mt-3 max-w-[560px] text-[13px] leading-6 text-[#70766f]";
+const docsTools = [
+  ["thread_context", "Retrieve project context. Pass includeHistory to see how a fact changed."],
+  ["thread_checkpoint", "Save progress, decisions, and the next step."],
+  ["thread_resume", "Pick up the latest unfinished handoff."],
+] as const;
+
+function DocsPage({ onNavigate }: { onNavigate: (view: View) => void }) {
+  const [client, setClient] = useState<(typeof docsClients)[number]["id"]>("claude");
+  const selectedClient = docsClients.find((item) => item.id === client) ?? docsClients[0];
+  const prompt = `Before you begin, retrieve the current Thred context with thread_context. When work is ready to pass on, call thread_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
+  const heading = "text-[15px] font-medium tracking-[-0.03em] text-[#252724]";
+  const body = "mt-2 text-[13px] leading-6 text-[#70726e]";
 
   return (
     <>
-      <PageHeader title="Bring context into" accent="every handoff.">
-        Everything your agents need to save useful work and let the next one resume it.
-      </PageHeader>
-      <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-[#e8e8e4] lg:block">
-          <nav className="sticky top-0 space-y-0.5 px-6 py-10">
-            {docsNav.map(([id, label], index) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                className="landing-link flex items-baseline gap-2.5 py-1 text-[12px] text-[#6b6e69] hover:text-[#171717]"
+      <div className="mx-auto max-w-[640px] space-y-14 px-6 py-16 sm:px-10">
+        <header>
+          <h1 className="text-[30px] font-normal leading-[0.98] tracking-[-0.055em] text-[#111111] sm:text-[36px]">Docs.</h1>
+          <p className="mt-3 text-[13px] leading-[1.65] text-[#70726e]">Set up Thred in a few minutes.</p>
+        </header>
+        <section>
+          <h2 className={heading}>Setup</h2>
+          <ol className="mt-3 space-y-2 text-[13px] leading-6 text-[#4e514c]">
+            <li>
+              1.{" "}
+              <button type="button" onClick={() => onNavigate("apiKeys")} className="landing-link cursor-pointer underline decoration-[#d0d2cc] underline-offset-4 hover:decoration-[#171717]">
+                Create an agent key
+              </button>
+            </li>
+            <li>2. Add the config below to your client</li>
+            <li>
+              3.{" "}
+              <button type="button" onClick={() => onNavigate("prompts")} className="landing-link cursor-pointer underline decoration-[#d0d2cc] underline-offset-4 hover:decoration-[#171717]">
+                Give your agent the instructions
+              </button>
+            </li>
+          </ol>
+        </section>
+
+        <section>
+          <h2 className={heading}>Install</h2>
+          <p className={body}>
+            Paste into <code className="font-mono text-[12px] text-[#252724]">{selectedClient.filename}</code> and replace{" "}
+            <code className="font-mono text-[12px] text-[#252724]">thrd_sk_…</code> with your key.
+          </p>
+          <div className="mt-4 flex gap-4" role="tablist" aria-label="MCP client">
+            {docsClients.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={client === item.id}
+                onClick={() => setClient(item.id)}
+                className={`cursor-pointer text-[12px] transition-colors ${client === item.id ? "font-medium text-[#171717]" : "text-[#9a9c96] hover:text-[#171717]"}`}
               >
-                <span className="font-mono text-[10px] text-[#a3a59f]">0{index + 1}</span>
-                {label}
-              </a>
+                {item.label}
+              </button>
             ))}
-          </nav>
-        </aside>
-        <article className="min-w-0">
-          <DocSection id="quickstart" number="01" title="Connect an agent in three moves.">
-            <ol className="mt-6 divide-y divide-[#e8e8e4]">
-              {["Create a Thred agent key", "Add the MCP config", "Save your first handoff"].map((item, index) => (
-                <li key={item} className="flex items-baseline gap-4 py-3.5 text-[13px] text-[#252724] first:pt-0 last:pb-0">
-                  <span className="font-mono text-[11px] text-[#9a9c96]">0{index + 1}</span>
-                  {item}
-                </li>
-              ))}
-            </ol>
-          </DocSection>
-          <DocSection id="codebase" number="02" title="Add Thred to the agent you already use.">
-            <p className={body}>
-              Paste this into your MCP client configuration, then add the Thred agent key from this workspace. Provider keys are configured separately under BYOK providers.
-            </p>
-            <div className="mt-6">
-              <ToolTray
-                items={[
-                  { label: "Claude", node: <span className="grid size-12 place-items-center rounded-[14px] border border-[#c9694a] bg-[#D87551] text-[#FFF7F1] shadow-[0_5px_12px_rgba(0,0,0,0.08)]"><SiClaude className="size-5" /></span> },
-                  { label: "Thred", node: <span className="grid size-12 place-items-center rounded-[14px] bg-[#1c211e] shadow-[0_5px_12px_rgba(0,0,0,0.12)]"><Mark className="size-7" /></span> },
-                  { label: "Codex", node: <span className={ui.tile}><CodexMark /></span> },
-                ]}
-              />
-            </div>
-            <div className="mt-6">
-              <CodeBlock>{config}</CodeBlock>
-            </div>
-          </DocSection>
-          <DocSection id="providers" number="03" title="Bring your own model key.">
-            <p className={body}>
-              Configure the model key Thred should use for extraction and evaluation. Keys are encrypted before storage and never returned. Ollama runs locally without a key; Groq and OpenRouter often have free models with provider limits.
-            </p>
-            <div className="mt-6">
-              <CodeBlock>{`Provider: Groq (free tier)
-Model: openai/gpt-oss-20b
-Base URL: https://api.groq.com/openai/v1
-Label: Groq (free tier)
-API key: Paste provider key`}</CodeBlock>
-            </div>
-          </DocSection>
-          <DocSection id="prompt" number="04" title="Tell the agent when memory matters.">
-            <p className={body}>
-              Put this in your project instructions or first message. It gives every agent the same handoff discipline.
-            </p>
-            <div className="mt-6">
-              <CodeBlock>{prompt}</CodeBlock>
-            </div>
-          </DocSection>
-          <DocSection id="save" number="05" title="Checkpoint work before the context disappears.">
-            <p className={body}>
-              When an agent finishes a meaningful step, it saves the facts the next agent cannot safely guess.
-            </p>
-            <div className="mt-6">
-              <CodeBlock>{`thread_checkpoint({
-  sessionId: "oauth-onboarding",
-  messages: [
-    { id: "m1", role: "user", content: "Use Google-only sign in." },
-    { id: "m2", role: "assistant", content: "Done. Next: add the production redirect URL." }
-  ],
-  changedFiles: ["app/sign-in/page.tsx"],
-  testResults: ["OAuth callback tested locally"]
-})`}</CodeBlock>
-            </div>
-          </DocSection>
-          <DocSection id="resume" number="06" title="Pick up exactly where work stopped.">
-            <p className={body}>
-              A new agent reads the saved context first, then continues with the task, decisions, evidence, and next step already in view.
-            </p>
-            <div className="mt-6 overflow-hidden rounded-[10px] border border-[#2c2f2b] bg-[#1d1f1c] p-5 font-mono text-[12px] leading-6 text-[#dce1da] shadow-[0_12px_28px_rgba(25,30,26,.1)]">
-              <p className="text-[#99a997]">$ codex</p>
-              <p className="mt-2 text-white">› thread_resume for {workspace.name}</p>
-              <p className="text-[#a8b4a5]">✓ 1 open handoff · next step loaded</p>
-              <p className="mt-2 text-white">› Continue from the saved checkpoint</p>
-            </div>
-          </DocSection>
-          <DocSection id="reference" number="07" title="The small toolset behind the handoff.">
-            <div className="mt-6 divide-y divide-[#e8e8e4]">
-              {[
-                ["thread_checkpoint", "Save a resumable task, decisions, evidence, and next step."],
-                ["thread_context", "Retrieve current decisions and evidence. Pass includeHistory to see how a fact changed."],
-                ["thread_resume", "Pick up the latest unfinished handoff with its related context."],
-              ].map(([tool, description]) => (
-                <div key={tool} className="grid gap-1 py-4 first:pt-0 last:pb-0 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-6">
-                  <code className="font-mono text-[12px] font-medium text-[#252724]">{tool}</code>
-                  <p className="text-[12px] leading-5 text-[#70766f]">{description}</p>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-        </article>
+          </div>
+          <div className="mt-3">
+            <CodeBlock filename={selectedClient.filename}>{selectedClient.config()}</CodeBlock>
+          </div>
+        </section>
+
+        <section>
+          <h2 className={heading}>Instructions</h2>
+          <p className={body}>Add this to your project instructions.</p>
+          <div className="mt-4">
+            <CodeBlock>{prompt}</CodeBlock>
+          </div>
+        </section>
+
+        <section>
+          <h2 className={heading}>Tools</h2>
+          <dl className="mt-3 space-y-3">
+            {docsTools.map(([name, description]) => (
+              <div key={name}>
+                <dt className="font-mono text-[12px] text-[#252724]">{name}</dt>
+                <dd className="mt-0.5 text-[13px] leading-6 text-[#70726e]">{description}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </div>
     </>
   );
@@ -1102,7 +1064,7 @@ function DashboardContent({
         )}
         <div className={`bg-[#fcfcfb] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}>
           <div
-            className={`mx-auto border-x border-[#e8e8e4] ${view === "docs" ? "max-w-[1080px]" : "max-w-[880px]"} ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}
+            className={`mx-auto border-x border-[#e8e8e4] max-w-[880px] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}
           >
             {view === "overview" && (
               <>
@@ -1213,7 +1175,7 @@ function DashboardContent({
             )}
             {view === "apiKeys" && <ApiKeys workspace={workspace} request={request} />}
             {view === "prompts" && <AgentPrompts workspace={workspace} />}
-            {view === "docs" && <DocsPage workspace={workspace} />}
+            {view === "docs" && <DocsPage onNavigate={setView} />}
             {view === "settings" && (
               <>
                 <PageHeader title="Make this space" accent="yours.">
@@ -1268,13 +1230,13 @@ function DashboardContent({
                       <PixelFolder className="size-3.5 text-[#777d75]" />
                       <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
                       <PixelChevronDown
-                        className={`size-3.5 text-[#777b74] transition-transform duration-200 ${settingsWorkspaceOpen ? "rotate-180" : ""}`}
+                        className={`size-3.5 text-[#777b74] transition-transform duration-100 ${settingsWorkspaceOpen ? "rotate-180" : ""}`}
                       />
                     </button>
                     {settingsWorkspaceOpen && (
                       <div
                         role="menu"
-                        className="ui-popover ui-popover-down absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[9px] border border-[#e8e8e4] bg-white p-1.5 shadow-[0_12px_28px_rgba(29,40,31,.13)]"
+                        className="ui-popover ui-popover-down absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[10px] border border-[#e8e8e4] bg-[#fcfcfb] p-1 shadow-[0_1px_1px_rgba(0,0,0,0.04),0_12px_32px_rgba(16,22,18,0.1)]"
                       >
                         {workspaces.map((item) => (
                           <button
@@ -1284,7 +1246,7 @@ function DashboardContent({
                               setWorkspace(item);
                               setSettingsWorkspaceOpen(false);
                             }}
-                            className={`flex w-full cursor-pointer items-center rounded-[6px] px-2.5 py-2 text-left text-[12px] transition-colors ${item.id === workspace.id ? "bg-[#f1f2f0] font-medium text-[#171717]" : "text-[#62665f] hover:bg-[#f5f6f3]"}`}
+                            className={`flex w-full cursor-pointer items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left text-[13px] transition-colors hover:bg-[#f1f2f0] hover:text-[#171717] ${item.id === workspace.id ? "text-[#171717]" : "text-[#4e514c]"}`}
                           >
                             <span className="min-w-0 flex-1 truncate">{item.name}</span>
                             {item.id === workspace.id && <PixelCheck className="size-3.5" />}

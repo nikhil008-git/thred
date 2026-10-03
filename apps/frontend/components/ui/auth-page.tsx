@@ -67,11 +67,11 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
         </div>
       </aside>
 
-      <section className="relative flex min-h-screen flex-col justify-start bg-[#fcfcfb] px-5 pb-10 pt-28 sm:px-10 lg:justify-center lg:px-[clamp(3rem,9vw,9rem)] lg:py-10">
+      <section className={`relative flex min-h-screen flex-col bg-[#fcfcfb] px-5 sm:px-10 lg:justify-center lg:px-[clamp(3rem,9vw,9rem)] lg:py-10 ${mode === "sign-in" ? "justify-center py-10" : "justify-start pb-10 pt-28"}`}>
         <Button variant="ghost" className="absolute left-4 top-5 h-9 rounded-[7px] px-2.5 text-[12px] text-[#4e504c] transition-colors hover:bg-[#eef1ed] hover:text-[#171717] sm:left-7 sm:top-7" asChild>
           <Link href="/"><ChevronLeft className="size-4" />Home</Link>
         </Button>
-        <div className="relative mx-auto w-full max-w-[360px]">
+        <div className={`relative mx-auto w-full max-w-[360px] ${mode === "sign-in" ? "flex flex-col items-center text-center" : ""}`}>
           {mode !== "sign-in" && <div className="mb-8 lg:hidden">
             <Link href="/" className="flex w-fit items-center gap-2 text-[15px] font-semibold tracking-[-0.05em] text-[#253228]">
               <span className="grid size-7 place-items-center rounded-[8px] bg-[#243026] text-[10px] font-semibold text-white">t</span>
@@ -79,13 +79,13 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
             </Link>
           </div>}
           {mode !== "sign-in" && <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#858680]">{copy.eyebrow}</p>}
-          {mode === "sign-in" && <ThreadMark className="mb-5 hidden size-9 lg:block" />}
-          <h1 className={`${mode === "sign-in" ? "text-[24px] sm:text-[28px]" : "mt-3 text-[32px] sm:text-[38px]"} font-normal leading-[1.03] tracking-[-0.055em] text-[#171717]`}>{copy.title}</h1>
-          <p className="mt-4 text-sm leading-6 text-[#70726e]">{copy.description}</p>
+          {mode === "sign-in" && <ThreadMark className="mb-5 size-8" />}
+          <h1 className={`${mode === "sign-in" ? "text-[20px]" : "mt-3 text-[32px] sm:text-[38px]"} font-normal leading-[1.03] tracking-[-0.055em] text-[#171717]`}>{copy.title}</h1>
+          {copy.description && <p className="mt-4 text-sm leading-6 text-[#70726e]">{copy.description}</p>}
 
           {error && <p role="alert" className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
 
-          <form className="mt-8 space-y-4" onSubmit={onSubmit}>
+          <form className={mode === "sign-in" ? "mt-6" : "mt-8 space-y-4"} onSubmit={onSubmit}>
             {mode === "workspace" && (
               <label className="block space-y-1.5" htmlFor="workspace-name">
                 <span className="text-sm font-medium text-[#373936]">Workspace name</span>
@@ -93,7 +93,16 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
                 <span className="block text-xs text-[#858781]">You can invite teammates and create more workspaces later.</span>
               </label>
             )}
-            {mode === "sign-in" && <div><Button type="submit" className="mt-2 w-full cursor-pointer bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}><SiGoogle className="size-4" />{isSubmitting ? copy.submitting : copy.submit}</Button></div>}
+            {mode === "sign-in" && (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="landing-cta inline-flex h-9 cursor-pointer items-center gap-2 rounded-[6px] border border-[#e2e3df] bg-white px-4 text-[12px] font-medium text-[#252724] shadow-[0_1px_1px_rgba(0,0,0,0.04)] hover:border-[#d0d2cc] hover:text-[#171717] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <SiGoogle className="size-3.5" />
+                {isSubmitting ? copy.submitting : copy.submit}
+              </button>
+            )}
             {mode === "workspace" && <Button type="submit" className="mt-2 w-full bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.submit}</Button>}
           </form>
           {copy.prompt && <p className="mt-7 text-center text-sm text-[#7b7d78]">{copy.prompt}{copy.action && <> <Link href={copy.href} className="font-medium text-[#373936] underline decoration-[#b7b9b4] underline-offset-4 hover:text-[#171717]">{copy.action}</Link></>}</p>}

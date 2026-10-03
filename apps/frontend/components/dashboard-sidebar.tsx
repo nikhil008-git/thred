@@ -3,6 +3,7 @@
 import { useState, type ComponentType, type Dispatch, type RefObject, type SetStateAction } from "react";
 import {
   PixelBookOpen,
+  PixelCheck,
   PixelChevronDown,
   PixelClose,
   PixelDatabase,
@@ -18,6 +19,15 @@ import {
 } from "@/components/pixel-icons";
 
 type Workspace = { id: string; name: string; slug: string };
+
+/** Dropdown styling shared by the footer menus — paper panel, hairline, soft shadow. */
+const menu = {
+  panel:
+    "ui-popover ui-popover-up absolute bottom-[calc(100%+6px)] left-0 right-0 z-30 overflow-hidden rounded-[10px] border border-[#e8e8e4] bg-[#fcfcfb] p-1 shadow-[0_1px_1px_rgba(0,0,0,0.04),0_12px_32px_rgba(16,22,18,0.1)]",
+  label: "px-2.5 pb-1 pt-2 text-[11px] text-[#9a9c96]",
+  item: "flex w-full cursor-pointer items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left text-[13px] text-[#4e514c] transition-colors hover:bg-[#f1f2f0] hover:text-[#171717]",
+  divider: "my-1 h-px bg-[#e8e8e4]",
+};
 
 export type DashboardView =
   | "overview"
@@ -242,21 +252,22 @@ export function DashboardSidebar({
           <div className="dashboard-sidebar-panel-footer">
             <div ref={sidebarWorkspaceRef} className="relative">
               {sidebarWorkspaceOpen && (
-                <div
-                  role="menu"
-                  className="ui-popover ui-popover-up absolute bottom-[calc(100%+8px)] left-0 right-0 z-30 overflow-hidden rounded-[13px] border border-[#e2e5e0] bg-white p-1.5 shadow-[0_12px_28px_rgba(29,40,31,.13)]"
-                >
+                <div role="menu" className={menu.panel}>
+                  <p className={menu.label}>Workspaces</p>
                   {workspaces.map((item) => (
                     <button
                       key={item.id}
                       type="button"
+                      role="menuitemradio"
+                      aria-checked={item.id === workspace.id}
                       onClick={() => {
                         onWorkspaceChange(item);
                         setSidebarWorkspaceOpen(false);
                       }}
-                      className={`flex w-full cursor-pointer items-center rounded-[8px] px-2.5 py-2 text-left text-[13px] transition-colors ${item.id === workspace.id ? "bg-[#eef0ed] font-medium text-[#141614]" : "text-[#4a4f48] hover:bg-[#f4f5f2] hover:text-[#141614]"}`}
+                      className={`${menu.item} ${item.id === workspace.id ? "text-[#171717]" : ""}`}
                     >
-                      <span className="truncate">{item.name}</span>
+                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                      {item.id === workspace.id && <PixelCheck className="size-3.5 shrink-0" />}
                     </button>
                   ))}
                 </div>
@@ -278,63 +289,39 @@ export function DashboardSidebar({
                   {workspace.name}
                 </span>
                 <PixelChevronDown
-                  className={`size-4 shrink-0 text-[#555a53] transition-transform duration-200 ${sidebarWorkspaceOpen ? "rotate-180" : ""}`}
+                  className={`size-4 shrink-0 text-[#555a53] transition-transform duration-100 ${sidebarWorkspaceOpen ? "rotate-180" : ""}`}
                 />
               </button>
             </div>
 
             <div ref={accountMenuRef} className="relative">
               {accountMenuOpen && (
-                <div
-                  role="menu"
-                  className="ui-popover ui-popover-up absolute bottom-[calc(100%+8px)] left-0 right-0 z-30 rounded-[13px] border border-[#e2e5e0] bg-white p-2 shadow-[0_12px_28px_rgba(29,40,31,.13)]"
-                >
-                  <div className="px-2 pb-2">
-                    <p className="min-w-0 truncate text-[13px] font-medium text-[#141614]">{accountName}</p>
-                  </div>
-                  <div className="space-y-0.5 border-t border-[#eceeea] pt-1">
+                <div role="menu" className={menu.panel}>
+                  <p className={`${menu.label} truncate`}>{accountName}</p>
+                  {([
+                    ["settings", "Workspace settings", PixelSliders],
+                    ["apiKeys", "Thred agent keys", PixelKey],
+                    ["providers", "BYOK providers", PixelSliders],
+                  ] as const).map(([target, label, Icon]) => (
                     <button
+                      key={target}
                       type="button"
+                      role="menuitem"
                       onClick={() => {
                         setAccountMenuOpen(false);
-                        onViewChange("settings");
+                        onViewChange(target);
                       }}
-                      className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
+                      className={menu.item}
                     >
-                      <PixelSliders className="size-3.5" />
-                      Workspace settings
+                      <Icon className="size-3.5 shrink-0 text-[#8a8c86]" />
+                      {label}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountMenuOpen(false);
-                        onViewChange("apiKeys");
-                      }}
-                      className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
-                    >
-                      <PixelKey className="size-3.5" />
-                      Thred agent keys
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountMenuOpen(false);
-                        onViewChange("providers");
-                      }}
-                      className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
-                    >
-                      <PixelSliders className="size-3.5" />
-                      BYOK providers
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onSignOut}
-                      className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
-                    >
-                      <PixelLogout className="size-3.5" />
-                      Sign out
-                    </button>
-                  </div>
+                  ))}
+                  <div className={menu.divider} />
+                  <button type="button" role="menuitem" onClick={onSignOut} className={menu.item}>
+                    <PixelLogout className="size-3.5 shrink-0 text-[#8a8c86]" />
+                    Sign out
+                  </button>
                 </div>
               )}
               <button
@@ -352,7 +339,7 @@ export function DashboardSidebar({
                   {accountName}
                 </span>
                 <PixelChevronDown
-                  className={`size-4 shrink-0 text-[#555a53] transition-transform duration-200 ${accountMenuOpen ? "rotate-180" : ""}`}
+                  className={`size-4 shrink-0 text-[#555a53] transition-transform duration-100 ${accountMenuOpen ? "rotate-180" : ""}`}
                 />
               </button>
             </div>

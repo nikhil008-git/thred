@@ -37,3 +37,5 @@ export const PixelCheckBox = pixelIcon("M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18
 export const PixelCopy = pixelIcon("M8 6h12v2H8zM4 2h12v2H4zm2 6h2v12H6zM2 4h2v12H2zm6 16h12v2H8zM20 8h2v12h-2zm-4-4h2v2h-2zM4 16h2v2H4z");
 export const PixelArrowRight = pixelIcon(["M4 11v2h16v-2zm12 2v2h2v-2zm-2 2v2h2v-2zm-2 2v2h2v-2zm4-6V9h2v2z", "M14 15V7h2v8zm-2 2V5h2v12z"]);
 export const PixelMenu = pixelIcon("M20 18H4v-2h16v2Zm0-5H4v-2h16v2Zm0-5H4V6h16v2Z");
+export const PixelTrash = pixelIcon("M18 22H6V20H18V22ZM9 6H15V4H17V6H22V8H20V20H18V8H6V20H4V8H2V6H7V4H9V6ZM15 4H9V2H15V4Z");
+export const PixelLoader = pixelIcon("M13 22h-2v-6h2v6Zm-6-3H5v-2h2v2Zm12 0h-2v-2h2v2ZM9 17H7v-2h2v2Zm8 0h-2v-2h2v2Zm-9-4H2v-2h6v2Zm14 0h-6v-2h6v2ZM9 9H7V7h2v2Zm8 0h-2V7h2v2Zm-4-1h-2V2h2v6ZM7 7H5V5h2v2Zm12 0h-2V5h2v2Z");
