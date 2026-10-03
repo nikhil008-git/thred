@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType, Dispatch, RefObject, SetStateAction } from "react";
+import { useState, type ComponentType, type Dispatch, type RefObject, type SetStateAction } from "react";
 import {
   PixelBookOpen,
   PixelChevronDown,
@@ -119,6 +119,7 @@ function OpenNavRow({
     <button
       type="button"
       onClick={onSelect}
+      title={label}
       className={`dashboard-sidebar-panel-row ${active ? "dashboard-sidebar-panel-row-active" : ""}`}
     >
       <Icon className="size-[18px] shrink-0 text-[#1a1d19]" />
@@ -145,9 +146,17 @@ export function DashboardSidebar({
   accountMenuRef,
   onSignOut,
 }: DashboardSidebarProps) {
+  const [hovered, setHovered] = useState(false);
+  // Menus render inside the panel, so keep it open while one is showing.
+  const expanded = isHeroPreview || hovered || sidebarWorkspaceOpen || accountMenuOpen;
+
   return (
     <div
       data-preview={isHeroPreview ? "true" : "false"}
+      data-expanded={expanded ? "true" : "false"}
+      data-peek={expanded && !isHeroPreview ? "true" : "false"}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={`dashboard-sidebar-group ${
         isHeroPreview
           ? "relative h-full min-h-full"
@@ -161,7 +170,7 @@ export function DashboardSidebar({
           <div className="dashboard-sidebar-panel-header">
             <div className="flex min-w-0 items-center gap-2.5">
               <Mark className="size-7 shrink-0" />
-              <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[#141614]">
+              <span className="dashboard-sidebar-fade truncate text-[15px] font-semibold tracking-[-0.01em] text-[#141614]">
                 {workspace.name}
               </span>
             </div>
@@ -179,7 +188,7 @@ export function DashboardSidebar({
             <nav className="dashboard-sidebar-panel-nav">
               {OPEN_NAV_SECTIONS.map((section, sectionIndex) => (
                 <div key={`${section.label}-${sectionIndex}`} className="dashboard-sidebar-panel-section">
-                  <p className="dashboard-sidebar-panel-section-label">{section.label}</p>
+                  <p className="dashboard-sidebar-panel-section-label dashboard-sidebar-fade">{section.label}</p>
                   {section.items.map((item) => (
                     <OpenNavRow
                       key={item.id}
@@ -193,7 +202,7 @@ export function DashboardSidebar({
               ))}
 
               <div className="dashboard-sidebar-panel-section">
-                <p className="dashboard-sidebar-panel-section-label">Connect</p>
+                <p className="dashboard-sidebar-panel-section-label dashboard-sidebar-fade">Connect</p>
                 <OpenNavRow
                   label="MCP connection"
                   icon={PixelPlug}
@@ -211,6 +220,7 @@ export function DashboardSidebar({
                   target="_blank"
                   rel="noreferrer"
                   className="dashboard-sidebar-panel-row"
+                  title="HydraDB memory"
                 >
                   <PixelDatabase className="size-[18px] shrink-0 text-[#1a1d19]" />
                   <span className="min-w-0 truncate">HydraDB memory</span>
@@ -220,6 +230,7 @@ export function DashboardSidebar({
                   target="_blank"
                   rel="noreferrer"
                   className="dashboard-sidebar-panel-row"
+                  title="GitHub repo"
                 >
                   <PixelGithub className="size-[18px] shrink-0 text-[#1a1d19]" />
                   <span className="min-w-0 truncate">GitHub repo</span>

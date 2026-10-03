@@ -421,6 +421,52 @@
     background: #e1e5df;
   }
 
+  /* Desktop: collapse to an icon rail, open on hover */
+  @media (min-width: 1024px) {
+    .dashboard-sidebar-group {
+      --sidebar-rail: 3.625rem;
+      transition: width 200ms ease-out, box-shadow 200ms ease-out;
+    }
+
+    .dashboard-sidebar-group[data-expanded="false"] {
+      width: var(--sidebar-rail);
+      box-shadow: inset -1px 0 0 rgb(226 229 224 / 0.9);
+    }
+
+    .dashboard-sidebar-group[data-peek="true"] {
+      box-shadow: 18px 0 50px rgb(20 28 22 / 0.14);
+    }
+
+    .dashboard-sidebar-fade {
+      transition: opacity 150ms ease-out;
+    }
+
+    .dashboard-sidebar-group[data-expanded="false"] .dashboard-sidebar-fade {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .dashboard-sidebar-panel-row,
+    .dashboard-sidebar-panel-footer-btn {
+      transition: background-color 150ms ease-out, width 200ms ease-out;
+    }
+
+    /* Square icon targets in the rail, so highlights aren't clipped */
+    .dashboard-sidebar-group[data-expanded="false"] .dashboard-sidebar-panel-row {
+      width: 2.375rem;
+      overflow: hidden;
+    }
+
+    .dashboard-sidebar-group[data-expanded="false"] .dashboard-sidebar-panel-footer {
+      padding-inline: 0.5rem;
+    }
+
+    .dashboard-sidebar-group[data-expanded="false"] .dashboard-sidebar-panel-footer-btn {
+      width: 2.75rem;
+      overflow: hidden;
+    }
+  }
+
   /* Landing / iframe hero preview */
   .dashboard-sidebar-group[data-preview="true"] {
     height: 100%;
