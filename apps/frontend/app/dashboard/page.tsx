@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -109,6 +109,8 @@ const heroPreviewOverview: Overview = {
 };
 
 function Mark({ className = "size-8 shrink-0" }: { className?: string }) {
+  // Unique per instance: a gradient inside a hidden copy can't paint visible ones.
+  const gradientId = useId();
   return (
     <svg
       aria-hidden="true"
@@ -118,7 +120,7 @@ function Mark({ className = "size-8 shrink-0" }: { className?: string }) {
     >
       <defs>
         <linearGradient
-          id="dashboard-mark"
+          id={gradientId}
           x1="3"
           y1="2"
           x2="25"
@@ -129,7 +131,7 @@ function Mark({ className = "size-8 shrink-0" }: { className?: string }) {
           <stop offset="1" stopColor="#131514" />
         </linearGradient>
       </defs>
-      <rect width="28" height="28" rx="8.5" fill="url(#dashboard-mark)" />
+      <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
       <path
         d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45"
         stroke="#F5F7F3"
@@ -285,7 +287,7 @@ function ToolTray({ items }: { items: Array<{ label: string; node: React.ReactNo
   );
 }
 
-function CodeBlock({ children, filename }: { children: string; filename?: string }) {
+function CodeBlock({ children, filename, wrap = false }: { children: string; filename?: string; wrap?: boolean }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -316,7 +318,7 @@ function CodeBlock({ children, filename }: { children: string; filename?: string
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="whitespace-pre-wrap break-words p-5 font-mono text-[12px] leading-6 text-[#e8ebe6]">
+      <pre className={`p-5 font-mono text-[12px] leading-6 text-[#e8ebe6] ${wrap ? "whitespace-pre-wrap break-words" : "overflow-x-auto"}`}>
         <code>{children}</code>
       </pre>
     </div>
@@ -803,7 +805,7 @@ function DocsPage({ onNavigate }: { onNavigate: (view: View) => void }) {
           <h2 className={heading}>Instructions</h2>
           <p className={body}>Add this to your project instructions.</p>
           <div className="mt-4">
-            <CodeBlock>{prompt}</CodeBlock>
+            <CodeBlock wrap>{prompt}</CodeBlock>
           </div>
         </section>
 
@@ -1064,7 +1066,7 @@ function DashboardContent({
         )}
         <div className={`bg-[#fcfcfb] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}>
           <div
-            className={`mx-auto border-x border-[#e8e8e4] max-w-[880px] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}
+            className={`mx-auto border-[#e8e8e4] sm:border-x max-w-[880px] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}
           >
             {view === "overview" && (
               <>

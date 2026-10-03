@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { SiClaude, SiCline, SiCursor, SiModelcontextprotocol, SiWindsurf } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
@@ -10,15 +10,17 @@ import { useSession } from "@/lib/auth-client";
 import DashboardPage from "./dashboard/page";
 
 function ThreadMark({ className = "" }: { className?: string }) {
+  // Unique per instance: a gradient inside a hidden copy can't paint visible ones.
+  const gradientId = useId();
   return (
     <svg aria-hidden="true" viewBox="0 0 28 28" className={className} fill="none">
       <defs>
-        <linearGradient id="thread-mark-surface" x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
           <stop stopColor="#262927" />
           <stop offset="1" stopColor="#131514" />
         </linearGradient>
       </defs>
-      <rect width="28" height="28" rx="8.5" fill="url(#thread-mark-surface)" />
+      <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
       <path d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45" stroke="#F5F7F3" strokeWidth="1.95" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7.25" cy="9.1" r="1.55" fill="#F5F7F3" />
       <circle cx="20.75" cy="20.57" r="1.55" fill="#F5F7F3" />
@@ -114,14 +116,14 @@ export default function Home() {
             <h2 className="text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724] sm:text-[28px]">One memory for every agent that touches the work.</h2>
             <p className="mx-auto mt-4 max-w-[520px] text-[13px] leading-6 text-[#70766f] sm:text-[14px]">Claude saves the decision and the next step. Thread resolves what changed. Codex continues with the context it needs.</p>
 
-            <div className="mx-auto mt-8 flex w-fit items-center gap-3 rounded-[22px] border border-white/80 bg-[#e9ece9]/90 p-3 shadow-[0_14px_40px_rgba(65,84,72,0.12)]">
-              <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><SiClaude className="size-7" /></div>
-              <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
-              <div className="grid size-[60px] place-items-center transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-[60px]" /></div>
-              <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
-              <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><HydraMark className="size-8" /></div>
-              <ArrowRight className="size-4 text-[#9ba29c]" strokeWidth={1.5} />
-              <div className="grid size-[60px] place-items-center rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><RiOpenaiFill className="size-7" /></div>
+            <div className="mx-auto mt-8 flex w-fit items-center gap-1.5 rounded-[22px] border border-white/80 bg-[#e9ece9]/90 p-2 sm:gap-3 sm:p-3 shadow-[0_14px_40px_rgba(65,84,72,0.12)]">
+              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><SiClaude className="size-6 sm:size-7" /></div>
+              <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
+              <div className="grid size-12 place-items-center sm:size-[60px] transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-12 sm:size-[60px]" /></div>
+              <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
+              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><HydraMark className="size-7 sm:size-8" /></div>
+              <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
+              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><RiOpenaiFill className="size-6 sm:size-7" /></div>
             </div>
 
             <Link href="/sign-up" className="landing-cta mt-8 inline-flex items-center gap-2 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">Connect an agent <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>

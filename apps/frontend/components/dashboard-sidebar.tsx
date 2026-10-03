@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentType, type Dispatch, type RefObject, type SetStateAction } from "react";
+import { useId, useState, type ComponentType, type Dispatch, type RefObject, type SetStateAction } from "react";
 import {
   PixelBookOpen,
   PixelCheck,
@@ -71,15 +71,17 @@ const OPEN_NAV_SECTIONS: NavSection[] = [
 ];
 
 function Mark({ className = "size-8 shrink-0" }: { className?: string }) {
+  // Unique per instance: a gradient inside a hidden copy can't paint visible ones.
+  const gradientId = useId();
   return (
     <svg aria-hidden="true" viewBox="0 0 28 28" className={className} fill="none">
       <defs>
-        <linearGradient id="sidebar-mark" x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
           <stop stopColor="#262927" />
           <stop offset="1" stopColor="#131514" />
         </linearGradient>
       </defs>
-      <rect width="28" height="28" rx="8.5" fill="url(#sidebar-mark)" />
+      <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
       <path
         d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45"
         stroke="#F5F7F3"

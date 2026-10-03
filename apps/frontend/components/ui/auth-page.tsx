@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import { useId, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronLeft } from "lucide-react";
@@ -15,7 +15,7 @@ type AuthPageProps = {
   mode: AuthMode;
   error: string | null;
   isSubmitting: boolean;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 const content = {
@@ -113,15 +113,17 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
 }
 
 function ThreadMark({ className = "" }: { className?: string }) {
+  // Unique per instance: a gradient defined inside a hidden copy can't paint a visible one.
+  const gradientId = useId();
   return (
     <svg aria-hidden="true" viewBox="0 0 28 28" className={className} fill="none">
       <defs>
-        <linearGradient id="auth-thread-mark-surface" x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="3" y1="2" x2="25" y2="27" gradientUnits="userSpaceOnUse">
           <stop stopColor="#262927" />
           <stop offset="1" stopColor="#131514" />
         </linearGradient>
       </defs>
-      <rect width="28" height="28" rx="8.5" fill="url(#auth-thread-mark-surface)" />
+      <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
       <path d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45" stroke="#F5F7F3" strokeWidth="1.95" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7.25" cy="9.1" r="1.55" fill="#F5F7F3" />
       <circle cx="20.75" cy="20.57" r="1.55" fill="#F5F7F3" />
@@ -131,7 +133,7 @@ function ThreadMark({ className = "" }: { className?: string }) {
   );
 }
 
-function AgentNode({ children }: { children: React.ReactNode }) {
+function AgentNode({ children }: { children: ReactNode }) {
   return <div className="grid size-[64px] shrink-0 place-items-center rounded-[18px] border border-[#d8ded8] bg-white text-[#59625b] shadow-[0_5px_13px_rgba(26,40,31,0.08)]">{children}</div>;
 }
 
