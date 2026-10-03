@@ -1,5 +1,4 @@
 export { getHydraClient } from "./client.js";
-export { getMemoryRelations } from "./graph.js";
 export { recallLongTermMemory } from "./query.js";
 export {
   getWorkspaceDatabaseStatus,

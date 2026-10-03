@@ -3,7 +3,6 @@ export { shouldAbstain, type AbstentionResult } from "./abstention.js";
 export { buildHydraMemory } from "./graph-builder.js";
 export { buildMemoryContext, type MemoryContext } from "./context-builder.js";
 export { buildMemoryHistory, type MemoryHistory } from "./history.js";
-export { inspectMemory } from "./inspect.js";
 export { resumeWithMemory, type ResumeWithMemory } from "./resume-context.js";
 export { HydraMemoryLookup } from "./hydra-lookup.js";
 export { CachedMemoryLookup } from "./memory-cache.js";

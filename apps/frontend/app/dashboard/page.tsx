@@ -477,17 +477,17 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
     {
       name: "Claude Code",
       icon: "claude",
-      prompt: `Connect to Thred for the ${workspace.name} workspace using the THRED_API_KEY I provide. Before starting work, retrieve the current workspace context. Before you finish or hand work off, call thred_checkpoint with the goal, progress, decisions, evidence, blockers, and exact next step. Configure model credentials separately under BYOK providers.`,
+      prompt: `Connect to Thred for the ${workspace.name} workspace using the THRED_API_KEY I provide. Before starting work, retrieve the current workspace context. Before you finish or hand work off, call thread_checkpoint with the goal, progress, decisions, evidence, blockers, and exact next step. Configure model credentials separately under BYOK providers.`,
     },
     {
       name: "Cursor",
       icon: "cursor",
-      prompt: `Connect to Thred for ${workspace.name} using my THRED_API_KEY. Read the workspace context before making changes. When the work is ready to hand off, save a thred_checkpoint with the changed files, decisions, evidence, blockers, and next step so the next agent can continue immediately. The model provider is configured separately with BYOK.`,
+      prompt: `Connect to Thred for ${workspace.name} using my THRED_API_KEY. Read the workspace context before making changes. When the work is ready to hand off, save a thread_checkpoint with the changed files, decisions, evidence, blockers, and next step so the next agent can continue immediately. The model provider is configured separately with BYOK.`,
     },
     {
       name: "Codex",
       icon: "codex",
-      prompt: `Use Thred as the shared memory for ${workspace.name}. Configure it with the THRED_API_KEY I provide, then retrieve the current context before you begin. At each meaningful handoff, call thred_checkpoint with a concise summary, decisions, verification, open risks, and next action. Provider credentials are configured separately under BYOK.`,
+      prompt: `Use Thred as the shared memory for ${workspace.name}. Configure it with the THRED_API_KEY I provide, then retrieve the current context before you begin. At each meaningful handoff, call thread_checkpoint with a concise summary, decisions, verification, open risks, and next action. Provider credentials are configured separately under BYOK.`,
     },
   ];
 
@@ -571,7 +571,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
     setCopied(name);
   };
   const config = mcpServerConfig();
-  const prompt = `Before you begin, retrieve the current Thred context. When work is ready to pass on, call thred_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
+  const prompt = `Before you begin, retrieve the current Thred context. When work is ready to pass on, call thread_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
   const Code = ({ name, children }: { name: string; children: string }) => (
     <div className="relative mt-5 overflow-hidden rounded-[11px] bg-[#20221f] p-5 pr-20 font-mono text-[11px] leading-6 text-[#e9ece7] shadow-[0_12px_28px_rgba(25,30,26,.1)]">
       <button
@@ -723,12 +723,14 @@ Save provider`}</Code>
             When an agent finishes a meaningful step, it saves the facts the
             next agent cannot safely guess.
           </p>
-          <Code name="checkpoint">{`thred_checkpoint({
-  task: "Finish Google OAuth onboarding",
-  decisions: ["Use Google-only sign in"],
-  evidence: ["OAuth callback tested locally"],
-  blockers: [],
-  nextStep: "Add the production redirect URL"
+          <Code name="checkpoint">{`thread_checkpoint({
+  sessionId: "oauth-onboarding",
+  messages: [
+    { id: "m1", role: "user", content: "Use Google-only sign in." },
+    { id: "m2", role: "assistant", content: "Done. Next: add the production redirect URL." }
+  ],
+  changedFiles: ["app/sign-in/page.tsx"],
+  testResults: ["OAuth callback tested locally"]
 })`}</Code>
         </Section>
         <Section
@@ -743,7 +745,7 @@ Save provider`}</Code>
           <div className="mt-5 overflow-hidden rounded-[11px] bg-[#1c211e] p-5 font-mono text-[11px] leading-6 text-[#dce1da] shadow-[0_12px_28px_rgba(25,30,26,.1)]">
             <p className="text-[#99a997]">$ codex</p>
             <p className="mt-2 text-white">
-              › Retrieve Thred context for {workspace.name}
+              › thread_resume for {workspace.name}
             </p>
             <p className="text-[#a8b4a5]">
               ✓ 1 open handoff · next step loaded
@@ -761,14 +763,17 @@ Save provider`}</Code>
           <div className="mt-5 divide-y divide-[#e7eae5] rounded-[10px] bg-[#f4f5f2] px-4">
             {[
               [
-                "thred_checkpoint",
+                "thread_checkpoint",
                 "Save a resumable task, decisions, evidence, and next step.",
               ],
               [
-                "thred_context",
-                "Retrieve the current workspace context before you begin.",
+                "thread_context",
+                "Retrieve current decisions and evidence. Pass includeHistory to see how a fact changed.",
               ],
-              ["thred_search", "Find prior decisions and supporting evidence."],
+              [
+                "thread_resume",
+                "Pick up the latest unfinished handoff with its related context.",
+              ],
             ].map(([tool, description]) => (
               <div key={tool} className="py-4">
                 <code className="text-[12px] font-medium text-[#252824]">
@@ -1203,7 +1208,7 @@ function DashboardContent({
                       <p className="mt-5 text-[14px] font-medium text-[#30332e]">No handoffs yet.</p>
                       <p className="mt-1 max-w-[510px] text-[12px] leading-5 text-[#73776f]">
                         Connect your agent, let it complete a meaningful step, then save the task, decisions, evidence, and exact next move with{" "}
-                        <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#454a43]">thred_checkpoint</code>.
+                        <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#454a43]">thread_checkpoint</code>.
                       </p>
                     </div>
                   )}

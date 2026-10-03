@@ -5,8 +5,6 @@ import {
   CachedMemoryLookup,
   HydraMemoryLookup,
   ingestSession,
-  inspectMemory,
-  processLongTermClaim,
   resumeWithMemory,
 } from "@repo/memory-engine";
 import { extractionModelForWorkspace } from "./workspace-model.js";
@@ -21,81 +19,11 @@ mcpRouter.post("/context", async (req: ThredRequest, res, next) => {
     const query = typeof req.body?.query === "string" ? req.body.query.trim() : "";
     if (!query) return res.status(400).json({ error: "query is required" });
 
-    const result = await buildMemoryContext({
-      workspaceId: req.workspaceId!,
-      query,
-    });
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-mcpRouter.post("/remember", async (req: ThredRequest, res, next) => {
-  try {
-    const body = req.body ?? {};
-    const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : "";
-    const kind = body.kind;
-    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
-    const predicate = typeof body.predicate === "string" ? body.predicate.trim() : "";
-    const value = typeof body.value === "string" ? body.value.trim() : "";
-    const reason = typeof body.reason === "string" ? body.reason.trim() : undefined;
-    const confidence = body.confidence;
-    const sourceMessageIds = Array.isArray(body.sourceMessageIds) ? body.sourceMessageIds : [];
-    const files = Array.isArray(body.files) ? body.files : [];
-    const evidenceEventIds = Array.isArray(body.evidenceEventIds) ? body.evidenceEventIds : [];
-
-    if (!sessionId || !subject || !predicate || !value || typeof confidence !== "number"
-      || !sourceMessageIds.length) {
-      return res.status(400).json({ error: "Invalid remember payload" });
-    }
-
-    const workspaceId = req.workspaceId!;
-    const agentSessionId = await getAgentSession(workspaceId, sessionId);
-    const result = await processLongTermClaim(new HydraMemoryLookup(), {
-      workspaceId,
-      sessionId: agentSessionId,
-      evidenceEventIds,
-      claim: {
-        kind,
-        subject,
-        predicate,
-        value,
-        ...(reason ? { reason } : {}),
-        confidence,
-        sourceMessageIds,
-        files,
-      },
-    });
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-mcpRouter.post("/history", async (req: ThredRequest, res, next) => {
-  try {
-    const query = typeof req.body?.query === "string" ? req.body.query.trim() : "";
-    const maxResults = typeof req.body?.maxResults === "number" ? req.body.maxResults : undefined;
-    if (!query) return res.status(400).json({ error: "query is required" });
-
-    const result = await buildMemoryHistory({
-      workspaceId: req.workspaceId!,
-      query,
-      ...(maxResults === undefined ? {} : { maxResults }),
-    });
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
-});
-
-mcpRouter.post("/inspect", async (req: ThredRequest, res, next) => {
-  try {
-    const memoryId = typeof req.body?.memoryId === "string" ? req.body.memoryId.trim() : "";
-    if (!memoryId) return res.status(400).json({ error: "memoryId is required" });
-
-    const result = await inspectMemory({ workspaceId: req.workspaceId!, memoryId });
+    // History keeps superseded revisions and orders them oldest first; plain
+    // context hides them and returns only what is current.
+    const result = req.body?.includeHistory === true
+      ? await buildMemoryHistory({ workspaceId: req.workspaceId!, query })
+      : await buildMemoryContext({ workspaceId: req.workspaceId!, query });
     res.json(result);
   } catch (error) {
     next(error);
