@@ -4,18 +4,19 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SiClaude, SiCursor } from "react-icons/si";
 import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  CircleCheck,
-  Copy,
-  KeyRound,
-  Layers3,
-  Link2,
-  Menu,
-} from "lucide-react";
-import { SiClaude, SiCursor, SiModelcontextprotocol } from "react-icons/si";
+  PixelArrowRight,
+  PixelCheck,
+  PixelCheckBox,
+  PixelChevronDown,
+  PixelCopy,
+  PixelFolder,
+  PixelKey,
+  PixelLink,
+  PixelMenu,
+  PixelPlug,
+} from "@/components/pixel-icons";
 import { signOut, useSession } from "@/lib/auth-client";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { useClickOutside } from "@/lib/use-click-outside";
@@ -72,7 +73,6 @@ type ProviderCredential = {
 };
 type View =
   | "overview"
-  | "handoffs"
   | "mcp"
   | "apiKeys"
   | "providers"
@@ -192,6 +192,57 @@ function CodexMark() {
   );
 }
 
+type Checkpoint = Overview["latestCheckpoints"][number];
+
+function HandoffList({ checkpoints }: { checkpoints: Checkpoint[] }) {
+  const formatDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+  return (
+    <div className="divide-y divide-[#e8ebe6] rounded-[12px] border border-[#e6e9e4] bg-white text-left">
+      {checkpoints.map((checkpoint) => (
+        <article key={checkpoint.id} className="flex items-start gap-3 px-4 py-4 sm:px-5">
+          <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-[8px] bg-[#f1f3ef] text-[#5d665b]">
+            <PixelCheckBox className="size-3.5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-medium text-[#2a2d29]">{checkpoint.task}</p>
+            <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#73776f]">
+              {checkpoint.payload?.nextStep ?? "No next step recorded."}
+            </p>
+          </div>
+          <div className="shrink-0 text-right text-[11px] leading-5 text-[#8a8e86]">
+            <p className="capitalize">{checkpoint.session.agent.toLowerCase()}</p>
+            <p>{formatDate.format(new Date(checkpoint.updatedAt))}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function PageHeader({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <header className="text-center">
+      <p className="text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
+        {eyebrow}
+      </p>
+      <h1 className="mx-auto mt-3 max-w-[560px] text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
+        {title}
+      </h1>
+      <p className="mx-auto mt-4 max-w-[540px] text-[13px] leading-6 text-[#6f736c]">
+        {children}
+      </p>
+    </header>
+  );
+}
+
 function DashboardSkeleton() {
   const bar = "animate-pulse rounded bg-[#e8ebe6]";
 
@@ -296,24 +347,16 @@ function ApiKeys({
   };
 
   return (
-    <section id="api-keys" className="mx-auto mt-10 max-w-[760px]">
-      <div className="flex items-end justify-between gap-5">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">
-            Thred agent keys
-          </p>
-          <h2 className="mt-2 text-[26px] tracking-[-.05em] text-[#20221f]">
-            Keys for your agents.
-          </h2>
-          <p className="mt-2 max-w-[440px] text-[12px] leading-5 text-[#73776f]">
-            Give each agent or environment its own key, so access stays easy to
-            manage as your team grows.
-          </p>
-        </div>
+    <section id="api-keys" className="mx-auto mt-10 max-w-[760px] text-left">
+      <div className="flex items-center justify-between gap-5 border-b border-[#e8ebe6] pb-4">
+        <p className="text-[12px] text-[#73776f]">
+          {loading ? "Loading…" : `${keys.length} active key${keys.length === 1 ? "" : "s"}`}
+        </p>
         <button
           onClick={() => void create()}
-          className="landing-cta cursor-pointer rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white shadow-[0_4px_12px_rgba(21,23,21,.14)] hover:bg-[#343733]"
+          className="landing-cta inline-flex cursor-pointer items-center gap-1.5 rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white shadow-[0_4px_12px_rgba(21,23,21,.14)] hover:bg-[#343733]"
         >
+          <PixelKey className="size-3.5" />
           Create key
         </button>
       </div>
@@ -343,7 +386,7 @@ function ApiKeys({
           </code>
         </div>
       )}
-      <div className="mt-7 divide-y divide-[#e8ebe6]">
+      <div className="divide-y divide-[#e8ebe6]">
         {loading ? (
           <div className="flex items-center gap-2 py-5 text-[13px] text-[#858881]">
             <span className="size-3 animate-pulse rounded-full bg-[#cbd1ca]" />
@@ -379,8 +422,8 @@ function ApiKeys({
             </div>
           ))
         ) : (
-          <div className="my-5 rounded-[10px] border border-dashed border-[#dce1db] bg-[#f7f8f6] p-5">
-            <KeyRound className="size-4 text-[#777d75]" />
+          <div className="my-5 flex flex-col items-center rounded-[14px] border border-dashed border-[#dce1db] bg-[#f7f8f6] px-6 py-9 text-center">
+            <PixelKey className="size-5 text-[#777d75]" />
             <p className="mt-3 text-[13px] font-medium text-[#333630]">No keys yet.</p>
             <p className="mt-1 text-[12px] leading-5 text-[#73776f]">Create your first key, copy it once, then add it to an agent&apos;s MCP configuration.</p>
           </div>
@@ -440,26 +483,25 @@ function ProviderKeys({
     if (response.ok) setCredentials((current) => current.filter((entry) => entry.provider !== item.provider));
   };
   return (
-    <section className="mx-auto mt-8 max-w-[620px] border-t border-[#e2e6df] pt-7 text-left">
-      <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">BYOK · model providers</p>
-      <h2 className="mt-2 text-[22px] tracking-[-.05em] text-[#20221f]">Bring your own model key.</h2>
-      <p className="mt-2 text-[12px] leading-5 text-[#73776f]">Keys are encrypted before storage and never returned. Ollama runs locally without a key; Groq and OpenRouter often have free models with provider limits.</p>
+    <section className="mx-auto mt-10 max-w-[620px] text-left">
+      <p className="text-[12px] leading-5 text-[#73776f]">Keys are encrypted before storage and never returned. Ollama runs locally without a key; Groq and OpenRouter often have free models with provider limits.</p>
       <div className="mt-5 space-y-2">
         {credentials.map((item) => (
-          <div key={item.provider} className="flex items-center gap-3 rounded-[8px] bg-[#f4f5f2] px-3 py-2.5 text-[12px]">
+          <div key={item.provider} className="flex items-center gap-3 rounded-[10px] border border-[#e6e9e4] bg-white px-4 py-3 text-[12px]">
+            <PixelCheckBox className="size-3.5 shrink-0 text-[#66806b]" />
             <span className="min-w-0 flex-1"><strong className="font-medium text-[#30332e]">{item.label}</strong><span className="ml-2 text-[#777d75]">{item.model} · {item.keyHint}</span></span>
-            <button type="button" onClick={() => void remove(item)} className="text-[#8a4f47] hover:text-[#6d302b]">Remove</button>
+            <button type="button" onClick={() => void remove(item)} className="cursor-pointer rounded-[5px] bg-[#f3f4f1] px-2.5 py-1.5 text-[11px] font-medium text-[#8a4f47] transition-colors hover:bg-[#f4e9e7] hover:text-[#6d302b]">Remove</button>
           </div>
         ))}
       </div>
-      <form onSubmit={(event) => void save(event)} className="mt-5 grid gap-3 rounded-[10px] bg-[#f4f5f2] p-4">
-        <label className="text-[11px] font-medium text-[#454a43]">Provider<select value={provider} onChange={(event) => changeProvider(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal">{providerOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-        <label className="text-[11px] font-medium text-[#454a43]">Model<input value={model} onChange={(event) => setModel(event.target.value)} required className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder="Model ID" /></label>
-        <label className="text-[11px] font-medium text-[#454a43]">Base URL<input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} required={provider === "custom"} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder="https://api.example.com/v1" /></label>
-        <label className="text-[11px] font-medium text-[#454a43]">Label<input value={label} onChange={(event) => setLabel(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" /></label>
-        {selected.needsKey && <label className="text-[11px] font-medium text-[#454a43]">Provider API key<input type="password" value={key} onChange={(event) => setKey(event.target.value)} required={!credentials.some((item) => item.provider === provider)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal" placeholder={credentials.some((item) => item.provider === provider) ? "Leave blank to keep current key" : "Paste provider key"} /></label>}
-        {message && <p className={`text-[11px] ${message.includes("securely") ? "text-[#477152]" : "text-red-600"}`}>{message}</p>}
-        <button disabled={saving} className="mt-1 w-fit rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white disabled:opacity-50">{saving ? "Saving…" : "Save provider"}</button>
+      <form onSubmit={(event) => void save(event)} className="mt-5 grid gap-3 rounded-[12px] bg-[#f4f5f2] p-5 sm:grid-cols-2">
+        <label className="text-[11px] font-medium text-[#454a43]">Provider<select value={provider} onChange={(event) => changeProvider(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]">{providerOptions.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Model<input value={model} onChange={(event) => setModel(event.target.value)} required className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]" placeholder="Model ID" /></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Base URL<input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} required={provider === "custom"} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]" placeholder="https://api.example.com/v1" /></label>
+        <label className="text-[11px] font-medium text-[#454a43]">Label<input value={label} onChange={(event) => setLabel(event.target.value)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]" /></label>
+        {selected.needsKey && <label className="text-[11px] font-medium text-[#454a43] sm:col-span-2">Provider API key<input type="password" value={key} onChange={(event) => setKey(event.target.value)} required={!credentials.some((item) => item.provider === provider)} className="mt-1.5 w-full rounded-[6px] border border-[#dfe3dc] bg-white px-2.5 py-2 text-[12px] font-normal outline-none transition focus:border-[#767d73] focus:ring-2 focus:ring-[#dce5dc]" placeholder={credentials.some((item) => item.provider === provider) ? "Leave blank to keep current key" : "Paste provider key"} /></label>}
+        {message && <p className={`text-[11px] sm:col-span-2 ${message.includes("securely") ? "text-[#477152]" : "text-red-600"}`}>{message}</p>}
+        <button disabled={saving} className="landing-cta mt-1 w-fit cursor-pointer rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white shadow-[0_4px_12px_rgba(21,23,21,.14)] hover:bg-[#343733] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">{saving ? "Saving…" : "Save provider"}</button>
       </form>
     </section>
   );
@@ -493,16 +535,9 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
 
   return (
     <>
-      <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-        Agent instructions
-      </p>
-      <h1 className="mx-auto mt-3 max-w-[520px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-        Start every agent with context.
-      </h1>
-      <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">
-        Choose your tool, copy its instructions, and each agent will pick up the
-        work with the context it needs.
-      </p>
+      <PageHeader eyebrow="Agent instructions" title="Start every agent with context.">
+        Choose your tool, copy its instructions, and each agent will pick up the work with the context it needs.
+      </PageHeader>
       <div className="mx-auto mt-9 max-w-[760px] space-y-3">
         {prompts.map((item) => (
           <article
@@ -542,9 +577,9 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
               className="mt-3 inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] bg-[#1b1d1b] text-white sm:mt-0 sm:shrink-0"
             >
               {copied === item.name ? (
-                <Check className="size-3" aria-hidden="true" />
+                <PixelCheck className="size-3" aria-hidden="true" />
               ) : (
-                <Copy className="size-3" aria-hidden="true" />
+                <PixelCopy className="size-3" aria-hidden="true" />
               )}
             </button>
           </article>
@@ -627,17 +662,10 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         </div>
       </aside>
       <article className="min-w-0">
-        <div className="pb-12 text-center">
-          <p className="text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-            Thred docs
-          </p>
-          <h1 className="mx-auto mt-3 max-w-[520px] text-[30px] leading-[1.02] tracking-[-.06em] sm:text-[38px]">
-            Bring context into every handoff.
-          </h1>
-          <p className="mx-auto mt-4 max-w-[540px] text-[13px] leading-6 text-[#555b53]">
-            Everything your agents need to save useful work and let the next one
-            resume it.
-          </p>
+        <div className="pb-12">
+          <PageHeader eyebrow="Thred docs" title="Bring context into every handoff.">
+            Everything your agents need to save useful work and let the next one resume it.
+          </PageHeader>
         </div>
         <Section
           id="quickstart"
@@ -646,7 +674,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         >
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
-      "Create a Thred agent key",
+              "Create a Thred agent key",
               "Add the MCP config",
               "Save your first handoff",
             ].map((item, index) => (
@@ -686,7 +714,7 @@ function DocsPage({ workspace }: { workspace: Workspace }) {
         </Section>
         <Section
           id="providers"
-          eyebrow="02 · BYOK model providers"
+          eyebrow="03 · BYOK model providers"
           title="Bring your own model key."
         >
           <p className="mt-4 text-[14px] leading-6 text-[#424740]">
@@ -813,7 +841,6 @@ function DashboardContent({
   const router = useRouter();
   const isHeroPreview = preview || isHeroFromQuery;
   const initialView: View =
-    previewView === "handoffs" ||
     previewView === "mcp" ||
     previewView === "apiKeys" ||
     previewView === "providers" ||
@@ -1021,10 +1048,10 @@ function DashboardContent({
         }}
       />
       <section className={`min-w-0 bg-white ${isHeroPreview ? "" : "lg:ml-[18rem]"}`}>
-        <header className={`sticky z-10 flex h-12 items-center justify-between gap-2 bg-[#f1f2f0] px-4 sm:px-5 lg:justify-end lg:px-8 ${isHeroPreview ? "top-0" : "top-[var(--beta-banner-height)]"}`}>
+        <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-2 bg-[#f1f2f0] px-4 sm:px-5 lg:justify-end lg:px-8">
           <div className="flex items-center gap-2 lg:hidden">
             <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#4d534c] transition hover:bg-[#e3e7e1]">
-              <Menu className="size-4" />
+              <PixelMenu className="size-4" />
             </button>
             <Link href="/" className="flex items-center gap-1.5 text-[14px] font-semibold tracking-[-.055em]">
               <Mark className="size-5" />
@@ -1054,39 +1081,28 @@ function DashboardContent({
           >
             {view === "overview" && (
               <section className="flex min-h-[calc(100vh-220px)] flex-col justify-center">
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  Workspace overview
-                </p>
-                <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-                  {salutation}, {firstName}.
-                </h1>
-                <p className="mx-auto mt-4 max-w-[535px] text-center text-[13px] font-medium leading-6 text-[#686c66]">
-                  Your workspace keeps every agent oriented around the work in
-                  motion.
-                </p>
+                <PageHeader eyebrow="Workspace overview" title={`${salutation}, ${firstName}.`}>
+                  Your workspace keeps every agent oriented around the work in motion.
+                </PageHeader>
                 <section className="mx-auto mt-10 max-w-[820px] px-6 py-3 sm:px-10">
                   <p className="text-center text-[10px] font-medium uppercase tracking-[.16em] text-[#7e867c]">
                     One shared context stream
                   </p>
-                  <div className="mt-5 flex items-center justify-center gap-2.5 sm:gap-5">
-                    <span className="grid size-12 place-items-center rounded-[14px] bg-[#D87551] text-[#FFF7F1] shadow-[0_6px_18px_rgba(39,57,43,.08)]">
-                      <SiClaude className="size-5" />
-                    </span>
-                    <span className="text-lg text-[#8f9990]">→</span>
-                    <span className="grid size-[56px] place-items-center rounded-[17px] bg-[#1c211e] shadow-[0_8px_20px_rgba(24,42,29,.18)]">
-                      <Mark className="size-7" />
-                    </span>
-                    <span className="text-lg text-[#8f9990]">→</span>
-                    <span className="grid size-12 place-items-center rounded-[14px] bg-white shadow-[0_6px_18px_rgba(39,57,43,.08)]">
-                      <HydraMark />
-                    </span>
-                    <span className="text-lg text-[#8f9990]">→</span>
-                    <span className="grid size-12 place-items-center overflow-hidden rounded-[14px] bg-white shadow-[0_6px_18px_rgba(39,57,43,.08)]">
-                      <CodexMark />
-                    </span>
-                  </div>
-                  <div className="mx-auto mt-3 grid max-w-[440px] grid-cols-4 text-center text-[10px] font-medium text-[#81877f]">
-                    <span>Claude</span><span>Thred</span><span>Memory</span><span>Codex</span>
+                  <div className="mt-5 flex items-start justify-center gap-2 sm:gap-4">
+                    {[
+                      ["Claude", <span key="claude" className="grid size-12 place-items-center rounded-[14px] bg-[#D87551] text-[#FFF7F1] shadow-[0_6px_18px_rgba(39,57,43,.08)]"><SiClaude className="size-5" /></span>],
+                      ["Thred", <span key="thred" className="grid size-12 place-items-center rounded-[14px] bg-[#1c211e] shadow-[0_8px_20px_rgba(24,42,29,.18)]"><Mark className="size-7" /></span>],
+                      ["Memory", <span key="memory" className="grid size-12 place-items-center rounded-[14px] bg-white shadow-[0_6px_18px_rgba(39,57,43,.08)]"><HydraMark /></span>],
+                      ["Codex", <span key="codex" className="grid size-12 place-items-center overflow-hidden rounded-[14px] bg-white shadow-[0_6px_18px_rgba(39,57,43,.08)]"><CodexMark /></span>],
+                    ].map(([label, icon], index) => (
+                      <div key={label as string} className="flex items-start gap-2 sm:gap-4">
+                        {index > 0 && <PixelArrowRight className="mt-[18px] size-3 text-[#a3aba1]" />}
+                        <figure className="flex w-14 flex-col items-center gap-2">
+                          {icon}
+                          <figcaption className="text-[10px] font-medium text-[#81877f]">{label}</figcaption>
+                        </figure>
+                      </div>
+                    ))}
                   </div>
                   <p className="mt-5 text-center text-[12px] text-[#697067]">
                     Your agent saves the state once. The next one resumes with
@@ -1100,13 +1116,13 @@ function DashboardContent({
                     title="Create and copy a Thred agent key"
                     aria-label="Open Thred agent keys"
                     className="grid size-9 cursor-pointer place-items-center rounded-full border border-[#e0e4de] bg-white transition hover:border-[#abb5a8] hover:bg-[#f3f6f1] hover:text-[#596857]"
-                  ><KeyRound className="size-3.5" /></button>
+                  ><PixelKey className="size-3.5" /></button>
                   <span className="h-px flex-1 bg-[#dfe4dd]" />
                   <button
                     type="button"
-                    onClick={() => setView("handoffs")}
-                    title="View saved handoffs"
-                    aria-label="Open handoffs"
+                    onClick={() => setView("prompts")}
+                    title="Copy agent instructions"
+                    aria-label="Open agent instructions"
                     className="grid size-9 cursor-pointer place-items-center rounded-full border border-[#e0e4de] bg-white text-[#9ca39a] transition hover:border-[#abb5a8] hover:bg-[#f3f6f1] hover:text-[#596857]"
                   ><MarkGlyph className="size-3.5" /></button>
                   <span className="h-px flex-1 bg-[#dfe4dd]" />
@@ -1116,7 +1132,7 @@ function DashboardContent({
                     title="Finish your MCP connection"
                     aria-label="Open MCP connection"
                     className="grid size-9 cursor-pointer place-items-center rounded-full border border-[#e0e4de] bg-white transition hover:border-[#abb5a8] hover:bg-[#f3f6f1] hover:text-[#596857]"
-                  ><SiModelcontextprotocol className="size-4" /></button>
+                  ><PixelPlug className="size-4" /></button>
                 </div>
                 <div className="mx-auto mt-4 max-w-[620px] py-3 text-center">
                   <div>
@@ -1136,7 +1152,7 @@ function DashboardContent({
                     onClick={() => {
                       closeMenus();
                       if (overview?.metrics.agentCount) {
-                        setView("handoffs");
+                        setView("apiKeys");
                       } else {
                         setSetupOpen(true);
                       }
@@ -1144,95 +1160,31 @@ function DashboardContent({
                     className="landing-cta mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-[6px] bg-[#1b1d1b] px-3.5 py-2 text-[12px] font-medium text-white shadow-[0_4px_12px_rgba(21,23,21,.14)] hover:bg-[#343733]"
                   >
                     {overview?.metrics.agentCount
-                      ? "Manage handoffs"
+                      ? "Manage agent keys"
                       : "Set up handoffs"}
-                    <ArrowRight className="size-3" />
+                    <PixelArrowRight className="size-3" />
                   </button>
                 </div>
                 {overview?.latestCheckpoints.length ? (
-                  <section className="mt-11 w-full">
-                    <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">
+                  <section className="mx-auto mt-11 w-full max-w-[760px]">
+                    <p className="mb-3 text-[10px] font-medium uppercase tracking-[.14em] text-[#8a8d87]">
                       Latest handoffs
                     </p>
-                    <div className="mt-4 divide-y border-y border-[#e6e9e4]">
-                      {overview.latestCheckpoints.map((checkpoint) => (
-                        <div key={checkpoint.id} className="py-4">
-                          <p className="text-[13px] font-medium text-[#30322f]">
-                            {checkpoint.task}
-                          </p>
-                          <p className="mt-1 text-[12px] text-[#73776f]">
-                            {checkpoint.payload?.nextStep ??
-                              `${checkpoint.status.toLowerCase()} · ${checkpoint.session.agent.toLowerCase()}`}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                    <HandoffList checkpoints={overview.latestCheckpoints} />
                   </section>
                 ) : null}
               </section>
             )}
-            {view === "handoffs" && (
-              <>
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  Handoffs
-                </p>
-                <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-                  Ready for the next agent.
-                </h1>
-                <p className="mx-auto mt-4 max-w-[520px] text-center text-[13px] font-medium leading-6 text-[#686c66]">
-                  Every checkpoint your agents save becomes a resumable piece of
-                  work here.
-                </p>
-                <div className="mx-auto mt-10 max-w-[760px] divide-y border-y border-[#e3e7e1] text-left">
-                  {overview?.latestCheckpoints.length ? (
-                    overview.latestCheckpoints.map((checkpoint) => (
-                      <article key={checkpoint.id} className="py-5">
-                        <p className="text-[14px] font-medium text-[#2a2d29]">
-                          {checkpoint.task}
-                        </p>
-                        <p className="mt-1 text-[12px] text-[#73776f]">
-                          {checkpoint.payload?.nextStep ??
-                            `${checkpoint.status.toLowerCase()} · saved by ${checkpoint.session.agent.toLowerCase()}`}
-                        </p>
-                      </article>
-                    ))
-                  ) : (
-                    <div className="my-6 rounded-[12px] bg-[#f4f5f2] p-5 sm:p-6">
-                      <div className="flex items-center gap-2 text-[#667063]">
-                        <span className="grid size-8 place-items-center rounded-[9px] bg-white shadow-[0_3px_10px_rgba(25,30,26,.06)]"><SiClaude className="size-3.5" /></span>
-                        <ArrowRight className="size-3" />
-                        <span className="grid size-8 place-items-center rounded-[9px] bg-[#1c211e]"><Mark className="size-4" /></span>
-                        <ArrowRight className="size-3" />
-                        <span className="grid size-8 place-items-center rounded-[9px] bg-white shadow-[0_3px_10px_rgba(25,30,26,.06)]"><SiCursor className="size-3.5" /></span>
-                      </div>
-                      <p className="mt-5 text-[14px] font-medium text-[#30332e]">No handoffs yet.</p>
-                      <p className="mt-1 max-w-[510px] text-[12px] leading-5 text-[#73776f]">
-                        Connect your agent, let it complete a meaningful step, then save the task, decisions, evidence, and exact next move with{" "}
-                        <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#454a43]">thread_checkpoint</code>.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
             {view === "mcp" && (
               <>
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  MCP connection
-                </p>
-                <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-                  Bring Thred into your agent.
-                </h1>
-                <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">
-                  Create a Thred agent key, then add this configuration to
-                  Codex, Claude, or Cursor. Configure your model provider
-                  separately under BYOK providers.
-                </p>
+                <PageHeader eyebrow="MCP connection" title="Bring Thred into your agent.">
+                  Create a Thred agent key, then add this configuration to Codex, Claude, or Cursor. Configure your model provider separately under BYOK providers.
+                </PageHeader>
                 <div className="mx-auto mt-8 grid max-w-[760px] gap-2 sm:grid-cols-3">
                   {[
-                    ["01", "Create a key", <KeyRound key="key" className="size-4" />],
-                    ["02", "Add the config", <Link2 key="link" className="size-4" />],
-                    ["03", "Save a handoff", <CircleCheck key="check" className="size-4" />],
+                    ["01", "Create a key", <PixelKey key="key" className="size-4" />],
+                    ["02", "Add the config", <PixelLink key="link" className="size-4" />],
+                    ["03", "Save a handoff", <PixelCheckBox key="check" className="size-4" />],
                   ].map(([number, label, icon]) => (
                     <div key={number as string} className="rounded-[10px] bg-[#f4f5f2] p-3.5 text-left">
                       <div className="flex items-center justify-between text-[#697168]">
@@ -1246,25 +1198,20 @@ function DashboardContent({
                 <pre className="mx-auto mt-3 max-w-[760px] overflow-x-auto rounded-[12px] bg-[#20221f] p-5 text-left text-[12px] leading-6 text-[#e8ebe6] shadow-[0_12px_30px_rgba(25,30,26,.12)]">
                   <code>{mcpServerConfig()}</code>
                 </pre>
-                <p className="mx-auto mt-4 flex max-w-[760px] items-center gap-2 text-[12px] leading-5 text-[#747970]">
-                  <CircleCheck className="size-4 shrink-0 text-[#66806b]" />
-                  Replace <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">thrd_sk_…</code> with your Thred agent key. The MCP server calls{" "}
-                  <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">THRED_API_URL</code> — keep both env vars set for tools to work.
-                </p>
+                <div className="mx-auto mt-4 flex max-w-[760px] items-start gap-2 text-left text-[12px] leading-5 text-[#747970]">
+                  <PixelCheckBox className="mt-0.5 size-4 shrink-0 text-[#66806b]" />
+                  <p>
+                    Replace <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">thrd_sk_…</code> with your Thred agent key. The MCP server calls{" "}
+                    <code className="rounded bg-[#eef1ec] px-1 py-0.5 font-mono text-[11px] text-[#454a43]">THRED_API_URL</code>, so keep both env vars set for the tools to work.
+                  </p>
+                </div>
               </>
             )}
             {view === "apiKeys" && (
               <>
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  Thred agent keys
-                </p>
-                <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-                  Give your agent access.
-                </h1>
-                <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">
-                  Create one Thred agent key for each agent or environment. The secret is
-                  shown only once.
-                </p>
+                <PageHeader eyebrow="Thred agent keys" title="Give your agent access.">
+                  Create one Thred agent key for each agent or environment. The secret is shown only once.
+                </PageHeader>
                 <ApiKeys workspace={workspace} request={request} />
               </>
             )}
@@ -1272,24 +1219,17 @@ function DashboardContent({
             {view === "docs" && <DocsPage workspace={workspace} />}
             {view === "settings" && (
               <>
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">
-                  Workspace settings
-                </p>
-                <h1 className="mx-auto mt-3 max-w-[500px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">
-                  Make this space yours.
-                </h1>
-                <p className="mx-auto mt-4 max-w-[520px] text-center text-[13px] font-medium leading-6 text-[#686c66]">
-                  Name the place your agents will use to share context,
-                  checkpoints, and durable memory.
-                </p>
+                <PageHeader eyebrow="Workspace settings" title="Make this space yours.">
+                  Name the place your agents will use to share context, checkpoints, and durable memory.
+                </PageHeader>
                 <div className="mx-auto mt-8 grid max-w-[620px] gap-3 sm:grid-cols-2">
                   <div className="rounded-[10px] bg-[#f4f5f2] p-4 text-left">
-                    <Layers3 className="size-4 text-[#687066]" />
+                    <PixelFolder className="size-4 text-[#687066]" />
                     <p className="mt-3 text-[12px] font-medium text-[#343833]">One shared workspace</p>
                     <p className="mt-1 text-[11px] leading-5 text-[#767b73]">Every key, checkpoint, and memory stays scoped to this space.</p>
                   </div>
                   <div className="rounded-[10px] bg-[#f4f5f2] p-4 text-left">
-                    <CircleCheck className="size-4 text-[#687066]" />
+                    <PixelCheckBox className="size-4 text-[#687066]" />
                     <p className="mt-3 text-[12px] font-medium text-[#343833]">Easy to keep current</p>
                     <p className="mt-1 text-[11px] leading-5 text-[#767b73]">Rename it anytime as the work, team, or project evolves.</p>
                   </div>
@@ -1302,7 +1242,7 @@ function DashboardContent({
                   className="mx-auto mt-7 max-w-[620px] border-t border-[#e2e6df] pt-7 text-left"
                 >
                   <label className="block text-[12px] font-medium text-[#3f433d]">
-                    <span className="flex items-center gap-1.5"><Layers3 className="size-3.5 text-[#777d75]" /> Workspace name</span>
+                    <span className="flex items-center gap-1.5"><PixelFolder className="size-3.5 text-[#777d75]" /> Workspace name</span>
                     <input
                       value={settingsName}
                       onChange={(event) => {
@@ -1313,7 +1253,7 @@ function DashboardContent({
                     />
                   </label>
                   <div ref={settingsWorkspaceRef} className="relative mt-5">
-                    <p className="flex items-center gap-1.5 text-[12px] font-medium text-[#3f433d]"><Link2 className="size-3.5 text-[#777d75]" /> Switch workspace</p>
+                    <p className="flex items-center gap-1.5 text-[12px] font-medium text-[#3f433d]"><PixelLink className="size-3.5 text-[#777d75]" /> Switch workspace</p>
                     <button
                       type="button"
                       onClick={() => {
@@ -1328,7 +1268,7 @@ function DashboardContent({
                       <span className="min-w-0 flex-1 truncate font-medium">
                         {workspace.name}
                       </span>
-                      <ChevronDown
+                      <PixelChevronDown
                         className={`size-3.5 text-[#777b74] transition-transform duration-200 ${settingsWorkspaceOpen ? "rotate-180" : ""}`}
                       />
                     </button>
@@ -1351,7 +1291,7 @@ function DashboardContent({
                               {item.name}
                             </span>
                             {item.id === workspace.id && (
-                              <Check className="size-3.5" />
+                              <PixelCheck className="size-3.5" />
                             )}
                           </button>
                         ))}
@@ -1389,9 +1329,9 @@ function DashboardContent({
             )}
             {view === "providers" && (
               <>
-                <p className="text-center text-[10px] font-medium uppercase tracking-[.15em] text-[#8a8d87]">Configure · BYOK</p>
-                <h1 className="mx-auto mt-3 max-w-[560px] text-center text-[30px] leading-[1.02] tracking-[-.06em] text-[#1b1d1b] sm:text-[36px]">Bring your own model key.</h1>
-                <p className="mx-auto mt-4 max-w-[540px] text-center text-[13px] leading-6 text-[#73766f]">Choose the model provider Thred should use for extraction and evaluation. Your provider key stays encrypted in this workspace.</p>
+                <PageHeader eyebrow="BYOK providers" title="Bring your own model key.">
+                  Choose the model provider Thred should use for extraction and evaluation. Your provider key stays encrypted in this workspace.
+                </PageHeader>
                 <ProviderKeys workspace={workspace} request={request} />
               </>
             )}

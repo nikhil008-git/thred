@@ -63,32 +63,28 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="relative min-h-[calc(100svh-86px)] max-w-none overflow-x-clip bg-[#fcfcfb] px-6 py-14 sm:px-10 sm:py-18 lg:grid lg:min-h-0 lg:grid-cols-[minmax(360px,440px)_minmax(0,1fr)] lg:items-start lg:gap-10 lg:py-10 lg:pr-0">
-        <div className="relative z-10 mx-auto max-w-[440px] text-center lg:mx-0 lg:self-center lg:text-left">
-          <div style={{ marginBottom: 24 }}>
-            <a href="https://www.producthunt.com/products/thred-5?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-thred-4" target="_blank" rel="noopener noreferrer">
-              <img alt="thred - shared memory for decisions, revisions, and unfinished work | Product Hunt" width={121} height={34} src="/product-hunt-badge.svg" style={{ display: "block", border: "none" }} />
-            </a>
-          </div>
-          <h1 className="max-w-none text-[30px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[34px] lg:text-[35px] lg:leading-[0.96]">
+      <section className="relative overflow-x-clip bg-[#fcfcfb] px-6 pt-12 sm:px-10 sm:pt-16">
+        <div className="relative z-10 mx-auto flex max-w-[1120px] flex-col items-start text-left">
+          <h1 className="max-w-none text-[30px] font-normal leading-[0.98] tracking-[-0.055em] sm:text-[38px] lg:text-[44px] lg:leading-[0.96]">
             <span className="block text-[#111111]">Context that carries your</span>
             <span className="block text-[#6b6e69]">work forward.</span>
           </h1>
-          <p className="mt-5 max-w-[440px] text-pretty text-[12px] leading-[1.65] text-[#70726e] sm:text-[13px]">
+          <p className="mt-5 max-w-[480px] text-pretty text-[12px] leading-[1.65] text-[#70726e] sm:text-[14px]">
             Thread gives Claude, Codex, and Cursor shared memory for decisions, revisions, and unfinished work—so the next agent starts where the last one stopped.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start">
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">{session?.user ? "Open dashboard" : "Sign in"} <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
             <a href="#mcp" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore MCP <ArrowRight className="size-3" strokeWidth={1.6} /></a>
           </div>
         </div>
-        <div id="how-it-works" className="relative mx-auto mt-12 h-[390px] w-full sm:h-[560px] lg:mt-0 lg:h-[760px]">
-          <div className="absolute inset-y-0 left-0 w-screen overflow-hidden rounded-l-[18px] border-y border-l border-[#d7dad4] bg-[#f1f2f0] shadow-[-18px_12px_40px_rgba(16,22,18,0.16),-4px_2px_8px_rgba(16,22,18,0.08)]">
+        <div id="how-it-works" className="relative mx-auto mt-12 w-full max-w-[1120px] sm:mt-16">
+          <div className="relative h-[380px] overflow-hidden rounded-t-[18px] border-x border-t border-[#d7dad4] bg-[#f1f2f0] shadow-[0_-12px_40px_rgba(16,22,18,0.12),0_-2px_8px_rgba(16,22,18,0.06)] sm:h-[520px] lg:h-[720px]">
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute left-0 top-0 h-[1100px] w-[1280px] origin-top-left scale-[0.5] sm:scale-[0.7] lg:scale-[0.88]">
+              <div className="absolute left-0 top-0 h-[1100px] w-[1280px] origin-top-left scale-[0.5] sm:scale-[0.7] lg:scale-[0.875]">
                 <DashboardPage preview />
               </div>
             </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#fcfcfb]" />
             <Link
               href={session?.user ? "/dashboard" : "/sign-in"}
               aria-label="Open the Thred dashboard"
@@ -156,7 +152,7 @@ export default function Home() {
               {
                 title: "Resume a handoff",
                 body: "Every saved checkpoint is ready for the next agent to pick up without losing the work in motion.",
-                dashboardView: "handoffs",
+                dashboardView: "overview",
                 left: <SiClaude className="size-[18px]" />,
                 right: <SiModelcontextprotocol className="size-[18px]" />,
               },
