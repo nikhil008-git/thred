@@ -1,27 +1,26 @@
 "use client";
 
-import type { ComponentType, Dispatch, RefObject, SetStateAction } from "react";
+import { useState, type ComponentType, type Dispatch, type RefObject, type SetStateAction } from "react";
 import {
-  BookOpen,
-  ChevronDown,
-  Database,
-  GitFork,
-  KeyRound,
-  LayoutDashboard,
-  Layers3,
-  LogOut,
-  MessageSquareText,
-  Settings,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
-import { SiGithub, SiModelcontextprotocol } from "react-icons/si";
+  PixelBookOpen,
+  PixelChevronDown,
+  PixelClose,
+  PixelDatabase,
+  PixelFolder,
+  PixelGear,
+  PixelGithub,
+  PixelKey,
+  PixelLayout,
+  PixelLogout,
+  PixelMessageText,
+  PixelPlug,
+  PixelSliders,
+} from "@/components/pixel-icons";
 
 type Workspace = { id: string; name: string; slug: string };
 
 export type DashboardView =
   | "overview"
-  | "handoffs"
   | "mcp"
   | "apiKeys"
   | "providers"
@@ -32,7 +31,7 @@ export type DashboardView =
 type NavItem = {
   id: DashboardView;
   label: string;
-  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: ComponentType<{ className?: string }>;
 };
 
 type NavSection = {
@@ -40,26 +39,24 @@ type NavSection = {
   items: NavItem[];
 };
 
-/** Always-open right panel */
 const OPEN_NAV_SECTIONS: NavSection[] = [
   {
     label: "Workspace",
     items: [
-      { id: "overview", label: "Overview", icon: LayoutDashboard },
-      { id: "handoffs", label: "Handoffs", icon: GitFork },
+      { id: "overview", label: "Overview", icon: PixelLayout },
     ],
   },
   {
     label: "Configure",
     items: [
-      { id: "apiKeys", label: "Thred agent keys", icon: KeyRound },
-      { id: "providers", label: "BYOK providers", icon: SlidersHorizontal },
-      { id: "prompts", label: "Agent instructions", icon: MessageSquareText },
+      { id: "apiKeys", label: "Thred agent keys", icon: PixelKey },
+      { id: "providers", label: "BYOK providers", icon: PixelSliders },
+      { id: "prompts", label: "Agent instructions", icon: PixelMessageText },
     ],
   },
   {
     label: "Account",
-    items: [{ id: "settings", label: "Settings", icon: Settings }],
+    items: [{ id: "settings", label: "Settings", icon: PixelGear }],
   },
 ];
 
@@ -122,71 +119,12 @@ function OpenNavRow({
     <button
       type="button"
       onClick={onSelect}
+      title={label}
       className={`dashboard-sidebar-panel-row ${active ? "dashboard-sidebar-panel-row-active" : ""}`}
     >
-      <Icon className="size-[18px] shrink-0 text-[#1a1d19]" strokeWidth={1.75} />
+      <Icon className="size-[18px] shrink-0 text-[#1a1d19]" />
       <span className="min-w-0 truncate">{label}</span>
     </button>
-  );
-}
-
-/** Left logo rail — icons only, label on hover */
-function LogoRail({
-  view,
-  onViewChange,
-}: {
-  view: DashboardView;
-  onViewChange: (view: DashboardView) => void;
-}) {
-  return (
-    <nav className="dashboard-sidebar-rail" aria-label="Quick links">
-      <div className="dashboard-sidebar-rail-stack">
-        <button
-          type="button"
-          data-tip="Thred"
-          onClick={() => onViewChange("overview")}
-          className={`dashboard-sidebar-rail-btn ${view === "overview" ? "dashboard-sidebar-rail-btn-active" : ""}`}
-        >
-          <Mark className="size-5" />
-        </button>
-        <button
-          type="button"
-          data-tip="MCP"
-          onClick={() => onViewChange("mcp")}
-          className={`dashboard-sidebar-rail-btn ${view === "mcp" ? "dashboard-sidebar-rail-btn-active" : ""}`}
-        >
-          <SiModelcontextprotocol className="size-[15px]" />
-        </button>
-        <button
-          type="button"
-          data-tip="Docs"
-          onClick={() => onViewChange("docs")}
-          className={`dashboard-sidebar-rail-btn ${view === "docs" ? "dashboard-sidebar-rail-btn-active" : ""}`}
-        >
-          <BookOpen className="size-4" strokeWidth={1.8} />
-        </button>
-      </div>
-      <div className="dashboard-sidebar-rail-stack mt-auto">
-        <a
-          href="https://github.com/hydra-db/hydradb"
-          target="_blank"
-          rel="noreferrer"
-          data-tip="HydraDB"
-          className="dashboard-sidebar-rail-btn"
-        >
-          <Database className="size-4" strokeWidth={1.8} />
-        </a>
-        <a
-          href="https://github.com/nikhil008-git/thred"
-          target="_blank"
-          rel="noreferrer"
-          data-tip="GitHub"
-          className="dashboard-sidebar-rail-btn"
-        >
-          <SiGithub className="size-4" />
-        </a>
-      </div>
-    </nav>
   );
 }
 
@@ -208,25 +146,31 @@ export function DashboardSidebar({
   accountMenuRef,
   onSignOut,
 }: DashboardSidebarProps) {
+  const [hovered, setHovered] = useState(false);
+  // Menus render inside the panel, so keep it open while one is showing.
+  const expanded = isHeroPreview || hovered || sidebarWorkspaceOpen || accountMenuOpen;
+
   return (
     <div
       data-preview={isHeroPreview ? "true" : "false"}
+      data-expanded={expanded ? "true" : "false"}
+      data-peek={expanded && !isHeroPreview ? "true" : "false"}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={`dashboard-sidebar-group ${
         isHeroPreview
           ? "relative h-full min-h-full"
-          : `fixed top-[var(--beta-banner-height)] left-0 z-50 h-[calc(100vh-var(--beta-banner-height))] transition-transform duration-300 ease-out will-change-transform ${
+          : `fixed top-0 left-0 z-50 h-screen transition-transform duration-300 ease-out will-change-transform ${
               mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             } shadow-[18px_0_50px_rgba(20,28,22,.18)] lg:shadow-none`
       }`}
     >
-      <LogoRail view={view} onViewChange={onViewChange} />
-
       <aside className="dashboard-sidebar-panel">
         <div className="dashboard-sidebar-panel-inner">
           <div className="dashboard-sidebar-panel-header">
             <div className="flex min-w-0 items-center gap-2.5">
-              <Mark className="size-7 shrink-0 lg:hidden" />
-              <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[#141614]">
+              <Mark className="size-7 shrink-0" />
+              <span className="dashboard-sidebar-fade truncate text-[15px] font-semibold tracking-[-0.01em] text-[#141614]">
                 {workspace.name}
               </span>
             </div>
@@ -236,7 +180,7 @@ export function DashboardSidebar({
               aria-label="Close navigation"
               className="grid size-8 shrink-0 place-items-center rounded-[7px] text-[#666c64] hover:bg-[#e2e6e0] lg:hidden"
             >
-              <X className="size-4" />
+              <PixelClose className="size-4" />
             </button>
           </div>
 
@@ -244,7 +188,7 @@ export function DashboardSidebar({
             <nav className="dashboard-sidebar-panel-nav">
               {OPEN_NAV_SECTIONS.map((section, sectionIndex) => (
                 <div key={`${section.label}-${sectionIndex}`} className="dashboard-sidebar-panel-section">
-                  <p className="dashboard-sidebar-panel-section-label">{section.label}</p>
+                  <p className="dashboard-sidebar-panel-section-label dashboard-sidebar-fade">{section.label}</p>
                   {section.items.map((item) => (
                     <OpenNavRow
                       key={item.id}
@@ -257,19 +201,17 @@ export function DashboardSidebar({
                 </div>
               ))}
 
-              {/* Mobile-only: rail items live in the open panel */}
-              {!isHeroPreview ? (
-              <div className="dashboard-sidebar-mobile-connect">
-                <p className="dashboard-sidebar-panel-section-label">Connect</p>
+              <div className="dashboard-sidebar-panel-section">
+                <p className="dashboard-sidebar-panel-section-label dashboard-sidebar-fade">Connect</p>
                 <OpenNavRow
                   label="MCP connection"
-                  icon={SiModelcontextprotocol as NavItem["icon"]}
+                  icon={PixelPlug}
                   active={view === "mcp"}
                   onSelect={() => onViewChange("mcp")}
                 />
                 <OpenNavRow
                   label="Docs"
-                  icon={BookOpen}
+                  icon={PixelBookOpen}
                   active={view === "docs"}
                   onSelect={() => onViewChange("docs")}
                 />
@@ -278,8 +220,9 @@ export function DashboardSidebar({
                   target="_blank"
                   rel="noreferrer"
                   className="dashboard-sidebar-panel-row"
+                  title="HydraDB memory"
                 >
-                  <Database className="size-[18px] shrink-0 text-[#1a1d19]" strokeWidth={1.75} />
+                  <PixelDatabase className="size-[18px] shrink-0 text-[#1a1d19]" />
                   <span className="min-w-0 truncate">HydraDB memory</span>
                 </a>
                 <a
@@ -287,12 +230,12 @@ export function DashboardSidebar({
                   target="_blank"
                   rel="noreferrer"
                   className="dashboard-sidebar-panel-row"
+                  title="GitHub repo"
                 >
-                  <SiGithub className="size-[18px] shrink-0 text-[#1a1d19]" />
+                  <PixelGithub className="size-[18px] shrink-0 text-[#1a1d19]" />
                   <span className="min-w-0 truncate">GitHub repo</span>
                 </a>
               </div>
-              ) : null}
             </nav>
           </div>
 
@@ -329,12 +272,12 @@ export function DashboardSidebar({
                 aria-haspopup="menu"
               >
                 <span className="grid size-6 shrink-0 place-items-center rounded-[6px] bg-white/80 text-[#6d746b]">
-                  <Layers3 className="size-3.5" strokeWidth={1.8} />
+                  <PixelFolder className="size-3.5" />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-[#141614]">
                   {workspace.name}
                 </span>
-                <ChevronDown
+                <PixelChevronDown
                   className={`size-4 shrink-0 text-[#555a53] transition-transform duration-200 ${sidebarWorkspaceOpen ? "rotate-180" : ""}`}
                 />
               </button>
@@ -358,7 +301,7 @@ export function DashboardSidebar({
                       }}
                       className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
                     >
-                      <SlidersHorizontal className="size-3.5" />
+                      <PixelSliders className="size-3.5" />
                       Workspace settings
                     </button>
                     <button
@@ -369,7 +312,7 @@ export function DashboardSidebar({
                       }}
                       className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
                     >
-                      <KeyRound className="size-3.5" />
+                      <PixelKey className="size-3.5" />
                       Thred agent keys
                     </button>
                     <button
@@ -380,7 +323,7 @@ export function DashboardSidebar({
                       }}
                       className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
                     >
-                      <SlidersHorizontal className="size-3.5" />
+                      <PixelSliders className="size-3.5" />
                       BYOK providers
                     </button>
                     <button
@@ -388,7 +331,7 @@ export function DashboardSidebar({
                       onClick={onSignOut}
                       className="flex w-full cursor-pointer items-center gap-2 rounded-[7px] px-2 py-1.5 text-left text-[12px] text-[#3f433d] hover:bg-[#f4f5f2] hover:text-[#141614]"
                     >
-                      <LogOut className="size-3.5" />
+                      <PixelLogout className="size-3.5" />
                       Sign out
                     </button>
                   </div>
@@ -408,7 +351,7 @@ export function DashboardSidebar({
                 <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-[#141614]">
                   {accountName}
                 </span>
-                <ChevronDown
+                <PixelChevronDown
                   className={`size-4 shrink-0 text-[#555a53] transition-transform duration-200 ${accountMenuOpen ? "rotate-180" : ""}`}
                 />
               </button>

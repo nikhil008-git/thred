@@ -33,10 +33,7 @@ Thred exposes a small MCP toolset — use the same memory from any agent client:
 
 | Tool                | What it does                                                                                 |
 | ------------------- | -------------------------------------------------------------------------------------------- |
-| `thread_remember`   | Saves a durable, evidence-backed fact, decision, lesson, architecture choice, or preference. |
-| `thread_context`    | Retrieves verified long-term context relevant to a question.                                 |
-| `thread_history`    | Shows the chronological revision history for a fact or entity.                               |
-| `thread_inspect`    | Traverses a memory’s provenance and graph relationships.                                     |
+| `thread_context`    | Retrieves verified long-term context; `includeHistory` returns every revision, oldest first. |
 | `thread_checkpoint` | Saves coding progress and extracts durable long-term memory from a session.                  |
 | `thread_resume`     | Restores the latest unfinished coding checkpoint with relevant context.                      |
 

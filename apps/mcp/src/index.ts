@@ -7,66 +7,21 @@ import { callMcp } from "./client.js";
 function createServer() {
   const server = new McpServer({
     name: "thred",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
   server.registerTool(
     "thread_context",
     {
-      description: "Retrieve verified long-term project context from Thred.",
+      description:
+        "Retrieve verified long-term project context from Thred. Set includeHistory to get every revision of the matching facts, oldest first, including superseded ones.",
       inputSchema: z.object({
         query: z.string().min(1),
+        includeHistory: z.boolean().optional(),
       }),
     },
-    async ({ query }) => {
-      const result = await callMcp("context", { query });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    },
-  );
-
-  server.registerTool(
-    "thread_remember",
-    {
-      description: "Persist a provenance-backed durable fact or decision, preserving revisions.",
-      inputSchema: z.object({
-        sessionId: z.string().min(1),
-        kind: z.enum(["fact", "decision", "lesson", "architecture", "preference"]),
-        subject: z.string().min(1),
-        predicate: z.string().min(1),
-        value: z.string().min(1),
-        reason: z.string().min(1).optional(),
-        confidence: z.number().min(0).max(1),
-        sourceMessageIds: z.array(z.string().min(1)).min(1),
-        files: z.array(z.string().min(1)).default([]),
-        evidenceEventIds: z.array(z.string().min(1)).default([]),
-      }),
-    },
-    async (input) => {
-      const result = await callMcp("remember", input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    },
-  );
-
-  server.registerTool(
-    "thread_history",
-    {
-      description: "Show provenance-backed revisions for a memory or entity over time.",
-      inputSchema: z.object({ query: z.string().min(1), maxResults: z.number().int().min(1).max(100).optional() }),
-    },
-    async ({ query, maxResults }) => {
-      const result = await callMcp("history", { query, ...(maxResults === undefined ? {} : { maxResults }) });
-      return { content: [{ type: "text", text: JSON.stringify(result) }] };
-    },
-  );
-
-  server.registerTool(
-    "thread_inspect",
-    {
-      description: "Inspect a memory's graph relationships and source provenance.",
-      inputSchema: z.object({ memoryId: z.string().min(1) }),
-    },
-    async ({ memoryId }) => {
-      const result = await callMcp("inspect", { memoryId });
+    async ({ query, includeHistory }) => {
+      const result = await callMcp("context", { query, ...(includeHistory ? { includeHistory } : {}) });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { BetaBanner } from "@/components/beta-banner";
 import { LenisProvider } from "@/components/lenis-provider";
 import "./globals.css";
 
@@ -45,8 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-full flex-col pt-[var(--beta-banner-height)]">
-        <BetaBanner />
+      <body className="flex min-h-full flex-col">
         <LenisProvider>{children}</LenisProvider>
       </body>
     </html>
