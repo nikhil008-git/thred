@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { SiClaude, SiCline, SiCursor, SiModelcontextprotocol, SiWindsurf } from "react-icons/si";
 import { RiOpenaiFill } from "react-icons/ri";
 import { useSession } from "@/lib/auth-client";
-import DashboardPage from "./dashboard/page";
 
 function ThreadMark({ className = "" }: { className?: string }) {
   // Unique per instance: a gradient inside a hidden copy can't paint visible ones.
@@ -50,6 +49,40 @@ function ToolFlow({ left, right }: { left: ReactNode; right: ReactNode }) {
   );
 }
 
+const DASHBOARD_WIDTH = 1280;
+
+/**
+ * The real dashboard at desktop width inside an iframe, scaled to fit. The
+ * iframe has its own 1280px viewport, so phones still see the desktop layout
+ * instead of a cropped mobile one.
+ */
+function DashboardFrame({ view, title, visibleHeight }: { view: string; title: string; visibleHeight: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const update = () => setScale(element.clientWidth / DASHBOARD_WIDTH);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="relative w-full overflow-hidden" style={{ aspectRatio: `${DASHBOARD_WIDTH} / ${visibleHeight}` }}>
+      <iframe
+        src={`/dashboard?preview=hero&view=${view}`}
+        title={title}
+        tabIndex={-1}
+        loading="lazy"
+        className={`pointer-events-none absolute left-0 top-0 origin-top-left border-0 ${scale ? "" : "invisible"}`}
+        style={{ width: DASHBOARD_WIDTH, height: 1100, transform: `scale(${scale})` }}
+      />
+    </div>
+  );
+}
+
 export default function Home() {
   const { data: session } = useSession();
 
@@ -80,13 +113,9 @@ export default function Home() {
           </div>
         </div>
         <div id="how-it-works" className="relative mx-auto mt-12 w-full max-w-[1120px] sm:mt-16">
-          <div className="relative h-[380px] overflow-hidden rounded-t-[18px] border-x border-t border-[#d7dad4] bg-[#f1f2f0] shadow-[0_-12px_40px_rgba(16,22,18,0.12),0_-2px_8px_rgba(16,22,18,0.06)] sm:h-[520px] lg:h-[720px]">
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute left-0 top-0 h-[1100px] w-[1280px] origin-top-left scale-[0.5] sm:scale-[0.7] lg:scale-[0.875]">
-                <DashboardPage preview />
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#fcfcfb]" />
+          <div className="relative overflow-hidden rounded-t-[12px] border-x border-t border-[#d7dad4] bg-[#f1f2f0] shadow-[0_-12px_40px_rgba(16,22,18,0.12),0_-2px_8px_rgba(16,22,18,0.06)] sm:rounded-t-[18px]">
+            <DashboardFrame view="overview" title="Thred dashboard" visibleHeight={820} />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b sm:h-32 from-transparent to-[#fcfcfb]" />
             <Link
               href={session?.user ? "/dashboard" : "/sign-in"}
               aria-label="Open the Thred dashboard"
@@ -171,17 +200,12 @@ export default function Home() {
                   <h3 className="text-[20px] font-medium tracking-[-0.045em] text-[#252724] sm:text-[24px]">{card.title}</h3>
                   <p className="mx-auto mt-2 max-w-[500px] text-[12px] leading-5 text-[#747770] sm:text-[13px]">{card.body}</p>
                 </div>
-                <div className="thread-product-mesh relative overflow-hidden px-5 pt-12 sm:px-8 sm:pt-16">
-                  <div className="pointer-events-auto absolute left-1/2 top-5 z-10 -translate-x-1/2 sm:top-7">
+                <div className="thread-product-mesh relative overflow-hidden px-4 pt-5 sm:px-8 sm:pt-7">
+                  <div className="relative z-10 mx-auto mb-4 w-fit sm:mb-6">
                     <ToolFlow left={card.left} right={card.right} />
                   </div>
-                  <div className="mx-auto h-[220px] max-w-[900px] overflow-hidden rounded-t-[11px] border-x border-t border-[#e2e4df] bg-white shadow-[0_-6px_24px_rgba(35,48,40,0.1)] sm:h-[350px]">
-                    <iframe
-                      src={`/dashboard?preview=hero&view=${card.dashboardView}`}
-                      title={`${card.title} in Thred`}
-                      tabIndex={-1}
-                      className="pointer-events-none h-[950px] w-[1280px] origin-top-left scale-[0.49] border-0 sm:scale-[0.7]"
-                    />
+                  <div className="mx-auto max-w-[900px] overflow-hidden rounded-t-[11px] border-x border-t border-[#e2e4df] bg-white shadow-[0_-6px_24px_rgba(35,48,40,0.1)]">
+                    <DashboardFrame view={card.dashboardView} title={`${card.title} in Thred`} visibleHeight={640} />
                   </div>
                 </div>
               </article>
