@@ -54,10 +54,10 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
         </Link>
         <div className="relative z-20 m-auto w-full max-w-[470px] text-center">
           <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.16em] text-[#466451]">Context stays with the work</p>
-          <div className="flex items-center justify-center gap-3 rounded-[22px] border border-white/80 bg-[#eef2ee] p-4 shadow-[0_16px_42px_rgba(43,66,51,0.12)]">
+          <div className="flex items-center justify-center gap-3 bevel-tray rounded-[22px] p-4">
             <AgentNode><SiClaude className="size-7" /></AgentNode>
             <ArrowRight className="size-4 shrink-0 text-[#93a099]" strokeWidth={1.5} />
-            <div className="grid size-[64px] shrink-0 place-items-center"><ThreadMark className="size-[64px]" /></div>
+            <div className="grid size-[64px] shrink-0 place-items-center"><ThreadMark bevel className="size-[64px]" /></div>
             <ArrowRight className="size-4 shrink-0 text-[#93a099]" strokeWidth={1.5} />
             <AgentNode><HydraMark className="size-8" /></AgentNode>
             <ArrowRight className="size-4 shrink-0 text-[#93a099]" strokeWidth={1.5} />
@@ -89,7 +89,7 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
             {mode === "workspace" && (
               <label className="block space-y-1.5" htmlFor="workspace-name">
                 <span className="text-sm font-medium text-[#373936]">Workspace name</span>
-                <Input id="workspace-name" name="workspaceName" autoComplete="organization" required autoFocus placeholder="e.g. Acme engineering" className="border-[#e3e4e0] bg-white focus:border-[#737670] focus:shadow-[0_0_0_3px_rgba(23,23,23,0.08)]" />
+                <Input id="workspace-name" name="workspaceName" autoComplete="organization" required autoFocus placeholder="e.g. Acme engineering" />
                 <span className="block text-xs text-[#858781]">You can invite teammates and create more workspaces later.</span>
               </label>
             )}
@@ -97,13 +97,13 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="landing-cta inline-flex h-9 cursor-pointer items-center gap-2 rounded-[6px] border border-[#e2e3df] bg-white px-4 text-[12px] font-medium text-[#252724] shadow-[0_1px_1px_rgba(0,0,0,0.04)] hover:border-[#d0d2cc] hover:text-[#171717] disabled:cursor-not-allowed disabled:opacity-60"
+                className="landing-cta inline-flex h-9 cursor-pointer items-center gap-2 rounded-[6px] btn-paper px-4 text-[12px] font-medium disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <SiGoogle className="size-3.5" />
                 {isSubmitting ? copy.submitting : copy.submit}
               </button>
             )}
-            {mode === "workspace" && <Button type="submit" className="mt-2 w-full bg-[#171717] hover:bg-[#363634]" disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.submit}</Button>}
+            {mode === "workspace" && <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.submit}</Button>}
           </form>
           {copy.prompt && <p className="mt-7 text-center text-sm text-[#7b7d78]">{copy.prompt}{copy.action && <> <Link href={copy.href} className="font-medium text-[#373936] underline decoration-[#b7b9b4] underline-offset-4 hover:text-[#171717]">{copy.action}</Link></>}</p>}
         </div>
@@ -112,7 +112,7 @@ export function AuthPage({ mode, error, isSubmitting, onSubmit }: AuthPageProps)
   );
 }
 
-function ThreadMark({ className = "" }: { className?: string }) {
+function ThreadMark({ className = "", bevel = false }: { className?: string; bevel?: boolean }) {
   // Unique per instance: a gradient defined inside a hidden copy can't paint a visible one.
   const gradientId = useId();
   return (
@@ -124,6 +124,7 @@ function ThreadMark({ className = "" }: { className?: string }) {
         </linearGradient>
       </defs>
       <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
+      {bevel && <rect x="1.6" y="1.6" width="24.8" height="24.8" rx="7" stroke="#fff" strokeOpacity=".17" strokeWidth="1" vectorEffect="non-scaling-stroke" />}
       <path d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45" stroke="#F5F7F3" strokeWidth="1.95" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7.25" cy="9.1" r="1.55" fill="#F5F7F3" />
       <circle cx="20.75" cy="20.57" r="1.55" fill="#F5F7F3" />
@@ -134,7 +135,7 @@ function ThreadMark({ className = "" }: { className?: string }) {
 }
 
 function AgentNode({ children }: { children: ReactNode }) {
-  return <div className="grid size-[64px] shrink-0 place-items-center rounded-[18px] border border-[#d8ded8] bg-white text-[#59625b] shadow-[0_5px_13px_rgba(26,40,31,0.08)]">{children}</div>;
+  return <div className="grid size-[64px] shrink-0 place-items-center bevel-tile rounded-[18px] text-[#59625b]">{children}</div>;
 }
 
 function HydraMark({ className = "" }: { className?: string }) {

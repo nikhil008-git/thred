@@ -98,7 +98,7 @@ export function renderComparisonReport(input: {
   ];
 
   return [
-    `# Thred Track 03 evaluation — ${input.dataset}`,
+    `# Thred Track 03 evaluation: ${input.dataset}`,
     "",
     "| Metric | Vector-RAG | Thred |",
     "| --- | ---: | ---: |",

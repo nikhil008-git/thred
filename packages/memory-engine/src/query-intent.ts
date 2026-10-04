@@ -1,9 +1,9 @@
 export type QueryIntent = {
-  /** "how many", "list all" — needs every matching claim, not just the best one. */
+  /** "how many", "list all": needs every matching claim, not just the best one. */
   aggregation: boolean;
-  /** "first", "when", "before" — ordering matters more than relevance. */
+  /** "first", "when", "before": ordering matters more than relevance. */
   temporal: boolean;
-  /** "prefer", "recommend" — preference claims are phrased unlike the question. */
+  /** "prefer", "recommend": preference claims are phrased unlike the question. */
   preference: boolean;
   keywords: string[];
 };

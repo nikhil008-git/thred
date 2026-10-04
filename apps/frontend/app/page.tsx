@@ -8,7 +8,7 @@ import { SiClaude, SiCline, SiCursor, SiModelcontextprotocol, SiWindsurf } from 
 import { RiOpenaiFill } from "react-icons/ri";
 import { useSession } from "@/lib/auth-client";
 
-function ThreadMark({ className = "" }: { className?: string }) {
+function ThreadMark({ className = "", bevel = false }: { className?: string; bevel?: boolean }) {
   // Unique per instance: a gradient inside a hidden copy can't paint visible ones.
   const gradientId = useId();
   return (
@@ -20,6 +20,7 @@ function ThreadMark({ className = "" }: { className?: string }) {
         </linearGradient>
       </defs>
       <rect width="28" height="28" rx="8.5" fill={`url(#${gradientId})`} />
+      {bevel && <rect x="1.6" y="1.6" width="24.8" height="24.8" rx="7" stroke="#fff" strokeOpacity=".17" strokeWidth="1" vectorEffect="non-scaling-stroke" />}
       <path d="M9.3 9.1c-2.55 0-2.55 3.82 0 3.82h6.25c2.55 0 2.55 3.82 0 3.82h-3.3c-2.55 0-2.55 3.82 0 3.82h6.45" stroke="#F5F7F3" strokeWidth="1.95" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7.25" cy="9.1" r="1.55" fill="#F5F7F3" />
       <circle cx="20.75" cy="20.57" r="1.55" fill="#F5F7F3" />
@@ -39,12 +40,12 @@ function HydraMark({ className = "" }: { className?: string }) {
 
 function ToolFlow({ left, right }: { left: ReactNode; right: ReactNode }) {
   return (
-    <div className="flex items-center gap-2 rounded-[16px] border border-white bg-[#f1f3ef]/95 p-2 shadow-[0_10px_26px_rgba(29,38,32,0.12)]">
-      <div className="grid size-9 place-items-center rounded-[11px] border border-[#dfe2dc] bg-white text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{left}</div>
+    <div className="flex items-center gap-2 bevel-tray rounded-[16px] p-2">
+      <div className="grid size-9 place-items-center bevel-tile rounded-[11px] text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{left}</div>
       <ArrowRight className="size-3 text-[#9ca19b]" strokeWidth={1.5} />
-      <div className="grid size-9 place-items-center transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-9" /></div>
+      <div className="grid size-9 place-items-center transition-transform duration-200 ease-out hover:scale-110"><ThreadMark bevel className="size-9" /></div>
       <ArrowRight className="size-3 text-[#9ca19b]" strokeWidth={1.5} />
-      <div className="grid size-9 place-items-center rounded-[11px] border border-[#dfe2dc] bg-white text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{right}</div>
+      <div className="grid size-9 place-items-center bevel-tile rounded-[11px] text-[#646a64] transition-transform duration-200 ease-out hover:scale-110">{right}</div>
     </div>
   );
 }
@@ -83,6 +84,95 @@ function DashboardFrame({ view, title, visibleHeight }: { view: string; title: s
   );
 }
 
+const testimonials = [
+  { name: "Harnoor Singh", handle: "iHarnoorSingh", verified: true, date: "Aug 18, 2026", id: "2089829610427216278", text: "this is lit!! better memory and reduces the need of openrouter" },
+  { name: "waishnav", handle: "wshxnv", verified: true, date: "Aug 18, 2026", id: "2089760130250440770", text: "good work :)\n\nat some point i was gonna build smth similar the context layer for codebases but aparently models got better at exploring codebases on demand, so dropped that idea\n\nyou should do eval/benchmark btw" },
+  { name: "Arinjay Wyawhare", handle: "jaywyawhare", verified: true, date: "Aug 19, 2026", id: "2090036443603456021", text: "Lfg, good idea and great execution." },
+  { name: "Saurabh", handle: "_saurabh__xd", verified: false, date: "Aug 18, 2026", id: "2089719243562733899", text: "Hire him @hydra_db" },
+  { name: "aniketh", handle: "Aniketh_Deb", verified: true, date: "Aug 18, 2026", id: "2089718911063453773", text: "nice , @contextkingceo  have a look at it" },
+  { name: "Vyom", handle: "HelloVyom", verified: true, date: "Aug 18, 2026", id: "2089733478002884981", text: "Great work bro!!!" },
+  { name: "Atharva", handle: "AtharvaXDevs", verified: true, date: "Aug 18, 2026", id: "2089732744599535817", text: "crazy work man" },
+  { name: "Nandkishor", handle: "devops_nk", verified: true, date: "Aug 18, 2026", id: "2089760526230540292", text: "Cool brother let me try this out this weekend" },
+];
+
+function XLogo({ className = "" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77L17.75 3Zm-1.08 16.17h1.7L7.4 4.74H5.58l11.09 14.43Z" />
+    </svg>
+  );
+}
+
+function VerifiedBadge() {
+  return (
+    <svg aria-label="Verified" viewBox="0 0 22 22" className="size-3.5 shrink-0">
+      <path fill="#1d9bf0" d="M20.4 11c0-1.35-.8-2.5-1.97-3.04.45-1.2.2-2.6-.74-3.56-.95-.95-2.36-1.2-3.56-.75A3.36 3.36 0 0 0 11 1.6c-1.35 0-2.5.8-3.04 1.97a3.37 3.37 0 0 0-3.56.75c-.95.95-1.2 2.36-.75 3.56A3.36 3.36 0 0 0 1.6 11c0 1.35.8 2.5 1.97 3.04-.45 1.2-.2 2.6.75 3.56.95.95 2.36 1.2 3.56.74A3.36 3.36 0 0 0 11 20.4c1.35 0 2.5-.8 3.04-1.97 1.2.45 2.6.2 3.56-.74.95-.96 1.2-2.37.74-3.56A3.36 3.36 0 0 0 20.4 11Z" />
+      <path fill="#fff" d="m9.6 14.6-3.1-3.1 1.17-1.18 1.93 1.93 4.73-4.73 1.18 1.18-5.9 5.9Z" />
+    </svg>
+  );
+}
+
+/** Mentions render muted so a reply reads like the original post. */
+function TweetText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(@\w+)/).map((part, index) =>
+        part.startsWith("@") ? <span key={index} className="text-[#1d9bf0]">{part}</span> : part,
+      )}
+    </>
+  );
+}
+
+function Testimonials() {
+  return (
+    <section id="testimonials" className="page-frame mx-auto max-w-[1000px] border-x border-t px-6 py-16 sm:px-8 sm:py-20">
+      <div className="mx-auto max-w-[560px] text-center">
+        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#8a8d87]">Said on X</p>
+        <h2 className="mt-3 text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724] sm:text-[28px]">
+          Builders are already handing work off.
+        </h2>
+        <p className="mx-auto mt-4 max-w-[440px] text-[13px] leading-6 text-[#70766f] sm:text-[14px]">
+          What people said when Thred shipped. Unedited, straight from the replies.
+        </p>
+      </div>
+
+      <div className="mt-10 columns-1 gap-3 sm:mt-12 sm:columns-2 lg:columns-3">
+        {testimonials.map((item) => (
+          <a
+            key={item.id}
+            href={`https://x.com/${item.handle}/status/${item.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="testimonial-card bevel-tile mb-3 block break-inside-avoid rounded-[14px] p-4"
+          >
+            <div className="flex items-center gap-2.5">
+              <Image
+                src={`/testimonials/${item.handle}.jpg`}
+                alt=""
+                width={36}
+                height={36}
+                className="size-9 shrink-0 rounded-full outline outline-1 -outline-offset-1 outline-black/10"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1 text-[13px] font-medium leading-tight text-[#1d1f1c]">
+                  <span className="truncate">{item.name}</span>
+                  {item.verified && <VerifiedBadge />}
+                </p>
+                <p className="truncate text-[12px] leading-tight text-[#8a8d87]">@{item.handle}</p>
+              </div>
+              <XLogo className="size-3.5 shrink-0 text-[#1d1f1c] opacity-70" />
+            </div>
+            <p className="mt-3 whitespace-pre-line text-pretty text-[13.5px] leading-[1.55] text-[#2e302c]">
+              <TweetText text={item.text} />
+            </p>
+            <p className="mt-3 text-[11px] text-[#9a9c96]">{item.date}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const { data: session } = useSession();
 
@@ -105,10 +195,10 @@ export default function Home() {
             <span className="block text-[#6b6e69]">work forward.</span>
           </h1>
           <p className="mt-5 max-w-[480px] text-pretty text-[12px] leading-[1.65] text-[#70726e] sm:text-[14px]">
-            Thread gives Claude, Codex, and Cursor shared memory for decisions, revisions, and unfinished work—so the next agent starts where the last one stopped.
+            Thread gives Claude, Codex, and Cursor shared memory for decisions, revisions, and unfinished work, so the next agent starts where the last one stopped.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">{session?.user ? "Open dashboard" : "Sign in"} <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
+            <Link href={session?.user ? "/dashboard" : "/sign-in"} className="landing-cta inline-flex items-center gap-1.5 rounded-[5px] btn-ink px-4 py-2.5 text-[12px] font-medium">{session?.user ? "Open dashboard" : "Sign in"} <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
             <a href="#mcp" className="landing-link inline-flex items-center gap-1.5 text-[12px] text-[#5f625d] hover:text-[#171717]">Explore MCP <ArrowRight className="size-3" strokeWidth={1.6} /></a>
           </div>
         </div>
@@ -125,9 +215,9 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1000px] border-x border-[#e8e8e4]">
+      <div className="page-frame mx-auto max-w-[1000px] border-x">
       <section id="mcp" className="px-6 sm:px-8">
-        <div className="border-b border-[#e8e8e4] py-9 sm:py-11">
+        <div className="rule-fade border-b py-9 sm:py-11">
           <p className="text-center text-[11px] text-[#858680] sm:text-[12px]">One shared memory, available through MCP wherever your agents work.</p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-x-9 gap-y-5 text-[#6c6e69] sm:gap-x-12">
             <div className="flex items-center gap-2 text-[17px] font-medium tracking-[-0.045em]"><SiClaude className="size-5" />Claude</div>
@@ -140,28 +230,28 @@ export default function Home() {
         </div>
         </section>
 
-        <section id="memory" className="border-b border-[#e8e8e4] px-6 py-12 text-center sm:px-8 sm:py-14">
+        <section id="memory" className="rule-fade frame-marks border-b px-6 py-12 text-center sm:px-8 sm:py-14">
           <div className="mx-auto max-w-[620px]">
             <h2 className="text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724] sm:text-[28px]">One memory for every agent that touches the work.</h2>
             <p className="mx-auto mt-4 max-w-[520px] text-[13px] leading-6 text-[#70766f] sm:text-[14px]">Claude saves the decision and the next step. Thread resolves what changed. Codex continues with the context it needs.</p>
 
-            <div className="mx-auto mt-8 flex w-fit items-center gap-1.5 rounded-[22px] border border-white/80 bg-[#e9ece9]/90 p-2 sm:gap-3 sm:p-3 shadow-[0_14px_40px_rgba(65,84,72,0.12)]">
-              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><SiClaude className="size-6 sm:size-7" /></div>
+            <div className="mx-auto mt-8 flex w-fit items-center gap-1.5 bevel-tray rounded-[22px] p-2 sm:gap-3 sm:p-3">
+              <div className="grid size-12 place-items-center sm:size-[60px] bevel-tile rounded-[16px] text-[#575d58] transition-transform duration-200 ease-out hover:scale-110"><SiClaude className="size-6 sm:size-7" /></div>
               <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
-              <div className="grid size-12 place-items-center sm:size-[60px] transition-transform duration-200 ease-out hover:scale-110"><ThreadMark className="size-12 sm:size-[60px]" /></div>
+              <div className="grid size-12 place-items-center sm:size-[60px] transition-transform duration-200 ease-out hover:scale-110"><ThreadMark bevel className="size-12 sm:size-[60px]" /></div>
               <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
-              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><HydraMark className="size-7 sm:size-8" /></div>
+              <div className="grid size-12 place-items-center sm:size-[60px] bevel-tile rounded-[16px] transition-transform duration-200 ease-out hover:scale-110"><HydraMark className="size-7 sm:size-8" /></div>
               <ArrowRight className="size-3 shrink-0 text-[#9ba29c] sm:size-4" strokeWidth={1.5} />
-              <div className="grid size-12 place-items-center sm:size-[60px] rounded-[16px] border border-[#d9ddd8] bg-white text-[#575d58] shadow-[0_5px_12px_rgba(0,0,0,0.06)] transition-transform duration-200 ease-out hover:scale-110"><RiOpenaiFill className="size-6 sm:size-7" /></div>
+              <div className="grid size-12 place-items-center sm:size-[60px] bevel-tile rounded-[16px] text-[#575d58] transition-transform duration-200 ease-out hover:scale-110"><RiOpenaiFill className="size-6 sm:size-7" /></div>
             </div>
 
-            <Link href="/sign-up" className="landing-cta mt-8 inline-flex items-center gap-2 rounded-[5px] bg-[#171717] px-4 py-2.5 text-[12px] font-medium text-white shadow-[0_1px_1px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#363634] hover:shadow-[0_1px_1px_rgba(0,0,0,0.12),0_6px_16px_rgba(0,0,0,0.14)]">Connect an agent <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
+            <Link href="/sign-up" className="landing-cta mt-8 inline-flex items-center gap-2 rounded-[5px] btn-ink px-4 py-2.5 text-[12px] font-medium">Connect an agent <ArrowUpRight className="size-3" strokeWidth={1.7} /></Link>
           </div>
         </section>
 
       </div>
 
-      <section className="mx-auto max-w-[1000px] border-x border-[#e8e8e4] px-6 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-20">
+      <section className="page-frame mx-auto max-w-[1000px] border-x px-6 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-20">
           <div className="mx-auto max-w-[620px] border-b border-[#e8e8e4] pb-10 text-center sm:pb-12">
             <h2 className="text-balance text-[22px] font-medium leading-[1.12] tracking-[-0.045em] text-[#252724] sm:text-[28px]">
               Keep the work connected across every handoff.
@@ -213,7 +303,9 @@ export default function Home() {
           </div>
       </section>
 
-      <footer className="mx-auto max-w-[1000px] overflow-hidden border-x border-t border-[#e8e8e4]">
+      <Testimonials />
+
+      <footer className="page-frame mx-auto max-w-[1000px] overflow-hidden border-x border-t">
         <div className="flex flex-col gap-8 px-6 pt-12 sm:flex-row sm:items-start sm:justify-between sm:px-8">
           <div>
             <Link href="/" className="landing-link flex items-center gap-2 text-[14px] font-semibold tracking-[-0.04em]">

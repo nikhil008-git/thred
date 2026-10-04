@@ -102,7 +102,7 @@ git log -1 --format='%h %s'                     # the last commit, to name in th
 gh pr status --json number,title,headRefName    # `currentBranch`: this branch's open PR, if any
 ```
 
-`gh pr status` succeeds with no pull request open — it simply omits `currentBranch` — so an empty result is an answer, not an error. It fails outright without `gh`, without authentication, and on a repository with no GitHub remote. Treat any failure as "no pull request found", say so, and offer the remaining routes rather than stopping.
+`gh pr status` succeeds with no pull request open, it simply omits `currentBranch`, so an empty result is an answer, not an error. It fails outright without `gh`, without authentication, and on a repository with no GitHub remote. Treat any failure as "no pull request found", say so, and offer the remaining routes rather than stopping.
 
 Report the current branch, whether it is the default branch, that the tree is clean, and whether a pull request is open, then offer the three routes in principle 2. State the last commit's SHA and subject inside the offer: the user recognises "a1b2c3d Merge pull request #482" as not what they wanted, and cannot recognise "the last commit".
 

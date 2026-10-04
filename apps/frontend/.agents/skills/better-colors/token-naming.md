@@ -10,12 +10,12 @@ Naming is what makes a palette usable by anyone who did not build it. For which 
 
 ```css
 :root {
-  /* Tier 1: primitives — named by appearance, never used directly */
+  /* Tier 1: primitives: named by appearance, never used directly */
   --blue-500: #3b82f6;
   --neutral-200: #e5e7eb;
   --neutral-700: #374151;
 
-  /* Tier 2: semantics — named by role, this is what components use */
+  /* Tier 2: semantics: named by role, this is what components use */
   --color-accent-solid: var(--blue-500);
   --color-border: var(--neutral-200);
   --color-text-secondary: var(--neutral-700);
@@ -51,7 +51,7 @@ Use one shape and never deviate: `--color-{role}-{variant}-{state}`.
 --color-accent-solid-hover
 ```
 
-Pick one word per concept and use only that word. The vocabulary matters less than its consistency — a reader who has seen `--color-text-primary` must be able to guess `--color-text-disabled` without looking:
+Pick one word per concept and use only that word. The vocabulary matters less than its consistency, a reader who has seen `--color-text-primary` must be able to guess `--color-text-disabled` without looking:
 
 | Concept | Pick one | Never mix in |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ Reserve `primary` for exactly one meaning. `--color-text-primary` (the main body
 | `--color-gray-hover` | Mixes a hue with a state and belongs to no tier | `--color-bg-surface-hover` |
 | `--blue-500` used in a component | Skips the semantic tier and removes the theming seam | Point a semantic token at it |
 
-The rule underneath all of them: **never borrow a token because its value is right today.** If a role has no token, add the token. Reusing `--color-border` as a text color works until borders get lighter, and then the text goes with it — see [color-usage.md](color-usage.md).
+The rule underneath all of them: **never borrow a token because its value is right today.** If a role has no token, add the token. Reusing `--color-border` as a text color works until borders get lighter, and then the text goes with it, see [color-usage.md](color-usage.md).
 
 ## In Tailwind projects
 
@@ -86,7 +86,7 @@ Tailwind v4 generates utilities from `@theme`, so names declared there become th
   --color-brand-500: #3b82f6;
   --color-brand-900: #1e3a8a;
 
-  /* Semantics — these are what templates should use */
+  /* Semantics: these are what templates should use */
   --color-accent-solid: var(--color-brand-500);
   --color-text-secondary: var(--color-neutral-700);
 }
@@ -94,4 +94,4 @@ Tailwind v4 generates utilities from `@theme`, so names declared there become th
 
 This yields `bg-accent-solid` and `text-secondary` alongside `bg-brand-500`. Both are reachable, so the discipline is a convention rather than a constraint: templates use the semantic utilities, and a raw `bg-brand-500` in a component is the thing to flag in review.
 
-Opacity modifiers work on either tier — `bg-accent-solid/50` — but a color carrying alpha cannot be contrast-checked against a static background, since what it renders depends on what is behind it. Use solid tokens for anything with text on it.
+Opacity modifiers work on either tier, `bg-accent-solid/50`, but a color carrying alpha cannot be contrast-checked against a static background, since what it renders depends on what is behind it. Use solid tokens for anything with text on it.

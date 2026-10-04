@@ -23,7 +23,7 @@ A color system is a small set of ramps, named by role, applied consistently, and
 
 ### 1. Match the Project's Color System
 
-Reuse the project's existing tokens and notation. Introducing a second color representation to fix one value makes the palette harder to reason about, not easier — a consistent hex system beats a hex system with `oklch()` scattered through it. Notation is not a defect. For a genuinely new system, `oklch()` is the best default because its numbers behave the way the ramp rules below describe; everywhere else a color library produces the same ramp in whatever the project writes ([color-formats.md](color-formats.md)).
+Reuse the project's existing tokens and notation. Introducing a second color representation to fix one value makes the palette harder to reason about, not easier, a consistent hex system beats a hex system with `oklch()` scattered through it. Notation is not a defect. For a genuinely new system, `oklch()` is the best default because its numbers behave the way the ramp rules below describe; everywhere else a color library produces the same ramp in whatever the project writes ([color-formats.md](color-formats.md)).
 
 ### 2. A System Is Ramps, Not Colors
 
@@ -31,7 +31,7 @@ One neutral ramp, one accent ramp, and only the status ramps the product actuall
 
 ### 3. Every Step Has a Job
 
-A ramp is not a gradient to pick from by eye. Each step exists because a role needs it — page background, component hover, border, solid fill, body text — and a step no role consumes should not be generated. Both the Tailwind `50`–`950` and Radix `1`–`12` conventions map to those roles ([palette-structure.md](palette-structure.md)).
+A ramp is not a gradient to pick from by eye. Each step exists because a role needs it, page background, component hover, border, solid fill, body text, and a step no role consumes should not be generated. Both the Tailwind `50`–`950` and Radix `1`–`12` conventions map to those roles ([palette-structure.md](palette-structure.md)).
 
 ### 4. Name Primitives by Hue, Semantics by Role
 
@@ -47,7 +47,7 @@ Steps step evenly in *perceived* lightness, hue stays constant end to end, vivid
 
 ### 7. One Color, One Meaning
 
-Use a color for one purpose across the whole interface, treating anything within `15°` of hue as the same color. If the accent means interactive, that hue on static text tells users to click something that is not clickable — and an interactive element rendered neutral is just as misleading. Color is never the only carrier of meaning; `better-accessibility` owns that requirement.
+Use a color for one purpose across the whole interface, treating anything within `15°` of hue as the same color. If the accent means interactive, that hue on static text tells users to click something that is not clickable, and an interactive element rendered neutral is just as misleading. Color is never the only carrier of meaning; `better-accessibility` owns that requirement.
 
 ### 8. Fill Exactly One Action per View
 
@@ -55,11 +55,11 @@ When filled color encodes primary emphasis, one primary action gets it and peer 
 
 ### 9. Measure the Rendered Pair, Then Report
 
-Measure a foreground against the background it actually renders on, not the page background. When a pair fails, report it — the pair, its measured value, and the threshold it misses — and leave the colors alone. A project's colors are a design decision; change them only when asked, and remeasure after ([contrast.md](contrast.md)).
+Measure a foreground against the background it actually renders on, not the page background. When a pair fails, report it, the pair, its measured value, and the threshold it misses, and leave the colors alone. A project's colors are a design decision; change them only when asked, and remeasure after ([contrast.md](contrast.md)).
 
 ### 10. Pick a Gradient's Interpolation Space
 
-The space is a look, not a correctness setting. `in oklab` is the best default — even brightness, no hue surprises. `in oklch` travels around the hue wheel rather than through the middle, staying vivid and sweeping through the hues between the stops: a distinct look, and the fix when a two-hue gradient goes gray in the middle. The sRGB default is the classic, and its darker, muted midpoint is the one most interfaces already look like ([color-usage.md](color-usage.md)).
+The space is a look, not a correctness setting. `in oklab` is the best default, even brightness, no hue surprises. `in oklch` travels around the hue wheel rather than through the middle, staying vivid and sweeping through the hues between the stops: a distinct look, and the fix when a two-hue gradient goes gray in the middle. The sRGB default is the classic, and its darker, muted midpoint is the one most interfaces already look like ([color-usage.md](color-usage.md)).
 
 ## Common Mistakes
 
@@ -78,7 +78,7 @@ The space is a look, not a correctness setting. `in oklab` is the best default �
 | Dark mode made by mechanically reversing the light palette | Reverse as a starting point, then reduce vividness, widen the dark end, and recheck every pair |
 | `prefers-color-scheme` setting some tokens and a `.dark` class setting others | Pick one switching mechanism and use it throughout |
 | Failing contrast | Report the pair, its measured value, and the threshold missed; change colors only when asked |
-| Contrast fixed by changing hue | Change lightness — it is the channel contrast responds to |
+| Contrast fixed by changing hue | Change lightness, it is the channel contrast responds to |
 | P3 color with no sRGB fallback | Declare the sRGB value first, then override inside `@media (color-gamut: p3)` |
 | Gradient between opposite hues going gray in the middle | Switch to a polar space (`in oklch`) or add a mid-stop at a hue between the two |
 | Palette verified only in light mode | Recheck every foreground/background pair in both appearances |

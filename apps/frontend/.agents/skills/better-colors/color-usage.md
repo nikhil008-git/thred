@@ -4,7 +4,7 @@ How to deploy color once the system exists: meaning, emphasis, gradients, and ap
 
 ## One color, one meaning
 
-Use a color for one purpose — interactive, destructive, featured — across the whole interface. If the accent signals that text is interactive, that hue on non-interactive text tells users to click something that is not clickable. Treat anything within about 15° of hue as the same color for this purpose; users do not perceive a near-miss as a different color, only as a slightly different shade of the same one.
+Use a color for one purpose, interactive, destructive, featured, across the whole interface. If the accent signals that text is interactive, that hue on non-interactive text tells users to click something that is not clickable. Treat anything within about 15° of hue as the same color for this purpose; users do not perceive a near-miss as a different color, only as a slightly different shade of the same one.
 
 ```css
 /* Bad: the accent means both "link" and "decorative heading" */
@@ -18,7 +18,7 @@ a { color: var(--color-accent-text); }
 
 The rule runs in both directions. A color that means one thing must also not be *absent* where that thing occurs: if the accent means interactive, an interactive element rendered in neutral is just as misleading.
 
-Color is never the only carrier of meaning — pair it with an icon, a label, or a shape. `better-accessibility` owns that requirement.
+Color is never the only carrier of meaning, pair it with an icon, a label, or a shape. `better-accessibility` owns that requirement.
 
 ## Use tokens in their role
 
@@ -32,7 +32,7 @@ Apply a semantic token only for the role it names. `--color-text-secondary` is m
 .tag { background: var(--color-text-secondary); }
 ```
 
-If a role has no token yet, add the token. Never borrow one by value — the role inventory in [token-naming.md](token-naming.md) is the list of roles a system needs.
+If a role has no token yet, add the token. Never borrow one by value, the role inventory in [token-naming.md](token-naming.md) is the list of roles a system needs.
 
 ## One colored action per view
 
@@ -49,34 +49,34 @@ When the product uses a filled color to encode primary emphasis, give that treat
 <button class="bg-accent-solid text-white">Export</button>
 ```
 
-Put the color on the background, not the label: a filled button reads as primary from across the room, while accent-colored label text on a neutral button reads as a link. Selected states — an active tab, a checked segment — may use the accent on the glyph and label; that is state, not emphasis.
+Put the color on the background, not the label: a filled button reads as primary from across the room, while accent-colored label text on a neutral button reads as a link. Selected states, an active tab, a checked segment, may use the accent on the glyph and label; that is state, not emphasis.
 
 ## Gradients
 
 **The interpolation space is a look, not a correctness setting.** Three are worth knowing, and the difference between them is most visible in the middle of the gradient:
 
 ```css
-/* sRGB — the default and the classic. Midpoint darkens and mutes. */
+/* sRGB: the default and the classic. Midpoint darkens and mutes. */
 background: linear-gradient(#3b82f6, #ec4899);
 
-/* oklab — even brightness across the transition. The best default. */
+/* oklab: even brightness across the transition. The best default. */
 background: linear-gradient(in oklab, #3b82f6, #ec4899);
 
-/* oklch — travels around the hue wheel, staying vivid throughout. */
+/* oklch: travels around the hue wheel, staying vivid throughout. */
 background: linear-gradient(in oklch, #3b82f6, #ec4899);
 ```
 
-`oklab` and sRGB are **rectangular**: they interpolate in a straight line through the color space. `oklch` is **polar**: it interpolates the hue angle, so it arcs around the wheel and passes through every hue between the two stops. That is why it stays saturated, and also why it can produce hues nobody asked for — a blue-to-pink gradient routes through purple, which may be exactly the look or may be a surprise.
+`oklab` and sRGB are **rectangular**: they interpolate in a straight line through the color space. `oklch` is **polar**: it interpolates the hue angle, so it arcs around the wheel and passes through every hue between the two stops. That is why it stays saturated, and also why it can produce hues nobody asked for, a blue-to-pink gradient routes through purple, which may be exactly the look or may be a surprise.
 
 **The gray dead zone is a rectangular-space problem.** Two hues on opposite sides of the wheel sit on either side of the neutral axis, so a straight line between them passes near gray and the middle goes lifeless. Two fixes: switch to a polar space, which routes around the axis instead of through it, or add a third stop at a hue between the two and keep the space you have.
 
 With a polar space you also control which way it goes around:
 
 ```css
-/* The short way round — usually what you want */
+/* The short way round: usually what you want */
 background: linear-gradient(in oklch shorter hue, #3b82f6, #ec4899);
 
-/* The long way — sweeps most of the spectrum */
+/* The long way: sweeps most of the spectrum */
 background: linear-gradient(in oklch longer hue, #3b82f6, #ec4899);
 ```
 
@@ -86,7 +86,7 @@ background: linear-gradient(in oklch longer hue, #3b82f6, #ec4899);
 
 ## Color across cultures
 
-Color meaning is not universal. If a color is load-bearing — finance, status, alerts — verify the meaning holds in every locale you ship to.
+Color meaning is not universal. If a color is load-bearing, finance, status, alerts, verify the meaning holds in every locale you ship to.
 
 | Color | Common Western reading | Elsewhere |
 | --- | --- | --- |

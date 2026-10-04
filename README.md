@@ -4,7 +4,7 @@
 
 Thred is a durable memory layer for agents working across Cursor, Claude Code,
 Codex, and OpenCode. It turns long, fragmented chat histories into verifiable
-memory — decisions, facts, preferences, source evidence, revisions, and
+memory: decisions, facts, preferences, source evidence, revisions, and
 resumable coding handoffs.
 
 **[Get started → thred.fun](https://www.thred.fun)** · [MIT License](LICENSE)
@@ -29,7 +29,7 @@ honest abstention when the evidence isn't there.
 
 ## Features
 
-Thred exposes a small MCP toolset — use the same memory from any agent client:
+Thred exposes a small MCP toolset. Use the same memory from any agent client:
 
 | Tool                | What it does                                                                                 |
 | ------------------- | -------------------------------------------------------------------------------------------- |
@@ -38,7 +38,7 @@ Thred exposes a small MCP toolset — use the same memory from any agent client:
 | `thread_resume`     | Restores the latest unfinished coding checkpoint with relevant context.                      |
 
 Save "we chose PostgreSQL" in one session. Update to "we chose Neon Postgres" in
-another. Ask what’s true now — or why it changed — in a third. Nothing gets
+another. Ask what’s true now, or why it changed, in a third. Nothing gets
 silently erased.
 
 ## Quick start
@@ -101,7 +101,7 @@ production API.
 6. Insufficient evidence → `NOT_FOUND`, not a guess.
 
 Built on [HydraDB](https://github.com/hydra-db/hydradb) for graph-backed storage
-with hybrid retrieval — so revision history and provenance are first-class, not
+with hybrid retrieval, so revision history and provenance are first-class, not
 bolted onto a vector store.
 
 ## Benchmarks

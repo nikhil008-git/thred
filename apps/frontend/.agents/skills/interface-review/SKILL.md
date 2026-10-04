@@ -38,7 +38,7 @@ Exclude lockfiles, snapshots, generated output, vendored code, and binaries, and
 
 ### 2. With No Change, Ask Rather Than Invent One
 
-A clean tree with nothing ahead of the merge base means the user asked to review a change that does not exist. Never fall back to `HEAD~1..HEAD` on your own. The last commit is whatever happened to land — often a merge, often someone else's work — and a report on it is indistinguishable from a report on what the user meant.
+A clean tree with nothing ahead of the merge base means the user asked to review a change that does not exist. Never fall back to `HEAD~1..HEAD` on your own. The last commit is whatever happened to land, often a merge, often someone else's work, and a report on it is indistinguishable from a report on what the user meant.
 
 State the repository facts you found, then offer the routes and wait. [Nothing to Review](scope-resolution.md#nothing-to-review) holds the commands:
 

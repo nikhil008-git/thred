@@ -10,7 +10,7 @@ Group all confirmed findings by principle. Use a markdown table with **Severity*
 
 - **Severity**: `HIGH` makes content unreadable or assigns a misleading semantic color; `MEDIUM` creates a noticeable theme, token, or gamut failure; `LOW` is isolated polish.
 - **Location**: cite `path/to/file:line`. If the artifact has no source files, cite the exact screen and component instead.
-- **Before / After**: show the current value or token and the exact replacement. For a failing contrast pair, the replacement is a recommendation — report it, do not apply it unasked.
+- **Before / After**: show the current value or token and the exact replacement. For a failing contrast pair, the replacement is a recommendation, report it, do not apply it unasked.
 - **Why**: name the violated principle and include the measured contrast, gamut, or step evidence when relevant.
 
 Consolidate a repeated systemic issue into one row and list every affected location. Omit principles with no findings.

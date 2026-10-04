@@ -20,13 +20,13 @@ import {
 
 type Workspace = { id: string; name: string; slug: string };
 
-/** Dropdown styling shared by the footer menus — paper panel, hairline, soft shadow. */
+/** Dropdown styling shared by the footer menus: paper panel, hairline, soft shadow. */
 const menu = {
-  panel:
-    "ui-popover ui-popover-up absolute bottom-[calc(100%+6px)] left-0 right-0 z-30 overflow-hidden rounded-[10px] border border-[#e8e8e4] bg-[#fcfcfb] p-1 shadow-[0_1px_1px_rgba(0,0,0,0.04),0_12px_32px_rgba(16,22,18,0.1)]",
-  label: "px-2.5 pb-1 pt-2 text-[11px] text-[#9a9c96]",
-  item: "flex w-full cursor-pointer items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left text-[13px] text-[#4e514c] transition-colors hover:bg-[#f1f2f0] hover:text-[#171717]",
-  divider: "my-1 h-px bg-[#e8e8e4]",
+  panel: "ui-popover ui-popover-up bevel-panel menu-panel absolute bottom-[calc(100%+8px)] left-0 right-0 z-30",
+  label: "px-2 pb-1.5 pt-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-[#9a9c96]",
+  item: "menu-item",
+  icon: "menu-icon bevel-tile",
+  divider: "menu-divider",
 };
 
 export type DashboardView =
@@ -107,6 +107,7 @@ type DashboardSidebarProps = {
   workspaces: Workspace[];
   onWorkspaceChange: (workspace: Workspace) => void;
   accountName: string;
+  accountEmail?: string;
   sidebarWorkspaceOpen: boolean;
   setSidebarWorkspaceOpen: Dispatch<SetStateAction<boolean>>;
   sidebarWorkspaceRef: RefObject<HTMLDivElement | null>;
@@ -150,6 +151,7 @@ export function DashboardSidebar({
   workspaces,
   onWorkspaceChange,
   accountName,
+  accountEmail,
   sidebarWorkspaceOpen,
   setSidebarWorkspaceOpen,
   sidebarWorkspaceRef,
@@ -255,7 +257,7 @@ export function DashboardSidebar({
             <div ref={sidebarWorkspaceRef} className="relative">
               {sidebarWorkspaceOpen && (
                 <div role="menu" className={menu.panel}>
-                  <p className={menu.label}>Workspaces</p>
+                  <p className={menu.label}>Workspaces · {workspaces.length}</p>
                   {workspaces.map((item) => (
                     <button
                       key={item.id}
@@ -266,10 +268,11 @@ export function DashboardSidebar({
                         onWorkspaceChange(item);
                         setSidebarWorkspaceOpen(false);
                       }}
-                      className={`${menu.item} ${item.id === workspace.id ? "text-[#171717]" : ""}`}
+                      className={`${menu.item} ${item.id === workspace.id ? "font-medium text-[#141614]" : ""}`}
                     >
+                      <span className={`${menu.icon} text-[11px] font-semibold`}>{item.name.charAt(0).toUpperCase()}</span>
                       <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                      {item.id === workspace.id && <PixelCheck className="size-3.5 shrink-0" />}
+                      {item.id === workspace.id && <PixelCheck className="size-3.5 shrink-0 text-[#141614]" />}
                     </button>
                   ))}
                 </div>
@@ -284,7 +287,7 @@ export function DashboardSidebar({
                 aria-expanded={sidebarWorkspaceOpen}
                 aria-haspopup="menu"
               >
-                <span className="grid size-6 shrink-0 place-items-center rounded-[6px] bg-white/80 text-[#6d746b]">
+                <span className="bevel-tile grid size-7 shrink-0 place-items-center rounded-[7px] text-[#5d625b]">
                   <PixelFolder className="size-3.5" />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-[#141614]">
@@ -299,9 +302,18 @@ export function DashboardSidebar({
             <div ref={accountMenuRef} className="relative">
               {accountMenuOpen && (
                 <div role="menu" className={menu.panel}>
-                  <p className={`${menu.label} truncate`}>{accountName}</p>
+                  <div className="flex items-center gap-2.5 px-1.5 pb-2 pt-1.5">
+                    <span className="bevel-tile-ink grid size-9 shrink-0 place-items-center rounded-full text-[13px] font-semibold text-white">
+                      {accountName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[13px] font-medium text-[#141614]">{accountName}</span>
+                      <span className="block truncate text-[11px] text-[#8a8c86]">{accountEmail ?? workspace.name}</span>
+                    </span>
+                  </div>
+                  <div className={menu.divider} />
                   {([
-                    ["settings", "Workspace settings", PixelSliders],
+                    ["settings", "Workspace settings", PixelGear],
                     ["apiKeys", "Thred agent keys", PixelKey],
                     ["providers", "BYOK providers", PixelSliders],
                   ] as const).map(([target, label, Icon]) => (
@@ -313,15 +325,20 @@ export function DashboardSidebar({
                         setAccountMenuOpen(false);
                         onViewChange(target);
                       }}
-                      className={menu.item}
+                      className={`${menu.item} ${view === target ? "font-medium text-[#141614]" : ""}`}
                     >
-                      <Icon className="size-3.5 shrink-0 text-[#8a8c86]" />
-                      {label}
+                      <span className={menu.icon}>
+                        <Icon className="size-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{label}</span>
+                      {view === target && <span aria-hidden="true" className="mr-1 size-1.5 rounded-full bg-[#141614]" />}
                     </button>
                   ))}
                   <div className={menu.divider} />
-                  <button type="button" role="menuitem" onClick={onSignOut} className={menu.item}>
-                    <PixelLogout className="size-3.5 shrink-0 text-[#8a8c86]" />
+                  <button type="button" role="menuitem" onClick={onSignOut} className={`${menu.item} menu-item-danger`}>
+                    <span className={menu.icon}>
+                      <PixelLogout className="size-3.5" />
+                    </span>
                     Sign out
                   </button>
                 </div>
@@ -334,7 +351,7 @@ export function DashboardSidebar({
                 }}
                 className={`dashboard-sidebar-panel-footer-btn ${accountMenuOpen ? "dashboard-sidebar-panel-footer-btn-active" : ""}`}
               >
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#dce3dc] text-[10px] font-semibold text-[#4d564f]">
+                <span className="bevel-tile-ink grid size-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white">
                   {accountName.charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-[#141614]">

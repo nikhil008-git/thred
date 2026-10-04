@@ -1,8 +1,8 @@
 # Contrast
 
-Contrast is always measured between a **foreground color** (text, icon, or UI element) and the **background color** it actually renders against — typically the nearest ancestor that paints one. Identify that background before measuring; measuring against the page background when the element sits on a card gives the wrong answer.
+Contrast is always measured between a **foreground color** (text, icon, or UI element) and the **background color** it actually renders against, typically the nearest ancestor that paints one. Identify that background before measuring; measuring against the page background when the element sits on a card gives the wrong answer.
 
-**Report, don't repaint.** When a check fails, report it — the failing foreground/background pair, its measured value, and the threshold it misses — and leave the colors unchanged. A project's colors are a design decision. Apply the fix below only when the user asks for one.
+**Report, don't repaint.** When a check fails, report it, the failing foreground/background pair, its measured value, and the threshold it misses, and leave the colors unchanged. A project's colors are a design decision. Apply the fix below only when the user asks for one.
 
 `better-accessibility` decides when contrast is required and whether a given pair must pass. This file covers measuring the pair and, on request, changing it.
 
@@ -54,13 +54,13 @@ background: #eef2f7;
 Two constraints on the fix:
 
 - **Mid-lightness backgrounds cap what is achievable.** On a background around 75% perceived lightness, even pure black text only reaches about Lc 60. Body text needs a background near one extreme; if the background is mid-range, the background is the thing that has to change.
-- **Pushing lightness can push the color out of gamut.** Reduce saturation as needed to keep it renderable — see [color-formats.md](color-formats.md).
+- **Pushing lightness can push the color out of gamut.** Reduce saturation as needed to keep it renderable, see [color-formats.md](color-formats.md).
 
 Always remeasure after changing a value. Do not assume a fix landed.
 
 ## Quick approximations
 
-Useful for a first pass. They are approximations — verify with an actual measurement before reporting a result.
+Useful for a first pass. They are approximations, verify with an actual measurement before reporting a result.
 
 For body text targeting |Lc| ≥ 75:
 
@@ -69,7 +69,7 @@ For body text targeting |Lc| ≥ 75:
 
 The gap is asymmetric because APCA is polarity-aware; mirrored pairs do not score identically, which is also why a pair that passes in light mode can fail in dark.
 
-**Light or dark background?** The crossover is around 73% perceived lightness — above it, use dark text; at or below it, light text scores higher. This is higher than intuition suggests: between roughly 60% and 73% the background already looks light, but white text still measures meaningfully better than black.
+**Light or dark background?** The crossover is around 73% perceived lightness, above it, use dark text; at or below it, light text scores higher. This is higher than intuition suggests: between roughly 60% and 73% the background already looks light, but white text still measures meaningfully better than black.
 
 ## What to check
 

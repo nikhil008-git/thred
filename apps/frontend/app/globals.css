@@ -2,7 +2,7 @@
 @import "lenis/dist/lenis.css";
 @import "tailwindcss";
 
-/* Matter (Displaay) — licensed font, self-hosted from public/fonts/matter. */
+/* Matter (Displaay): licensed font, self-hosted from public/fonts/matter. */
 @font-face {
   font-family: "Matter";
   src: url("/fonts/matter/Matter-Regular.woff2") format("woff2");
@@ -147,8 +147,9 @@
   }
 
   .field-input::placeholder { color: #949792; }
-  .field-input:hover { border-color: rgb(17 17 17 / 0.16); }
-  .field-input:focus { border-color: rgb(17 17 17 / 0.42); background: white; box-shadow: 0 0 0 3px rgb(17 17 17 / 0.08); }
+  .field-input { border-color: #d6d8d2; background: linear-gradient(180deg, #f8f8f6 0%, #ffffff 100%); box-shadow: inset 0 1px 2px rgb(17 17 17 / 0.06); }
+  .field-input:hover { border-color: #c4c7c0; }
+  .field-input:focus { border-color: #8f938c; background: white; box-shadow: inset 0 1px 2px rgb(17 17 17 / 0.04), 0 0 0 3px rgb(17 17 17 / 0.07); }
 
   .link-subtle {
     color: var(--muted-foreground);
@@ -194,6 +195,234 @@
     transition: background-color 150ms ease-out, color 150ms ease-out, box-shadow 150ms ease-out, scale 150ms ease-out;
   }
   .landing-cta:active { scale: 0.96; }
+
+  /*
+   * Bevel system: a solid outer edge plus a lighter inner hairline 2px inside it.
+   * Buttons, icon tiles, the code block and panels all share it.
+   */
+  .btn-ink, .btn-paper, .btn-danger,
+  .bevel-tile, .bevel-tile-ink, .bevel-tile-clay, .bevel-tray, .bevel-panel, .bevel-code {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid transparent;
+  }
+  .btn-ink::after, .btn-paper::after, .btn-danger::after,
+  .bevel-tile::after, .bevel-tile-ink::after, .bevel-tile-clay::after, .bevel-tray::after, .bevel-panel::after, .bevel-code::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: 1;
+    border: 1px solid transparent;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: border-color 150ms ease-out;
+  }
+
+  /* Buttons */
+  .btn-ink {
+    border-color: #050505;
+    background: linear-gradient(180deg, #333331 0%, #1b1b1a 55%, #121212 100%);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 1px rgb(0 0 0 / 0.14), 0 4px 12px rgb(0 0 0 / 0.12);
+  }
+  .btn-ink::after { border-color: rgb(255 255 255 / 0.17); }
+  .btn-ink:hover {
+    background: linear-gradient(180deg, #41413e 0%, #282826 55%, #1c1c1b 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 1px rgb(0 0 0 / 0.14), 0 6px 16px rgb(0 0 0 / 0.16);
+  }
+  .btn-ink:hover::after { border-color: rgb(255 255 255 / 0.24); }
+
+  .btn-paper {
+    border-color: #d3d5cf;
+    background: linear-gradient(180deg, #ffffff 0%, #f7f7f5 100%);
+    color: #2a2c29;
+    box-shadow: 0 1px 1px rgb(0 0 0 / 0.05), 0 3px 8px rgb(0 0 0 / 0.04);
+  }
+  .btn-paper::after { border-color: rgb(17 17 17 / 0.07); }
+  .btn-paper:hover { border-color: #c3c6bf; color: #171717; background: linear-gradient(180deg, #ffffff 0%, #f1f2ef 100%); }
+  .btn-paper:hover::after { border-color: rgb(17 17 17 / 0.1); }
+
+  .btn-danger {
+    border-color: #7f2a21;
+    background: linear-gradient(180deg, #c95a4d 0%, #b0443a 55%, #9c3a30 100%);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 1px rgb(0 0 0 / 0.12), 0 4px 10px rgb(156 58 48 / 0.22);
+  }
+  .btn-danger::after { border-color: rgb(255 255 255 / 0.2); }
+  .btn-danger:hover { background: linear-gradient(180deg, #bd4f43 0%, #a23d33 55%, #8e332a 100%); }
+
+  .btn-ink:focus-visible, .btn-paper:focus-visible, .btn-danger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Icon tiles */
+  .bevel-tile {
+    border-color: #d3d6d0;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f5f2 100%);
+    box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgb(0 0 0 / 0.05), 0 6px 14px rgb(29 38 32 / 0.07);
+  }
+  .bevel-tile::after { border-color: rgb(17 17 17 / 0.06); }
+
+  .bevel-tile-ink {
+    border-color: #070807;
+    background: linear-gradient(180deg, #2d322e 0%, #1a1e1b 55%, #121513 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 1px rgb(0 0 0 / 0.16), 0 6px 14px rgb(0 0 0 / 0.14);
+  }
+  .bevel-tile-ink::after { border-color: rgb(255 255 255 / 0.15); }
+
+  .bevel-tile-clay {
+    border-color: #a8502f;
+    background: linear-gradient(180deg, #e2886a 0%, #d87551 55%, #c9663f 100%);
+    color: #fff7f1;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 1px 1px rgb(0 0 0 / 0.1), 0 6px 14px rgb(168 80 47 / 0.18);
+  }
+  .bevel-tile-clay::after { border-color: rgb(255 255 255 / 0.24); }
+
+  /* Tray that holds the tiles: frosted pill with a dotted inner line, echoing the page frame. */
+  .bevel-tray {
+    border-color: rgb(255 255 255 / 0.9);
+    background: linear-gradient(180deg, rgb(240 242 239 / 0.95) 0%, rgb(229 233 229 / 0.95) 100%);
+    box-shadow: 0 0 0 1px rgb(17 17 17 / 0.06), 0 14px 40px rgb(65 84 72 / 0.12);
+  }
+  .bevel-tray::after { inset: 4px; border-style: dotted; border-color: rgb(17 17 17 / 0.16); }
+
+  /* Modal panels */
+  .bevel-panel {
+    border-color: rgb(17 17 17 / 0.1);
+    box-shadow: 0 1px 2px rgb(24 32 26 / 0.06), 0 28px 90px rgb(24 32 26 / 0.22);
+  }
+  .bevel-panel::after { inset: 3px; border-color: rgb(255 255 255 / 0.55); box-shadow: 0 0 0 1px rgb(17 17 17 / 0.04); }
+
+  /* Dark code block */
+  .bevel-code {
+    border-color: #0b0c0b;
+    background: linear-gradient(180deg, #242723 0%, #1b1d1a 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 1px rgb(0 0 0 / 0.1), 0 8px 22px rgb(0 0 0 / 0.1);
+  }
+  .bevel-code::after { border-color: rgb(255 255 255 / 0.07); }
+
+  /* Inputs: slightly sunken well with a top inner shadow. */
+  .bevel-input {
+    border: 1px solid #d6d8d2;
+    background: linear-gradient(180deg, #f8f8f6 0%, #ffffff 100%);
+    box-shadow: inset 0 1px 2px rgb(17 17 17 / 0.06), 0 1px 0 rgb(255 255 255 / 0.8);
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
+  }
+  select.bevel-input { background: #fbfbfa; }
+  .bevel-input:hover { border-color: #c4c7c0; }
+  .bevel-input:focus {
+    border-color: #8f938c;
+    background: #fff;
+    box-shadow: inset 0 1px 2px rgb(17 17 17 / 0.04), 0 0 0 3px rgb(17 17 17 / 0.07);
+    outline: none;
+  }
+
+  /* Divider whose ends fade out before meeting the dotted page frame. */
+  .rule-fade {
+    border-image: linear-gradient(90deg, transparent, #e3e4e0 14%, #e3e4e0 86%, transparent) 1;
+  }
+
+  /* Pressed: the bevel sinks in, so the click feels physical. */
+  .btn-ink:active {
+    background: linear-gradient(180deg, #121212 0%, #1b1b1a 100%);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.45), 0 1px 1px rgb(0 0 0 / 0.1);
+  }
+  .btn-ink:active::after { border-color: rgb(255 255 255 / 0.07); }
+  .btn-paper:active {
+    background: linear-gradient(180deg, #eeefec 0%, #f7f7f5 100%);
+    box-shadow: inset 0 2px 4px rgb(17 17 17 / 0.1);
+  }
+  .btn-paper:active::after { border-color: rgb(17 17 17 / 0.03); }
+  .btn-danger:active {
+    background: linear-gradient(180deg, #8e332a 0%, #a23d33 100%);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.3);
+  }
+  .btn-danger:active::after { border-color: rgb(255 255 255 / 0.1); }
+
+  /* Loading placeholder: a bevelled grey shape with a soft sheen passing over it. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #e3e4e0;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #f3f4f1 0%, #eeefec 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
+    animation: skeleton-sheen 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-sheen {
+    to { transform: translateX(100%); }
+  }
+
+  /* Toasts */
+  .ui-toast {
+    animation: ui-toast-in 220ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .ui-toast-leave {
+    animation: ui-toast-out 180ms ease-in both;
+  }
+  @keyframes ui-toast-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); filter: blur(2px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+  @keyframes ui-toast-out {
+    to { opacity: 0; transform: translateY(4px) scale(0.98); }
+  }
+
+  /*
+   * Corner marks: a small "+" where a divider meets the dotted page frame.
+   * Put on a full-width section with a bottom border, inside a .page-frame.
+   */
+  .frame-marks {
+    position: relative;
+  }
+  .frame-marks::before, .frame-marks::after {
+    content: "";
+    position: absolute;
+    bottom: -5.5px;
+    z-index: 2;
+    width: 11px;
+    height: 11px;
+    pointer-events: none;
+    background:
+      linear-gradient(#9fa39b, #9fa39b) center / 11px 1px no-repeat,
+      linear-gradient(#9fa39b, #9fa39b) center / 1px 11px no-repeat;
+  }
+  .frame-marks::before { left: -6px; }
+  .frame-marks::after { right: -6px; }
+  /* Dashboard sections: the last one has no divider, and the frame only has sides from sm up. */
+  .frame-marks-sm:last-child::before, .frame-marks-sm:last-child::after { display: none; }
+  @media (max-width: 639px) {
+    .frame-marks-sm::before, .frame-marks-sm::after { display: none; }
+  }
+
+  /* Testimonial cards lift slightly on hover. */
+  .testimonial-card {
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+  }
+  .testimonial-card:hover {
+    transform: translateY(-2px);
+    border-color: #c9ccc5;
+    box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgb(0 0 0 / 0.05), 0 12px 28px rgb(29 38 32 / 0.1);
+  }
+  .testimonial-card:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  /* Page frame: dotted, slightly darker than inner dividers. */
+  .page-frame {
+    --tw-border-style: dotted;
+    border-style: dotted;
+    border-color: #b9bcb5;
+  }
 
   .landing-link {
     transition: color 150ms ease-out, opacity 150ms ease-out;
@@ -291,7 +520,7 @@
     background: #f1f2f0;
   }
 
-  /* Single labeled panel — full height, not page-scrollable */
+  /* Single labeled panel: full height, not page-scrollable */
   .dashboard-sidebar-panel {
     display: flex;
     width: var(--sidebar-panel);
@@ -380,8 +609,10 @@
     background: #e8ebe7;
   }
 
-  .dashboard-sidebar-panel-row-active {
-    background: #e0e3df;
+  .dashboard-sidebar-panel-row-active,
+  .dashboard-sidebar-panel-row-active:hover {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9f7 100%);
+    box-shadow: 0 0 0 1px #d8dbd5, inset 0 1px 0 #fff, 0 1px 2px rgb(17 17 17 / 0.06), 0 3px 8px rgb(17 17 17 / 0.04);
     font-weight: 600;
   }
 
@@ -409,16 +640,96 @@
     gap: 0.625rem;
     border: none;
     border-radius: 0.5625rem;
-    background: #e8ebe7;
-    padding: 0.5rem 0.625rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f6f7f5 100%);
+    padding: 0.4375rem 0.5625rem;
     cursor: pointer;
     color: #141614;
-    transition: background-color 150ms ease-out;
+    box-shadow: 0 0 0 1px #dcdfd9, inset 0 1px 0 #fff, 0 1px 2px rgb(17 17 17 / 0.05);
+    transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
   }
 
-  .dashboard-sidebar-panel-footer-btn:hover,
-  .dashboard-sidebar-panel-footer-btn-active {
-    background: #e1e5df;
+  .dashboard-sidebar-panel-footer-btn:hover {
+    box-shadow: 0 0 0 1px #cdd1ca, inset 0 1px 0 #fff, 0 2px 6px rgb(17 17 17 / 0.07);
+  }
+
+  /* Open: pressed in, like a toggled key. */
+  .dashboard-sidebar-panel-footer-btn-active,
+  .dashboard-sidebar-panel-footer-btn-active:hover {
+    background: linear-gradient(180deg, #eceee9 0%, #f3f4f1 100%);
+    box-shadow: 0 0 0 1px #cfd3cc, inset 0 1px 3px rgb(17 17 17 / 0.1);
+  }
+
+  .dashboard-sidebar-panel-footer-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Footer dropdown menus */
+  .menu-panel {
+    /* Beats .bevel-panel's position: relative. */
+    position: absolute;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafaf8 100%);
+    padding: 0.375rem;
+  }
+
+  .menu-item {
+    display: flex;
+    width: 100%;
+    cursor: pointer;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 8px;
+    padding: 0.3125rem 0.5rem 0.3125rem 0.3125rem;
+    text-align: left;
+    font-size: 13px;
+    color: #3f423d;
+    transition: background-color 120ms ease-out, box-shadow 120ms ease-out, color 120ms ease-out;
+  }
+  .menu-item:hover, .menu-item:focus-visible {
+    outline: none;
+    background: linear-gradient(180deg, #f6f7f4 0%, #f0f1ee 100%);
+    box-shadow: inset 0 0 0 1px #e3e5e0, inset 0 1px 0 #fff;
+    color: #141614;
+  }
+  .menu-item:active {
+    box-shadow: inset 0 0 0 1px #dcdfd9, inset 0 1px 3px rgb(17 17 17 / 0.08);
+  }
+
+  .menu-item-danger:hover, .menu-item-danger:focus-visible {
+    background: linear-gradient(180deg, #fbf3f1 0%, #f8ebe8 100%);
+    box-shadow: inset 0 0 0 1px #f0d8d3, inset 0 1px 0 #fff;
+    color: #a53d32;
+  }
+  .menu-item-danger:hover .menu-icon, .menu-item-danger:focus-visible .menu-icon { color: #b4473b; }
+
+  /* Small bevelled icon square inside a menu row. */
+  .menu-icon {
+    display: grid;
+    width: 1.625rem;
+    height: 1.625rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 7px;
+    color: #6d716a;
+  }
+
+  .menu-divider {
+    margin: 0.3125rem 0.25rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e3e4e0 12%, #e3e4e0 88%, transparent);
+  }
+
+  .menu-kbd {
+    margin-left: auto;
+    border: 1px solid #e0e2dd;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f5f2 100%);
+    padding: 0.0625rem 0.3125rem;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #8a8d86;
+    box-shadow: 0 1px 0 #e0e2dd;
   }
 
   /* Desktop: collapse to an icon rail, open on hover */

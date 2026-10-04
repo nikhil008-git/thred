@@ -34,11 +34,11 @@ Extraction quality rules:
   preferences with product names. Never collapse a list into a bare number.
 - For a collection, emit one claim per item plus one summary claim holding the full list,
   so a later "how many" or "which ones" question can be answered from memory alone.
-- Always record the concrete thing the exchange is about — the product, project, model,
-  place, or artifact the user owns, bought, or is working on — as its own claim, even when
+- Always record the concrete thing the exchange is about (the product, project, model,
+  place, or artifact the user owns, bought, or is working on) as its own claim, even when
   most of the exchange is advice. Advice without the subject it applies to is not recallable.
-- Record problems the user reports — faults, breakages, complaints, and things that did not
-  work — as their own claims naming what was affected and when, separately from any later fix.
+- Record problems the user reports (faults, breakages, complaints, and things that did not
+  work) as their own claims naming what was affected and when, separately from any later fix.
   A claim that only records the repair cannot answer a question about the fault.
 - When a later message updates an earlier fact, emit both claims in message order using the
   same subject and predicate, oldest value first, so the revision stays traceable.
