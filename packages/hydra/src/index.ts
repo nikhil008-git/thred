@@ -7,7 +7,9 @@ export {
 } from "./setup/tenant.js";
 export { writeLongTermMemory, writeLongTermMemories } from "./write/ingest.js";
 export type {
+  HydraChunk,
   LongTermMemoryInput,
+  MemoryRelation,
   LongTermMemoryKind,
   HydraMemoryQueryResponse,
   HydraMemoryWriteResponse,

@@ -78,23 +78,31 @@ type View =
   | "prompts"
   | "docs"
   | "settings";
+type AgentSession = {
+  id: string;
+  agent: string;
+  startedAt: string;
+  endedAt: string | null;
+};
+type Checkpoint = {
+  id: string;
+  task: string;
+  status: string;
+  updatedAt: string;
+  payload: { nextStep?: string };
+  session: { agent: string };
+};
 type Overview = {
   metrics: { agentCount: number; checkpointCount: number };
-  latestSessions: Array<{
-    id: string;
-    agent: string;
-    startedAt: string;
-    endedAt: string | null;
-  }>;
-  latestCheckpoints: Array<{
-    id: string;
-    task: string;
-    status: string;
-    updatedAt: string;
-    payload: { nextStep?: string };
-    session: { agent: string };
-  }>;
+  latestSessions: AgentSession[];
+  latestCheckpoints: Checkpoint[];
 };
+
+const setupSteps: { label: string; target: View }[] = [
+  { label: "Create a Thred agent key", target: "apiKeys" },
+  { label: "Add Thred to your agent", target: "mcp" },
+  { label: "Copy the agent instructions", target: "prompts" },
+];
 
 const heroPreviewWorkspace: Workspace = {
   id: "hero-preview",
@@ -326,8 +334,6 @@ function CodeBlock({ children, filename, wrap = false }: { children: string; fil
   );
 }
 
-type Checkpoint = Overview["latestCheckpoints"][number];
-
 function HandoffList({ checkpoints }: { checkpoints: Checkpoint[] }) {
   const formatDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
   return (
@@ -552,14 +558,22 @@ function ApiKeys({
   );
 }
 
-const providerOptions = [
+type ProviderOption = {
+  id: string;
+  label: string;
+  model: string;
+  baseUrl: string;
+  needsKey: boolean;
+};
+
+const providerOptions: ProviderOption[] = [
   { id: "openai", label: "OpenAI", model: "gpt-5-mini", baseUrl: "https://api.openai.com/v1", needsKey: true },
   { id: "groq", label: "Groq (free tier)", model: "openai/gpt-oss-20b", baseUrl: "https://api.groq.com/openai/v1", needsKey: true },
   { id: "xai", label: "xAI / Grok", model: "grok-4-1-fast-reasoning", baseUrl: "https://api.x.ai/v1", needsKey: true },
   { id: "openrouter", label: "OpenRouter", model: "openai/gpt-oss-20b:free", baseUrl: "https://openrouter.ai/api/v1", needsKey: true },
   { id: "ollama", label: "Ollama (local, no key)", model: "llama3.2", baseUrl: "http://localhost:11434/v1", needsKey: false },
   { id: "custom", label: "Custom OpenAI-compatible", model: "", baseUrl: "", needsKey: true },
-] as const;
+];
 
 function ProviderKeys({
   workspace,
@@ -571,9 +585,9 @@ function ProviderKeys({
   const [credentials, setCredentials] = useState<ProviderCredential[]>([]);
   const [provider, setProvider] = useState("groq");
   const selected = providerOptions.find((item) => item.id === provider)!;
-  const [model, setModel] = useState<string>(selected.model);
-  const [baseUrl, setBaseUrl] = useState<string>(selected.baseUrl);
-  const [label, setLabel] = useState<string>(selected.label);
+  const [model, setModel] = useState(selected.model);
+  const [baseUrl, setBaseUrl] = useState(selected.baseUrl);
+  const [label, setLabel] = useState(selected.label);
   const [key, setKey] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -755,7 +769,14 @@ function AgentPrompts({ workspace }: { workspace: Workspace }) {
   );
 }
 
-const docsClients = [
+type DocsClient = {
+  id: string;
+  label: string;
+  filename: string;
+  config: () => string;
+};
+
+const docsClients: DocsClient[] = [
   {
     id: "claude",
     label: "Claude Code",
@@ -780,16 +801,17 @@ args = ["-y", "${MCP_PACKAGE}"]
 THRED_API_KEY = "thrd_sk_…"
 THRED_API_URL = "${mcpApiUrl()}"`,
   },
-] as const;
+];
 
-const docsTools = [
+// [tool name, what it does]
+const docsTools: [string, string][] = [
   ["thread_context", "Retrieve project context. Pass includeHistory to see how a fact changed."],
   ["thread_checkpoint", "Save progress, decisions, and the next step."],
   ["thread_resume", "Pick up the latest unfinished handoff."],
-] as const;
+];
 
 function DocsPage({ onNavigate }: { onNavigate: (view: View) => void }) {
-  const [client, setClient] = useState<(typeof docsClients)[number]["id"]>("claude");
+  const [client, setClient] = useState("claude");
   const selectedClient = docsClients.find((item) => item.id === client) ?? docsClients[0];
   const prompt = `Before you begin, retrieve the current Thred context with thread_context. When work is ready to pass on, call thread_checkpoint with the task, decisions, evidence, blockers, and exact next step.`;
   const heading = "text-[15px] font-medium tracking-[-0.03em] text-[#252724]";
@@ -1177,11 +1199,7 @@ function DashboardContent({
                 </Section>
                 <Section title="Get set up" description="Three steps to your first handoff.">
                   <ol className="divide-y divide-[#e8e8e4]">
-                    {([
-                      ["Create a Thred agent key", "apiKeys"],
-                      ["Add Thred to your agent", "mcp"],
-                      ["Copy the agent instructions", "prompts"],
-                    ] as const).map(([label, target], index) => (
+                    {setupSteps.map(({ label, target }, index) => (
                       <li key={target} className="group/step">
                         <button
                           type="button"

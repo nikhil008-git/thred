@@ -1,4 +1,3 @@
-
 import "dotenv/config";
 import { createHash, randomBytes } from "node:crypto";
 import express, { type NextFunction, type Request, type Response } from "express";
@@ -98,6 +97,12 @@ function slugify(value: string) {
     return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
 }
 
+/** Reads a URL param like :slug as a plain string ("" if missing). */
+function param(req: Request, name: string): string {
+    const value = req.params[name];
+    return typeof value === "string" ? value : "";
+}
+
 async function workspaceForUser(userId: string, slug: string) {
     return prisma.workspace.findFirst({
         where: { slug, members: { some: { userId } } },
@@ -136,7 +141,7 @@ app.post("/api/workspaces", requireAuth, async (req: AuthenticatedRequest, res, 
 /** Dashboard data stays operational: checkpoints/evidence/evals live in Postgres; durable memory remains in HydraDB. */
 app.get("/api/workspaces/:slug/overview", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
-        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+        const slug = param(req, "slug");
         if (!slug) return res.status(400).json({ error: "Workspace slug is required" });
         const workspace = await workspaceForUser(req.user!.id, slug);
         if (!workspace) return res.status(404).json({ error: "Workspace not found" });
@@ -155,7 +160,7 @@ app.get("/api/workspaces/:slug/overview", requireAuth, async (req: Authenticated
 /** Lists only safe API-key metadata. The secret is returned exactly once at creation. */
 app.get("/api/workspaces/:slug/api-keys", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
-        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+        const slug = param(req, "slug");
         if (!slug) return res.status(400).json({ error: "Workspace slug is required" });
         const workspace = await workspaceForUser(req.user!.id, slug);
         if (!workspace) return res.status(404).json({ error: "Workspace not found" });
@@ -171,7 +176,7 @@ app.get("/api/workspaces/:slug/api-keys", requireAuth, async (req: Authenticated
 /** Creates a workspace-scoped MCP key. Persist only its SHA-256 hash. */
 app.post("/api/workspaces/:slug/api-keys", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
-        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+        const slug = param(req, "slug");
         if (!slug) return res.status(400).json({ error: "Workspace slug is required" });
         const workspace = await workspaceForUser(req.user!.id, slug);
         if (!workspace) return res.status(404).json({ error: "Workspace not found" });
@@ -193,8 +198,8 @@ app.post("/api/workspaces/:slug/api-keys", requireAuth, async (req: Authenticate
 /** Revocation is reversible only by issuing a replacement key. */
 app.post("/api/workspaces/:slug/api-keys/:keyId/revoke", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
-        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
-        const keyId = Array.isArray(req.params.keyId) ? req.params.keyId[0] : req.params.keyId;
+        const slug = param(req, "slug");
+        const keyId = param(req, "keyId");
         if (!slug || !keyId) return res.status(400).json({ error: "Workspace slug and key ID are required" });
         const workspace = await workspaceForUser(req.user!.id, slug);
         if (!workspace) return res.status(404).json({ error: "Workspace not found" });

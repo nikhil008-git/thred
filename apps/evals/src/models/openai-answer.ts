@@ -59,7 +59,7 @@ export class OpenAIAnswerModel implements AnswerModel {
       model: this.name,
       // Greedy decoding: a benchmark comparison has to be reproducible, and at
       // the default temperature the same context can score differently per run.
-      ...(this.provider === "gemini" ? {} : { temperature: 0 }),
+      temperature: this.provider === "gemini" ? undefined : 0,
       max_completion_tokens: 512,
       messages: [
         {
@@ -106,7 +106,7 @@ export class OpenAIAnswerJudge implements AnswerJudge {
   async judge(input: { question: string; expectedAnswer: string; answer: string }): Promise<boolean> {
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.name,
-      ...(this.provider === "gemini" ? {} : { temperature: 0 }),
+      temperature: this.provider === "gemini" ? undefined : 0,
       max_completion_tokens: 128,
       messages: [
         {

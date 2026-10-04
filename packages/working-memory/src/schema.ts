@@ -71,7 +71,7 @@ export function parseCheckpointInput(value: unknown): CheckpointInput {
       filesChanged: stringList(payload.filesChanged ?? [], "payload.filesChanged"),
       tests: stringList(payload.tests ?? [], "payload.tests"),
       blockers: stringList(payload.blockers ?? [], "payload.blockers"),
-      ...(nextStep ? { nextStep: nextStep.trim() } : {}),
+      nextStep: nextStep ? nextStep.trim() : undefined,
     },
     hydraMemoryIds: stringList(input.hydraMemoryIds ?? [], "hydraMemoryIds"),
   };

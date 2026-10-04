@@ -21,7 +21,7 @@ function createServer() {
       }),
     },
     async ({ query, includeHistory }) => {
-      const result = await callMcp("context", { query, ...(includeHistory ? { includeHistory } : {}) });
+      const result = await callMcp("context", { query, includeHistory });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
@@ -58,7 +58,7 @@ function createServer() {
       }),
     },
     async ({ taskKey }) => {
-      const result = await callMcp("resume", taskKey ? { taskKey } : {});
+      const result = await callMcp("resume", { taskKey });
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );

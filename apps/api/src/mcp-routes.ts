@@ -62,15 +62,12 @@ mcpRouter.post("/checkpoint", async (req: ThredRequest, res, next) => {
       { model, memoryLookup: new CachedMemoryLookup(new HydraMemoryLookup()) },
     );
 
+    const noHandoffMessage =
+      "Long-term memories were extracted, but no resumable working-memory handoff was detected in this session.";
     res.json({
       checkpointId: result.checkpoint?.id ?? null,
       checkpointStatus: result.checkpoint ? "SAVED" : "NO_WORKING_MEMORY",
-      ...(result.checkpoint
-        ? {}
-        : {
-            message:
-              "Long-term memories were extracted, but no resumable working-memory handoff was detected in this session.",
-          }),
+      message: result.checkpoint ? undefined : noHandoffMessage,
       longTermDecisions: result.processed.map((item) => item.decision),
     });
   } catch (error) {
@@ -80,10 +77,10 @@ mcpRouter.post("/checkpoint", async (req: ThredRequest, res, next) => {
 
 mcpRouter.post("/resume", async (req: ThredRequest, res, next) => {
   try {
-    const taskKey = typeof req.body?.taskKey === "string" ? req.body.taskKey.trim() : undefined;
+    const taskKey = typeof req.body?.taskKey === "string" ? req.body.taskKey.trim() : "";
     const handoff = await resumeWithMemory({
       workspaceId: req.workspaceId!,
-      ...(taskKey ? { taskKey } : {}),
+      taskKey: taskKey || undefined,
     });
     res.json(handoff ?? { status: "NOT_FOUND", message: "No resumable task found." });
   } catch (error) {

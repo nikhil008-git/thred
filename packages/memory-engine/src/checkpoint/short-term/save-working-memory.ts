@@ -23,7 +23,7 @@ export async function saveWorkingMemoryHandoff(input: {
       filesChanged: workingMemory.filesChanged,
       tests: workingMemory.tests,
       blockers: workingMemory.blockers,
-      ...(workingMemory.nextStep ? { nextStep: workingMemory.nextStep } : {}),
+      nextStep: workingMemory.nextStep,
     },
     hydraMemoryIds: input.hydraMemoryIds,
   });

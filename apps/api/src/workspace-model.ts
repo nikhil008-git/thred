@@ -33,7 +33,7 @@ export async function extractionModelForWorkspace(workspaceId: string): Promise<
   return new OpenAIMemoryExtractionModel({
     provider: credential.provider,
     model: credential.model,
-    ...(credential.baseUrl ? { baseURL: credential.baseUrl } : {}),
-    ...(apiKey !== "local" ? { apiKey } : {}),
+    baseURL: credential.baseUrl || undefined,
+    apiKey: apiKey === "local" ? undefined : apiKey, // local models need no real key
   });
 }

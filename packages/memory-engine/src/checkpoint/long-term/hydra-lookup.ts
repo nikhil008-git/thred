@@ -27,24 +27,26 @@ export class HydraMemoryLookup implements MemoryLookup {
 
     const semanticKey = memorySemanticKey(input.subject, input.predicate);
 
-    return (response.data?.chunks ?? [])
-      .map((chunk): ExistingMemory | null => {
-        const text = chunk.chunkContent?.trim();
-        const id = chunk.id ?? chunk.chunkUuid;
-        if (!text || !id) return null;
+    const memories: ExistingMemory[] = [];
+    for (const chunk of response.data?.chunks ?? []) {
+      const text = chunk.chunkContent?.trim();
+      const id = chunk.id ?? chunk.chunkUuid;
+      if (!text || !id) continue;
 
-        const value = valueFromMemoryText(text, input.subject, input.predicate);
-        if (!value) return null;
+      const value = valueFromMemoryText(text, input.subject, input.predicate);
+      if (!value) continue;
 
-        return {
-          id,
-          subject: input.subject,
-          predicate: input.predicate,
-          value,
-          updatedAt: new Date(chunk.sourceLastUpdatedTime ?? chunk.sourceUploadTime ?? 0),
-        };
-      })
-      .filter((memory): memory is ExistingMemory => memory !== null)
-      .filter((memory) => memorySemanticKey(memory.subject, memory.predicate) === semanticKey);
+      const memory: ExistingMemory = {
+        id,
+        subject: input.subject,
+        predicate: input.predicate,
+        value,
+        updatedAt: new Date(chunk.sourceLastUpdatedTime ?? chunk.sourceUploadTime ?? 0),
+      };
+      if (memorySemanticKey(memory.subject, memory.predicate) === semanticKey) {
+        memories.push(memory);
+      }
+    }
+    return memories;
   }
 }

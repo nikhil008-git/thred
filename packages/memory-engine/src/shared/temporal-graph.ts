@@ -47,13 +47,19 @@ export class TemporalGraph {
     const edges: TemporalEdge[] = [
       { from: memory.id, predicate: "ABOUT", to: normalizeEntity(memory.subject) },
       { from: memory.id, predicate: "FROM_SESSION", to: memory.sessionId },
-      ...memory.sourceMessageIds.map((id) => ({ from: memory.id, predicate: "SUPPORTS" as const, to: `message:${id}` })),
-      ...memory.evidenceEventIds.map((id) => ({ from: memory.id, predicate: "SUPPORTS" as const, to: `evidence:${id}` })),
-      ...memory.files.map((file) => ({ from: memory.id, predicate: "TOUCHED_FILE" as const, to: file })),
-      ...(previous && normalizeEntity(previous.value) !== normalizeEntity(memory.value)
-        ? [{ from: memory.id, predicate: "SUPERSEDES" as const, to: previous.id }]
-        : []),
     ];
+    for (const id of memory.sourceMessageIds) {
+      edges.push({ from: memory.id, predicate: "SUPPORTS", to: `message:${id}` });
+    }
+    for (const id of memory.evidenceEventIds) {
+      edges.push({ from: memory.id, predicate: "SUPPORTS", to: `evidence:${id}` });
+    }
+    for (const file of memory.files) {
+      edges.push({ from: memory.id, predicate: "TOUCHED_FILE", to: file });
+    }
+    if (previous && normalizeEntity(previous.value) !== normalizeEntity(memory.value)) {
+      edges.push({ from: memory.id, predicate: "SUPERSEDES", to: previous.id });
+    }
     this.edges.push(...edges);
     return edges;
   }
@@ -65,8 +71,9 @@ export class TemporalGraph {
     const superseded = new Set(this.edges.filter((edge) => edge.predicate === "SUPERSEDES").map((edge) => edge.to));
     const candidates = history.filter((item) => !superseded.has(item.id));
     const newest = candidates.sort((left, right) => right.occurredAt.getTime() - left.occurredAt.getTime());
-    const current = newest.length ? [newest[0]!] : [];
-    const conflicts = newest.slice(1).filter((item) => normalizeEntity(item.value) !== normalizeEntity(newest[0]?.value ?? ""));
+    const latest = newest[0];
+    const current = latest ? [latest] : [];
+    const conflicts = newest.slice(1).filter((item) => normalizeEntity(item.value) !== normalizeEntity(latest?.value ?? ""));
 
     return {
       current,
@@ -76,7 +83,7 @@ export class TemporalGraph {
     };
   }
 
-  private findByKey(workspaceId: string, key: string) {
+  private findByKey(workspaceId: string, key: string): TemporalMemory[] {
     return [...this.memories.values()].filter((memory) =>
       memory.workspaceId === workspaceId && memorySemanticKey(memory.subject, memory.predicate) === key,
     );

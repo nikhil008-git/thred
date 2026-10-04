@@ -1,7 +1,7 @@
 import { getHydraClient, hydraWithRetry } from "../setup/client.js";
 import { workspaceDatabaseId } from "../setup/tenant.js";
 import type { HydraMemoryWriteResponse, LongTermMemoryInput } from "../types.js";
-import { memoryToSentence, validateMemory } from "./sentence-builder.js";
+import { memoryToSentence, validateMemory, type HydraSentence } from "./sentence-builder.js";
 
 const longTermCollection = "long_term";
 // HydraDB rejects ingest payloads above 1,000 memory tokens. Leave headroom
@@ -23,8 +23,9 @@ export async function writeLongTermMemories(
     throw new Error("a batched HydraDB write must use one workspace");
   }
 
-  const batches: Array<Array<ReturnType<typeof memoryToSentence>>> = [];
-  let batch: Array<ReturnType<typeof memoryToSentence>> = [];
+  // Split into batches so each request stays under HydraDB's token limit.
+  const batches: HydraSentence[][] = [];
+  let batch: HydraSentence[] = [];
   let batchTokens = 0;
   for (const memory of inputs.map(memoryToSentence)) {
     const tokens = Math.max(1, Math.ceil(memory.text.length / 4));
@@ -38,7 +39,7 @@ export async function writeLongTermMemories(
   }
   if (batch.length) batches.push(batch);
 
-  const results: Array<{ id?: string }> = [];
+  const results: { id?: string }[] = [];
   for (const memories of batches) {
     const response = await hydraWithRetry(() => getHydraClient().context.ingest({
       database: workspaceDatabaseId(workspaceId),

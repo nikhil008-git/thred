@@ -59,7 +59,7 @@ export async function resolveLongTermClaim(
       workspaceId: input.workspaceId,
       sessionId: input.sessionId,
       evidenceEventIds: input.evidenceEventIds,
-      ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
+      occurredAt: input.occurredAt,
     }),
   };
 }

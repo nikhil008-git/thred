@@ -1,7 +1,8 @@
 import { useEffect, type RefObject } from "react";
 
-export function useClickOutside<T extends HTMLElement>(
-  ref: RefObject<T | null>,
+/** Calls onClose when the user clicks or taps outside the element in `ref`. */
+export function useClickOutside(
+  ref: RefObject<HTMLElement | null>,
   onClose: () => void,
   enabled = true,
 ) {

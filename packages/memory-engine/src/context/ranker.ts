@@ -1,4 +1,4 @@
-import type { HydraMemoryQueryResponse } from "@repo/hydra";
+import type { HydraChunk, HydraMemoryQueryResponse } from "@repo/hydra";
 import { queryKeywords } from "./query-intent.js";
 
 export type RankedMemory = {
@@ -53,7 +53,11 @@ function occurredAtFromMemoryText(text: string): string | undefined {
 }
 
 function supersededIds(text: string): string[] {
-  return [...text.matchAll(/This supersedes memory ([^.\s]+)\./gi)].map((match) => match[1]!);
+  const ids: string[] = [];
+  for (const match of text.matchAll(/This supersedes memory ([^.\s]+)\./gi)) {
+    if (match[1]) ids.push(match[1]);
+  }
+  return ids;
 }
 
 /**
@@ -69,50 +73,60 @@ export function lexicalOverlap(query: string, text: string): number {
   return matched / keywords.length;
 }
 
-/** Scores recall chunks without inventing a new answer. */
+/** Scores one recall chunk. Returns null when the chunk has no text or id. */
+function rankChunk(chunk: HydraChunk, query: string | undefined): RankedMemory | null {
+  const text = chunk.chunkContent?.trim();
+  const id = chunk.id ?? chunk.chunkUuid;
+  if (!text || !id) return null;
+
+  const recordedAt = occurredAtFromMemoryText(text)
+    ?? chunk.sourceLastUpdatedTime
+    ?? chunk.sourceUploadTime;
+  const relevancyScore = Math.max(0, Math.min(1, chunk.relevancyScore ?? 0));
+  const confidence = numberAfterLabel(text, "Confidence", 0.5);
+  const recency = recencyScore(recordedAt);
+
+  let score: number;
+  if (query) {
+    const lexical = lexicalOverlap(query, text);
+    score = relevancyScore * 0.5 + lexical * 0.25 + confidence * 0.1 + recency * 0.15;
+  } else {
+    score = relevancyScore * 0.65 + confidence * 0.15 + recency * 0.2;
+  }
+
+  return {
+    id,
+    text,
+    score,
+    relevancyScore,
+    confidence,
+    recordedAt,
+    sourceMessageIds: unique([
+      ...listAfterLabel(text, "Source messages"),
+      ...provenanceField(text, "messages"),
+    ]),
+    evidenceEventIds: unique([
+      ...listAfterLabel(text, "Evidence events"),
+      ...provenanceField(text, "evidence"),
+    ]),
+    files: unique([
+      ...listAfterLabel(text, "Files"),
+      ...provenanceField(text, "files"),
+    ]),
+    supersedesMemoryIds: supersededIds(text),
+  };
+}
+
+/** Scores recall chunks without inventing a new answer. Best first. */
 export function rankMemories(
   response: HydraMemoryQueryResponse,
   options?: { query?: string },
 ): RankedMemory[] {
   const query = options?.query?.trim();
-  return (response.data?.chunks ?? [])
-    .map((chunk): RankedMemory | null => {
-      const text = chunk.chunkContent?.trim();
-      const id = chunk.id ?? chunk.chunkUuid;
-      if (!text || !id) return null;
-
-      const recordedAt = occurredAtFromMemoryText(text)
-        ?? chunk.sourceLastUpdatedTime
-        ?? chunk.sourceUploadTime;
-      const relevancyScore = Math.max(0, Math.min(1, chunk.relevancyScore ?? 0));
-      const confidence = numberAfterLabel(text, "Confidence", 0.5);
-      const lexical = query ? lexicalOverlap(query, text) : 0;
-      const score = query
-        ? relevancyScore * 0.5 + lexical * 0.25 + confidence * 0.1 + recencyScore(recordedAt) * 0.15
-        : relevancyScore * 0.65 + confidence * 0.15 + recencyScore(recordedAt) * 0.2;
-
-      return {
-        id,
-        text,
-        score,
-        relevancyScore,
-        confidence,
-        ...(recordedAt ? { recordedAt } : {}),
-        sourceMessageIds: unique([
-          ...listAfterLabel(text, "Source messages"),
-          ...provenanceField(text, "messages"),
-        ]),
-        evidenceEventIds: unique([
-          ...listAfterLabel(text, "Evidence events"),
-          ...provenanceField(text, "evidence"),
-        ]),
-        files: unique([
-          ...listAfterLabel(text, "Files"),
-          ...provenanceField(text, "files"),
-        ]),
-        supersedesMemoryIds: supersededIds(text),
-      };
-    })
-    .filter((memory): memory is RankedMemory => memory !== null)
-    .sort((left, right) => right.score - left.score);
+  const ranked: RankedMemory[] = [];
+  for (const chunk of response.data?.chunks ?? []) {
+    const memory = rankChunk(chunk, query);
+    if (memory) ranked.push(memory);
+  }
+  return ranked.sort((left, right) => right.score - left.score);
 }

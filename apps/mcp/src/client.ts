@@ -10,7 +10,8 @@ export function apiKey(): string {
   return secret;
 }
 
-export async function callMcp<T>(path: string, body: unknown): Promise<T> {
+/** POSTs to the Thred API and returns the parsed JSON response. */
+export async function callMcp(path: string, body: unknown): Promise<unknown> {
   const url = `${apiBaseUrl()}/api/mcp/${path}`;
   let response: Response;
   try {
@@ -23,18 +24,18 @@ export async function callMcp<T>(path: string, body: unknown): Promise<T> {
       body: JSON.stringify(body),
     });
   } catch (error) {
-    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : null;
-    const detail = cause ? `${"code" in cause && cause.code ? `${cause.code}: ` : ""}${cause.message}` : String(error);
+    // fetch hides the real reason (e.g. ECONNREFUSED) inside error.cause.
+    let detail = String(error);
+    const cause = error instanceof Error ? (error.cause as { code?: string; message?: string } | undefined) : undefined;
+    if (cause?.message) detail = cause.code ? `${cause.code}: ${cause.message}` : cause.message;
     throw new Error(`Could not reach Thred API at ${url} (${detail})`);
   }
 
-  const payload = await response.json().catch(() => null) as T | { error?: string } | null;
+  const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = payload && typeof payload === "object" && "error" in payload && payload.error
-      ? payload.error
-      : `Thred API request failed (${response.status})`;
-    throw new Error(message);
+    const errorMessage = (payload as { error?: string } | null)?.error;
+    throw new Error(errorMessage || `Thred API request failed (${response.status})`);
   }
 
-  return payload as T;
+  return payload;
 }

@@ -1,6 +1,9 @@
 export type ModelProvider = "openai" | "groq" | "xai" | "openrouter" | "gemini" | "ollama" | "custom";
 
-const defaults: Record<Exclude<ModelProvider, "custom">, { baseUrl: string; model: string; keyEnv?: string }> = {
+type ProviderPreset = { baseUrl: string; model: string; keyEnv?: string };
+
+// Default settings per provider. "custom" has no preset: you pass everything yourself.
+const defaults: Record<string, ProviderPreset> = {
   openai: { baseUrl: "https://api.openai.com/v1", model: "gpt-5-mini", keyEnv: "OPENAI_API_KEY" },
   groq: { baseUrl: "https://api.groq.com/openai/v1", model: "openai/gpt-oss-20b", keyEnv: "GROQ_API_KEY" },
   xai: { baseUrl: "https://api.x.ai/v1", model: "grok-4-1-fast-reasoning", keyEnv: "XAI_API_KEY" },
@@ -17,8 +20,8 @@ export function resolveModelConfig(options: { apiKey?: string; baseURL?: string;
     ?? process.env.MODEL_PROVIDER
     ?? "openai").trim().toLowerCase() as ModelProvider;
   if (!(provider in defaults) && provider !== "custom") throw new Error(`Unsupported MODEL_PROVIDER: ${provider}`);
-  const preset = provider === "custom" ? { baseUrl: "", model: "" } : defaults[provider];
-  const keyEnv = provider === "custom" ? undefined : preset.keyEnv;
+  const preset: ProviderPreset = defaults[provider] ?? { baseUrl: "", model: "" };
+  const keyEnv = preset.keyEnv;
   const apiKey = options.apiKey ?? (keyEnv ? process.env[keyEnv] : undefined) ?? process.env.MODEL_API_KEY ?? (provider === "openai" ? process.env.OPENAI_API_KEY : undefined) ?? (provider === "ollama" || provider === "custom" ? "local" : undefined);
   const baseURL = options.baseURL ?? process.env.MODEL_BASE_URL ?? preset.baseUrl;
   const model = options.model ?? preset.model;

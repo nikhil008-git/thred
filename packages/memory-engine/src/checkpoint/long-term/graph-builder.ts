@@ -1,26 +1,22 @@
-import type { LongTermMemoryInput } from "@repo/hydra";
+import type { LongTermMemoryInput, MemoryRelation } from "@repo/hydra";
 import type { LongTermMemoryClaim } from "@repo/memory-extractor";
 import type { RevisionDecision } from "./revision-resolver.js";
 
+type MemoryScope = {
+  workspaceId: string;
+  sessionId: string;
+  evidenceEventIds: string[];
+  occurredAt?: string;
+};
 
-// hydradb sentence here: 
-// 
-// 
-// 
-//  claim.subject claim.predicate claim.value
-// kind: claim.kind
-// confidence: claim.confidence
-// evidenceEventIds: scope.evidenceEventIds
-// sourceMessageIds: claim.sourceMessageIds
-// files: claim.files
-// relations: relations
-
-
-
+/**
+ * Turns an extracted claim into the object we save in HydraDB:
+ * readable text ("subject predicate value. Kind: ...") plus graph relations.
+ */
 export function buildHydraMemory(
   claim: LongTermMemoryClaim,
   decision: RevisionDecision,
-  scope: { workspaceId: string; sessionId: string; evidenceEventIds: string[]; occurredAt?: string },
+  scope: MemoryScope,
 ): LongTermMemoryInput {
   const revisionNote = decision.operation === "SUPERSEDE"
     ? ` This supersedes memory ${decision.supersededMemoryId}.`
@@ -29,24 +25,36 @@ export function buildHydraMemory(
   const sourceMessages = claim.sourceMessageIds.join(", ") || "none";
   const files = claim.files.join(", ") || "none";
   const evidence = scope.evidenceEventIds.join(", ") || "none";
-  const relations: NonNullable<LongTermMemoryInput["relations"]> = [
+  const relations: MemoryRelation[] = [
     { predicate: "ABOUT", target: claim.subject },
     { predicate: "FROM_SESSION", target: scope.sessionId },
-    ...claim.sourceMessageIds.map((messageId) => ({ predicate: "SUPPORTS" as const, target: `message:${messageId}` })),
-    ...scope.evidenceEventIds.map((eventId) => ({ predicate: "SUPPORTS" as const, target: `evidence:${eventId}` })),
-    ...claim.files.map((file) => ({ predicate: "TOUCHED_FILE" as const, target: file })),
-    ...(decision.operation === "SUPERSEDE"
-      ? [{ predicate: "SUPERSEDES" as const, target: `memory:${decision.supersededMemoryId}` }]
-      : []),
   ];
+  for (const messageId of claim.sourceMessageIds) {
+    relations.push({ predicate: "SUPPORTS", target: `message:${messageId}` });
+  }
+  for (const eventId of scope.evidenceEventIds) {
+    relations.push({ predicate: "SUPPORTS", target: `evidence:${eventId}` });
+  }
+  for (const file of claim.files) {
+    relations.push({ predicate: "TOUCHED_FILE", target: file });
+  }
+  if (decision.operation === "SUPERSEDE") {
+    relations.push({ predicate: "SUPERSEDES", target: `memory:${decision.supersededMemoryId}` });
+  }
+
+  const recordedAt = scope.occurredAt ? ` Recorded at: ${scope.occurredAt}.` : "";
+  // Keep the assertion first: HydraMemoryLookup can still identify a claim by
+  // subject + predicate, while the remaining fields make recall inspectable.
+  const text = `${claim.subject} ${claim.predicate} ${claim.value}.`
+    + ` Kind: ${claim.kind}. Confidence: ${claim.confidence}.`
+    + `${recordedAt}${reason}${revisionNote}`
+    + ` Source messages: ${sourceMessages}. Evidence events: ${evidence}. Files: ${files}.`;
 
   return {
     workspaceId: scope.workspaceId,
     sessionId: scope.sessionId,
     kind: claim.kind,
-    // Keep the assertion first: HydraMemoryLookup can still identify a claim by
-    // subject + predicate, while the remaining fields make recall inspectable.
-    text: `${claim.subject} ${claim.predicate} ${claim.value}. Kind: ${claim.kind}. Confidence: ${claim.confidence}.${scope.occurredAt ? ` Recorded at: ${scope.occurredAt}.` : ""}${reason}${revisionNote} Source messages: ${sourceMessages}. Evidence events: ${evidence}. Files: ${files}.`,
+    text,
     confidence: claim.confidence,
     evidenceEventIds: scope.evidenceEventIds,
     sourceMessageIds: claim.sourceMessageIds,

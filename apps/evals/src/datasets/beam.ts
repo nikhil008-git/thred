@@ -137,7 +137,7 @@ export function normalizeBeamDataset(parsed: unknown, dataset: EvalDataset = "be
         question: questionText,
         expectedAnswer,
         shouldAbstain,
-        ...(category ? { category } : {}),
+        category,
       });
     }
   }

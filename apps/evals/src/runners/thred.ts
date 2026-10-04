@@ -112,7 +112,7 @@ export async function runThred(input: {
     workspaceId: input.workspaceId,
     query: input.evalCase.question,
     minRelevancy: 0.2,
-    ...(needsTimeline ? { preferRecent: true } : {}),
+    preferRecent: needsTimeline || undefined,
   });
   if (context.status === "NOT_FOUND") {
     return {

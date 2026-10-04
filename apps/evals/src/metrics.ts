@@ -13,15 +13,36 @@ function ratio(values: boolean[]): number | null {
 function percentile(values: number[], ratioValue: number): number {
   if (!values.length) return 0;
   const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * ratioValue) - 1)]!;
+  const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * ratioValue) - 1);
+  return sorted[index] ?? 0;
 }
 
-export function summarizeMetrics(results: MetricInput[]) {
+export type MetricsSummary = {
+  accuracy: number | null;
+  temporalAccuracy: number | null;
+  revisionAccuracy: number | null;
+  abstentionAccuracy: number | null;
+  evalErrors: number;
+  casesScored: number;
+  writeTokens: number;
+  readTokens: number;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+};
+
+export function summarizeMetrics(results: MetricInput[]): MetricsSummary {
   const scored = results.filter((item) => !isEvalError(item.result));
-  const answer = scored.flatMap((item) => item.score.answerCorrect === null ? [] : [item.score.answerCorrect]);
-  const temporal = scored.flatMap((item) => item.score.temporalCorrect === null ? [] : [item.score.temporalCorrect]);
-  const revision = scored.flatMap((item) => item.score.revisionCorrect === null ? [] : [item.score.revisionCorrect]);
-  const abstention = scored.flatMap((item) => item.score.isAbstention ? [item.score.abstentionCorrect] : []);
+  // null means "not applicable to this case", so it is left out of the ratio.
+  const answer: boolean[] = [];
+  const temporal: boolean[] = [];
+  const revision: boolean[] = [];
+  const abstention: boolean[] = [];
+  for (const { score } of scored) {
+    if (score.answerCorrect !== null) answer.push(score.answerCorrect);
+    if (score.temporalCorrect !== null) temporal.push(score.temporalCorrect);
+    if (score.revisionCorrect !== null) revision.push(score.revisionCorrect);
+    if (score.isAbstention) abstention.push(score.abstentionCorrect);
+  }
   const latency = scored.map((item) => item.result.retrievalLatencyMs);
   return {
     accuracy: ratio(answer),

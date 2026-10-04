@@ -1,6 +1,5 @@
+import type { MetricsSummary as Summary } from "./metrics.js";
 import type { EvalDataset } from "./types.js";
-
-type Summary = ReturnType<typeof import("./metrics.js").summarizeMetrics>;
 
 export type FailedCaseSummary = {
   id: string;
@@ -33,14 +32,16 @@ function higherWins(
 }
 
 function renderHeadline(vectorRag: Summary, thred: Summary): string[] {
-  const wins = [
+  const results = [
     higherWins("Accuracy", vectorRag.accuracy, thred.accuracy),
     higherWins("Temporal accuracy", vectorRag.temporalAccuracy, thred.temporalAccuracy),
     higherWins("Revision accuracy", vectorRag.revisionAccuracy, thred.revisionAccuracy),
     higherWins("Abstention accuracy", vectorRag.abstentionAccuracy, thred.abstentionAccuracy),
     higherWins("Read tokens", vectorRag.readTokens, thred.readTokens, true),
     higherWins("p50 retrieval latency", vectorRag.p50LatencyMs, thred.p50LatencyMs, true),
-  ].filter((line): line is string => line !== null);
+  ];
+  const wins: string[] = [];
+  for (const line of results) if (line) wins.push(line);
 
   // The metric label is bold Markdown (`**Accuracy:**`), so the winner is
   // preceded by `:**`, not a plain colon. Match the rendered winner token.

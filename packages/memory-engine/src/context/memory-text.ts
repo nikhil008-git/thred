@@ -44,25 +44,27 @@ export function parseProvenanceBlock(text: string): EmbeddedProvenance | null {
   if (!match?.[1]) return null;
 
   const block = match[1];
-  const confidenceValue = provenanceField(block, "confidence");
-  const confidence = confidenceValue ? Number(confidenceValue) : undefined;
-  const relationsRaw = provenanceField(block, "relations");
+  const confidence = Number(provenanceField(block, "confidence"));
 
-  return {
+  // "relations=ABOUT:db|SUPPORTS:message:m1" -> [{ predicate, target }, ...]
+  const relations: { predicate: string; target: string }[] = [];
+  const relationsRaw = provenanceField(block, "relations") ?? "";
+  for (const pair of relationsRaw.split("|")) {
+    const colon = pair.indexOf(":");
+    if (colon === -1) continue;
+    relations.push({ predicate: pair.slice(0, colon), target: pair.slice(colon + 1) });
+  }
+
+  const provenance: EmbeddedProvenance = {
     kind: provenanceField(block, "kind"),
     session: provenanceField(block, "session"),
-    ...(confidence !== undefined && Number.isFinite(confidence) ? { confidence } : {}),
     messages: splitProvenanceList(provenanceField(block, "messages")),
     evidence: splitProvenanceList(provenanceField(block, "evidence")),
     files: splitProvenanceList(provenanceField(block, "files")),
-    relations: relationsRaw
-      ? relationsRaw.split("|").flatMap((pair) => {
-          const colon = pair.indexOf(":");
-          if (colon === -1) return [];
-          return [{ predicate: pair.slice(0, colon), target: pair.slice(colon + 1) }];
-        })
-      : [],
+    relations,
   };
+  if (Number.isFinite(confidence)) provenance.confidence = confidence;
+  return provenance;
 }
 
 export function compactMemoryText(text: string): string {

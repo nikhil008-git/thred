@@ -1,5 +1,6 @@
 import {
   extractRelevantContext,
+  type LongTermMemoryClaim,
   type MemoryExtractionModel,
   type MemoryExtractionRequest,
 } from "@repo/memory-extractor";
@@ -10,7 +11,9 @@ import {
   processLongTermClaim,
   resolveLongTermClaim,
   type MemoryLookup,
+  type ProcessLongTermClaimInput,
   type ProcessedLongTermClaim,
+  type ResolvedLongTermClaim,
 } from "./long-term/engine.js";
 import { saveWorkingMemoryHandoff } from "./short-term/save-working-memory.js";
 
@@ -29,6 +32,12 @@ export type IngestSessionDependencies = {
   memoryLookup?: MemoryLookup;
 };
 
+type BatchItem = {
+  index: number;
+  claim: LongTermMemoryClaim;
+  resolved: ResolvedLongTermClaim;
+};
+
 /**
  * The end-to-end write path: session material becomes a Prisma handoff and,
  * after revision resolution, durable HydraDB memories.
@@ -38,91 +47,93 @@ export async function ingestSession(
   dependencies: IngestSessionDependencies,
 ) {
   const extracted = await extractRelevantContext(dependencies.model, input.extractionRequest);
+  const claims = extracted.longTerm;
   const lookup: MemoryLookup = dependencies.memoryLookup ?? new HydraMemoryLookup();
   const processed: ProcessedLongTermClaim[] = [];
+
+  // Count how many claims in this session talk about the same subject + predicate.
   const keyCounts = new Map<string, number>();
-  for (const claim of extracted.longTerm) {
+  for (const claim of claims) {
     const key = memorySemanticKey(claim.subject, claim.predicate);
     keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
   }
+  function isRepeated(claim: LongTermMemoryClaim): boolean {
+    const key = memorySemanticKey(claim.subject, claim.predicate);
+    return (keyCounts.get(key) ?? 0) > 1;
+  }
 
-  // Claims about different facts cannot supersede each other, so resolving them
-  // first and persisting them in one HTTP request preserves graph semantics while
-  // changing the common path from N writes/session to one write/session.
-  const batch: Array<{ index: number; claim: typeof extracted.longTerm[number]; result: Awaited<ReturnType<typeof resolveLongTermClaim>> }> = [];
-  for (const [index, claim] of extracted.longTerm.entries()) {
-    if ((keyCounts.get(memorySemanticKey(claim.subject, claim.predicate)) ?? 0) > 1) continue;
-    const result = await resolveLongTermClaim(lookup, {
+  function claimInput(claim: LongTermMemoryClaim): ProcessLongTermClaimInput {
+    return {
       workspaceId: input.workspaceId,
       sessionId: input.sessionId,
       evidenceEventIds: input.evidenceEventIds ?? [],
-      ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
+      occurredAt: input.occurredAt,
       claim,
-    });
-    batch.push({ index, claim, result });
+    };
   }
 
-  if (batch.some((item) => item.result.memory)) {
-    const writable = batch.filter((item) => item.result.memory);
-    const response = await writeLongTermMemories(writable.map((item) => item.result.memory!));
-    for (const [writeIndex, item] of writable.entries()) {
-      const id = response.data?.results?.[writeIndex]?.id;
-      const hydraResponse = { data: { results: id ? [{ id }] : [] } };
-      processed[item.index] = { decision: item.result.decision, hydraResponse };
-      if (id && lookup.recordWrite) {
-        lookup.recordWrite({
-          workspaceId: input.workspaceId,
-          memoryId: id,
-          subject: item.claim.subject,
-          predicate: item.claim.predicate,
-          value: item.claim.value,
-        });
-      }
-    }
-    for (const item of batch.filter((item) => !item.result.memory)) {
-      processed[item.index] = { decision: item.result.decision };
-    }
-  } else {
-    for (const item of batch) processed[item.index] = { decision: item.result.decision };
-  }
-
-  for (const [index, claim] of extracted.longTerm.entries()) {
-    // Same semantic key within one session must stay sequential: the later
-    // claim needs the exact ID just written by the earlier one for SUPERSEDES.
-    if ((keyCounts.get(memorySemanticKey(claim.subject, claim.predicate)) ?? 0) === 1) continue;
-    const result = await processLongTermClaim(lookup, {
+  // Tell the lookup about a fresh write so later claims can find it right away.
+  function rememberWrite(claim: LongTermMemoryClaim, memoryId: string) {
+    lookup.recordWrite?.({
       workspaceId: input.workspaceId,
-      sessionId: input.sessionId,
-      evidenceEventIds: input.evidenceEventIds ?? [],
-      ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
-      claim,
+      memoryId,
+      subject: claim.subject,
+      predicate: claim.predicate,
+      value: claim.value,
     });
+  }
+
+  // Step 1: claims with a unique subject + predicate cannot supersede each
+  // other, so resolve them all first and save them in a single HydraDB request.
+  const batch: BatchItem[] = [];
+  for (const [index, claim] of claims.entries()) {
+    if (isRepeated(claim)) continue;
+    const resolved = await resolveLongTermClaim(lookup, claimInput(claim));
+    batch.push({ index, claim, resolved });
+  }
+
+  const toWrite = batch.filter((item) => item.resolved.memory);
+  const response = await writeLongTermMemories(toWrite.map((item) => item.resolved.memory!));
+  for (const item of batch) {
+    processed[item.index] = { decision: item.resolved.decision };
+  }
+  for (const [writeIndex, item] of toWrite.entries()) {
+    const id = response.data?.results?.[writeIndex]?.id;
+    processed[item.index] = {
+      decision: item.resolved.decision,
+      hydraResponse: { data: { results: id ? [{ id }] : [] } },
+    };
+    if (id) rememberWrite(item.claim, id);
+  }
+
+  // Step 2: repeated claims must run one by one, because a later claim needs
+  // the exact ID written by the earlier one to mark it as SUPERSEDES.
+  for (const [index, claim] of claims.entries()) {
+    if (!isRepeated(claim)) continue;
+    const result = await processLongTermClaim(lookup, claimInput(claim));
     processed[index] = result;
 
     const writtenId = result.hydraResponse?.data?.results?.find((item) => item.id)?.id;
-    if (writtenId && lookup.recordWrite) {
-      lookup.recordWrite({
-        workspaceId: input.workspaceId,
-        memoryId: writtenId,
-        subject: claim.subject,
-        predicate: claim.predicate,
-        value: claim.value,
-      });
+    if (writtenId) rememberWrite(claim, writtenId);
+  }
+
+  // Collect every HydraDB id we wrote, to link them from the working-memory row.
+  const hydraMemoryIds: string[] = [];
+  for (const result of processed) {
+    for (const item of result.hydraResponse?.data?.results ?? []) {
+      if (item.id) hydraMemoryIds.push(item.id);
     }
   }
 
-  const hydraMemoryIds = processed.flatMap((result) =>
-    result.hydraResponse?.data?.results?.flatMap((item) => item.id ? [item.id] : []) ?? [],
-  );
-
-  const checkpoint = input.persistWorkingMemory !== false && extracted.workingMemory
-    ? await saveWorkingMemoryHandoff({
-        workspaceId: input.workspaceId,
-        sessionId: input.sessionId,
-        workingMemory: extracted.workingMemory,
-        hydraMemoryIds,
-      })
-    : null;
+  let checkpoint = null;
+  if (input.persistWorkingMemory !== false && extracted.workingMemory) {
+    checkpoint = await saveWorkingMemoryHandoff({
+      workspaceId: input.workspaceId,
+      sessionId: input.sessionId,
+      workingMemory: extracted.workingMemory,
+      hydraMemoryIds,
+    });
+  }
 
   return { extracted, processed, checkpoint };
 }

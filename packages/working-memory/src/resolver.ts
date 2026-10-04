@@ -13,7 +13,7 @@ export async function findLatestResumableCheckpoint({
   return prisma.workingCheckpoint.findFirst({
     where: {
       workspaceId,
-      ...(taskKey ? { taskKey } : {}),
+      taskKey: taskKey || undefined, // undefined = any task
       status: { in: ["IN_PROGRESS", "BLOCKED"] },
     },
     orderBy: { updatedAt: "desc" },

@@ -81,10 +81,7 @@ export async function buildMemoryContext(input: {
   // current context by default.
   const superseded = new Set(ranked.flatMap((memory) => memory.supersedesMemoryIds));
   const memories = ranked.filter((memory) => !superseded.has(memory.id));
-  const abstention = shouldAbstain(
-    memories,
-    input.minRelevancy === undefined ? {} : { minRelevancy: input.minRelevancy },
-  );
+  const abstention = shouldAbstain(memories, { minRelevancy: input.minRelevancy });
 
   if (abstention.abstain) {
     return {

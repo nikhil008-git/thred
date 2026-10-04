@@ -32,13 +32,13 @@ test("apiKey requires THRED_API_KEY", () => {
 });
 
 test("callMcp posts JSON to the MCP route with bearer auth", async () => {
-  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  const calls: { url: string; init?: RequestInit }[] = [];
   globalThis.fetch = mock.fn(async (url, init) => {
     calls.push({ url: String(url), init });
     return new Response(JSON.stringify({ status: "FOUND", query: "auth" }), { status: 200 });
   }) as typeof fetch;
 
-  const result = await callMcp<{ status: string; query: string }>("context", { query: "auth" });
+  const result = (await callMcp("context", { query: "auth" })) as { status: string };
 
   assert.equal(result.status, "FOUND");
   assert.equal(calls.length, 1);

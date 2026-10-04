@@ -13,7 +13,8 @@ import { renderComparisonReport } from "./report.js";
 import { runThred } from "./runners/thred.js";
 import { runVectorRag } from "./runners/vector-rag.js";
 import { scoreCase } from "./scoring.js";
-import type { EvalCase, EvalDataset, EvaluatedAnswer } from "./types.js";
+import type { CaseScore, EvalCase, EvalDataset, EvaluatedAnswer } from "./types.js";
+import type { FailedCaseSummary } from "./report.js";
 
 // npm workspace scripts execute from apps/evals, while local credentials live at
 // the repository root. Loading this explicitly keeps CLI invocation reproducible.
@@ -37,11 +38,11 @@ const stratifiedPerCategory = stratifiedValue ? Number(stratifiedValue) : undefi
 const concurrencyValue = option("--concurrency");
 const concurrency = concurrencyValue ? Number(concurrencyValue) : 1;
 const strategyOption = option("--strategy");
-const allowedStrategies = ["VECTOR_RAG", "THRED"] as const;
-type EvalStrategy = (typeof allowedStrategies)[number];
-const strategyFilter: EvalStrategy[] = strategyOption
-  ? allowedStrategies.filter((value): value is EvalStrategy => value === strategyOption)
-  : [...allowedStrategies];
+type EvalStrategy = "VECTOR_RAG" | "THRED";
+const allowedStrategies: EvalStrategy[] = ["VECTOR_RAG", "THRED"];
+const strategyFilter = strategyOption
+  ? allowedStrategies.filter((value) => value === strategyOption)
+  : allowedStrategies;
 if (strategyOption && strategyFilter.length === 0) {
   throw new Error(`--strategy must be one of: ${allowedStrategies.join(", ")}`);
 }
@@ -75,8 +76,8 @@ if (!evalCases.length) throw new Error("No evaluation cases found in the supplie
 const answerModel = new OpenAIAnswerModel();
 const answerJudge = new OpenAIAnswerJudge();
 const extractor = new OpenAIMemoryExtractionModel();
-type RunResult = { evalCase: EvalCase; score: Awaited<ReturnType<typeof scoreCase>>; result: EvaluatedAnswer };
-const all = { VECTOR_RAG: [] as RunResult[], THRED: [] as RunResult[] };
+type RunResult = { evalCase: EvalCase; score: CaseScore; result: EvaluatedAnswer };
+const all: Record<EvalStrategy, RunResult[]> = { VECTOR_RAG: [], THRED: [] };
 
 async function waitForHydraDatabase(workspace: string) {
   try {
@@ -97,15 +98,19 @@ async function waitForHydraDatabase(workspace: string) {
   throw new Error(`HydraDB workspace ${workspace} did not become ready in time`);
 }
 
-async function runWithConcurrency<T>(items: T[], worker: (item: T) => Promise<void>) {
+/** Runs `worker` over every case, with at most `concurrency` running at once. */
+async function runWithConcurrency(items: EvalCase[], worker: (item: EvalCase) => Promise<void>) {
   let nextIndex = 0;
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+  async function workerLoop() {
     while (nextIndex < items.length) {
       const item = items[nextIndex];
       nextIndex += 1;
       if (item) await worker(item);
     }
-  }));
+  }
+  const loops = [];
+  for (let i = 0; i < Math.min(concurrency, items.length); i += 1) loops.push(workerLoop());
+  await Promise.all(loops);
 }
 
 type IngestionCheckpoint = { workspaceId: string; completedSessionIds: string[] };
@@ -125,6 +130,29 @@ async function loadIngestionCheckpoint(pathname: string, expectedWorkspaceId: st
   }
 }
 
+/** Runs one case through Thred, saving progress so --resume can skip finished sessions. */
+async function runThredCase(evalCase: EvalCase, caseWorkspaceId: string): Promise<EvaluatedAnswer> {
+  const checkpointDirectory = path.resolve("reports", "checkpoints");
+  await mkdir(checkpointDirectory, { recursive: true });
+  const checkpointPath = path.join(checkpointDirectory, `${dataset}-${evalCase.id}.json`);
+  const checkpoint = await loadIngestionCheckpoint(checkpointPath, caseWorkspaceId);
+  const evaluated = await runThred({
+    evalCase,
+    workspaceId: caseWorkspaceId,
+    extractor,
+    answerModel,
+    resume: {
+      completedSessionIds: checkpoint.completedSessionIds,
+      onSessionComplete: async (sessionId) => {
+        if (!checkpoint.completedSessionIds.includes(sessionId)) checkpoint.completedSessionIds.push(sessionId);
+        await writeFile(checkpointPath, JSON.stringify(checkpoint, null, 2));
+      },
+    },
+  });
+  await rm(checkpointPath, { force: true });
+  return evaluated;
+}
+
 for (const strategy of strategyFilter) {
   const run = await createEvalRun({ workspaceId, dataset, strategy, answerModel: answerModel.name, config: { inputPath, answerJudge: answerJudge.name } });
   console.log(`[${strategy}] run=${run.id} cases=${evalCases.length}`);
@@ -137,32 +165,14 @@ for (const strategy of strategyFilter) {
     // sharing memories across benchmark histories.
     const caseWorkspaceId = hydraWorkspaceId ?? `${workspaceId}_eval_${run.id}_${evalCase.id}`;
     let result: EvaluatedAnswer;
-    let score: Awaited<ReturnType<typeof scoreCase>>;
+    let score: CaseScore;
     try {
-      if (strategy === "THRED") await waitForHydraDatabase(caseWorkspaceId);
-      result = strategy === "VECTOR_RAG"
-        ? await runVectorRag(evalCase, answerModel)
-        : await (async () => {
-          const checkpointDirectory = path.resolve("reports", "checkpoints");
-          await mkdir(checkpointDirectory, { recursive: true });
-          const checkpointPath = path.join(checkpointDirectory, `${dataset}-${evalCase.id}.json`);
-          const checkpoint = await loadIngestionCheckpoint(checkpointPath, caseWorkspaceId);
-          const evaluated = await runThred({
-            evalCase,
-            workspaceId: caseWorkspaceId,
-            extractor,
-            answerModel,
-            resume: {
-              completedSessionIds: checkpoint.completedSessionIds,
-              onSessionComplete: async (sessionId) => {
-                if (!checkpoint.completedSessionIds.includes(sessionId)) checkpoint.completedSessionIds.push(sessionId);
-                await writeFile(checkpointPath, JSON.stringify(checkpoint, null, 2));
-              },
-            },
-          });
-          await rm(checkpointPath, { force: true });
-          return evaluated;
-        })();
+      if (strategy === "VECTOR_RAG") {
+        result = await runVectorRag(evalCase, answerModel);
+      } else {
+        await waitForHydraDatabase(caseWorkspaceId);
+        result = await runThredCase(evalCase, caseWorkspaceId);
+      }
       score = await scoreCase(evalCase, result, answerJudge);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -177,8 +187,8 @@ for (const strategy of strategyFilter) {
       };
       score = {
         answerCorrect: null,
-        temporalCorrect: evalCase.category === "temporal" ? null : null,
-        revisionCorrect: evalCase.category === "revision" ? null : null,
+        temporalCorrect: null,
+        revisionCorrect: null,
         abstentionCorrect: false,
         isAbstention: evalCase.shouldAbstain,
       };
@@ -195,64 +205,35 @@ for (const strategy of strategyFilter) {
   console.log(`[${strategy}] complete run=${run.id}`);
 }
 
+/** Short summary of one case for the report, with the error/retrieval reason if any. */
+function caseSummary(item: RunResult): FailedCaseSummary {
+  const evidence = item.result.evidence as { retrieval?: { reason?: string }; error?: string };
+  return {
+    id: item.evalCase.id,
+    question: item.evalCase.question,
+    expectedAnswer: item.evalCase.expectedAnswer,
+    answer: item.result.answer,
+    abstained: item.result.abstained,
+    reason: evidence.retrieval?.reason || evidence.error || undefined,
+  };
+}
+
+function isError(item: RunResult) {
+  return item.result.answer === "EVAL_ERROR";
+}
+
+function isWrongAnswer(item: RunResult) {
+  return !isError(item) && item.score.answerCorrect === false;
+}
+
 const report = renderComparisonReport({
   dataset,
   vectorRag: summarizeMetrics(all.VECTOR_RAG),
   thred: summarizeMetrics(all.THRED),
-  vectorRagFailures: all.VECTOR_RAG
-    .filter((item) => item.result.answer !== "EVAL_ERROR" && item.score.answerCorrect === false)
-    .slice(0, 20)
-    .map((item) => ({
-      id: item.evalCase.id,
-      question: item.evalCase.question,
-      expectedAnswer: item.evalCase.expectedAnswer,
-      answer: item.result.answer,
-      abstained: item.result.abstained,
-    })),
-  thredFailures: all.THRED
-    .filter((item) => item.result.answer !== "EVAL_ERROR" && item.score.answerCorrect === false)
-    .slice(0, 20)
-    .map((item) => {
-      const evidence = item.result.evidence as { retrieval?: { reason?: string }; error?: string };
-      return {
-        id: item.evalCase.id,
-        question: item.evalCase.question,
-        expectedAnswer: item.evalCase.expectedAnswer,
-        answer: item.result.answer,
-        abstained: item.result.abstained,
-        ...(evidence.retrieval?.reason
-          ? { reason: evidence.retrieval.reason }
-          : evidence.error ? { reason: evidence.error } : {}),
-      };
-    }),
-  vectorRagErrors: all.VECTOR_RAG
-    .filter((item) => item.result.answer === "EVAL_ERROR")
-    .slice(0, 20)
-    .map((item) => {
-      const evidence = item.result.evidence as { error?: string };
-      return {
-        id: item.evalCase.id,
-        question: item.evalCase.question,
-        expectedAnswer: item.evalCase.expectedAnswer,
-        answer: item.result.answer,
-        abstained: item.result.abstained,
-        ...(evidence.error ? { reason: evidence.error } : {}),
-      };
-    }),
-  thredErrors: all.THRED
-    .filter((item) => item.result.answer === "EVAL_ERROR")
-    .slice(0, 20)
-    .map((item) => {
-      const evidence = item.result.evidence as { error?: string };
-      return {
-        id: item.evalCase.id,
-        question: item.evalCase.question,
-        expectedAnswer: item.evalCase.expectedAnswer,
-        answer: item.result.answer,
-        abstained: item.result.abstained,
-        ...(evidence.error ? { reason: evidence.error } : {}),
-      };
-    }),
+  vectorRagFailures: all.VECTOR_RAG.filter(isWrongAnswer).slice(0, 20).map(caseSummary),
+  thredFailures: all.THRED.filter(isWrongAnswer).slice(0, 20).map(caseSummary),
+  vectorRagErrors: all.VECTOR_RAG.filter(isError).slice(0, 20).map(caseSummary),
+  thredErrors: all.THRED.filter(isError).slice(0, 20).map(caseSummary),
 });
 const reportDirectory = path.resolve("reports");
 await mkdir(reportDirectory, { recursive: true });

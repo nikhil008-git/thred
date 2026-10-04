@@ -1,6 +1,7 @@
 import {
   parseExtractedRelevantContext,
   type ExtractedRelevantContext,
+  type LongTermMemoryClaim,
 } from "./schema.js";
 
 export type SessionMessage = {
@@ -63,10 +64,11 @@ function claimKey(claim: { subject: string; predicate: string; value: string }):
     .join("::");
 }
 
-function backfillSourceMessageIds<T extends { sourceMessageIds: string[] }>(
-  claims: T[],
+/** Claims without sourceMessageIds get the last user message as their source. */
+function backfillSourceMessageIds(
+  claims: LongTermMemoryClaim[],
   messages: SessionMessage[],
-): T[] {
+): LongTermMemoryClaim[] {
   const lastUser = [...messages].reverse().find((message) => message.role === "user")?.id;
   const fallback = lastUser ?? messages.at(-1)?.id;
   return claims.map((claim) => ({
@@ -110,7 +112,7 @@ export async function extractRelevantContext(
   const chunks = chunkMessages(request.messages);
   const merged: ExtractedRelevantContext = { longTerm: [] };
   const seen = new Set<string>();
-  const claims: ExtractedRelevantContext["longTerm"] = [];
+  const claims: LongTermMemoryClaim[] = [];
   for (const messages of chunks) {
     const result = await model.extract({ ...request, messages }, extractionInstructions);
     const parsed = parseExtractedRelevantContext(result);

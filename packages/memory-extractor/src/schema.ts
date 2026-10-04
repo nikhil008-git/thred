@@ -96,14 +96,17 @@ function parseLongTerm(value: unknown): LongTermMemoryClaim | null {
   const claimValue = typeof claim.value === "string" ? claim.value.trim() : "";
   if (!subject || !predicate || !claimValue) return null;
 
+  let reason: string | undefined;
+  if (claim.reason !== undefined && claim.reason !== null) {
+    reason = typeof claim.reason === "string" ? claim.reason.trim() : String(claim.reason);
+  }
+
   return {
     kind,
     subject,
     predicate,
     value: claimValue,
-    ...(claim.reason === undefined || claim.reason === null
-      ? {}
-      : { reason: typeof claim.reason === "string" ? claim.reason.trim() : String(claim.reason) }),
+    reason,
     confidence,
     sourceMessageIds: stringList(claim.sourceMessageIds ?? [], "longTerm.sourceMessageIds"),
     files: stringList(claim.files ?? [], "longTerm.files"),
@@ -135,7 +138,7 @@ function parseWorkingMemory(value: unknown): WorkingMemoryCheckpoint {
     filesChanged: stringList(checkpoint.filesChanged ?? [], "workingMemory.filesChanged"),
     tests: stringList(checkpoint.tests ?? [], "workingMemory.tests"),
     blockers: stringList(checkpoint.blockers ?? [], "workingMemory.blockers"),
-    ...(nextStep ? { nextStep: nextStep.trim() } : {}),
+    nextStep: nextStep ? nextStep.trim() : undefined,
   };
 }
 
@@ -159,9 +162,15 @@ export function parseExtractedRelevantContext(value: unknown): ExtractedRelevant
 
   if (!Array.isArray(extracted.longTerm)) throw new Error("longTerm must be an array");
 
+  // Skip claims that are missing their subject, predicate, or value.
+  const longTerm: LongTermMemoryClaim[] = [];
+  for (const item of extracted.longTerm) {
+    const claim = parseLongTerm(item);
+    if (claim) longTerm.push(claim);
+  }
+
+  const result: ExtractedRelevantContext = { longTerm };
   const workingMemory = parseOptionalWorkingMemory(extracted.workingMemory);
-  return {
-    longTerm: extracted.longTerm.map(parseLongTerm).filter((claim): claim is LongTermMemoryClaim => claim !== null),
-    ...(workingMemory ? { workingMemory } : {}),
-  };
+  if (workingMemory) result.workingMemory = workingMemory;
+  return result;
 }

@@ -57,11 +57,12 @@ export function normalizeDatasetRecord(source: unknown, dataset: EvalDataset, in
   const shouldAbstain = Boolean(item.shouldAbstain ?? item.should_abstain)
     || string(item.id ?? item.question_id ?? item.uuid).toLowerCase().endsWith("_abs")
     || rawCategory.includes("abstain") || rawCategory.includes("unanswerable") || expectedAnswer === null;
-  const category: EvalCategory | undefined = shouldAbstain ? "abstention"
-    : rawCategory.includes("temporal") ? "temporal"
-    : rawCategory.includes("update") || rawCategory.includes("revision") ? "revision"
-    : rawCategory.includes("multi") ? "multi-session"
-    : rawCategory ? "single-session" : undefined;
+  let category: EvalCategory | undefined;
+  if (shouldAbstain) category = "abstention";
+  else if (rawCategory.includes("temporal")) category = "temporal";
+  else if (rawCategory.includes("update") || rawCategory.includes("revision")) category = "revision";
+  else if (rawCategory.includes("multi")) category = "multi-session";
+  else if (rawCategory) category = "single-session";
 
   return {
     id: string(item.id ?? item.question_id ?? item.uuid, `${dataset}-${index + 1}`),
@@ -74,7 +75,7 @@ export function normalizeDatasetRecord(source: unknown, dataset: EvalDataset, in
     question: string(item.question ?? item.query),
     expectedAnswer,
     shouldAbstain,
-    ...(answerSessionIds.length ? { answerSessionIds } : {}),
-    ...(category ? { category } : {}),
+    answerSessionIds: answerSessionIds.length ? answerSessionIds : undefined,
+    category,
   };
 }
