@@ -1,12 +1,11 @@
-export { getHydraClient } from "./client.js";
-export { recallLongTermMemory } from "./query.js";
+export { getHydraClient } from "./setup/client.js";
+export { recallLongTermMemory } from "./read/recall.js";
 export {
   getWorkspaceDatabaseStatus,
   provisionWorkspaceDatabase,
   workspaceDatabaseId,
-} from "./tenant.js";
-export { writeLongTermMemory } from "./write.js";
-export { writeLongTermMemories } from "./write.js";
+} from "./setup/tenant.js";
+export { writeLongTermMemory, writeLongTermMemories } from "./write/ingest.js";
 export type {
   LongTermMemoryInput,
   LongTermMemoryKind,

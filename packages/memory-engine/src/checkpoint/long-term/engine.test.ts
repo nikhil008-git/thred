@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { shouldAbstain } from "../context/abstention.js";
+import { shouldAbstain } from "../../context/abstention.js";
 import { resolveRevision } from "./revision-resolver.js";
-import { normalizeEntity } from "../shared/entity-resolver.js";
+import { normalizeEntity } from "../../shared/entity-resolver.js";
 
 const claim = { kind: "fact" as const, subject: "Production database", predicate: "uses", value: "PostgreSQL", confidence: 0.9, sourceMessageIds: ["m1"], files: [] };
 

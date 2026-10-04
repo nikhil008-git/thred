@@ -4,7 +4,7 @@ Brain after the MCP route. Does not talk to Cursor directly. `@repo/memory-extra
 
 | Folder | Tool | Job |
 |---|---|---|
-| `src/checkpoint/` | `thread_checkpoint` | File new facts: revisions, Hydra write, Postgres handoff |
+| `src/checkpoint/` | `thread_checkpoint` | Save: `long-term/` → HydraDB, `short-term/` → Postgres |
 | `src/context/` | `thread_context` | Find current ranked memories, or say “I don’t know” |
 | `src/resume/` | `thread_resume` | Latest unfinished task + related facts |
 | `src/shared/` | both | Name keys + temporal graph model |

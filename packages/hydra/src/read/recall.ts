@@ -1,6 +1,6 @@
-import { getHydraClient, hydraWithRetry } from "./client.js";
-import { workspaceDatabaseId } from "./tenant.js";
-import type { HydraMemoryQueryResponse, RecallLongTermMemoryInput } from "./types.js";
+import { getHydraClient, hydraWithRetry } from "../setup/client.js";
+import { workspaceDatabaseId } from "../setup/tenant.js";
+import type { HydraMemoryQueryResponse, RecallLongTermMemoryInput } from "../types.js";
 
 const longTermCollection = "long_term";
 

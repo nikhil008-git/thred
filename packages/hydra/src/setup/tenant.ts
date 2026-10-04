@@ -1,5 +1,5 @@
 import { getHydraClient, hydraWithRetry } from "./client.js";
-import type { HydraResponse } from "./types.js";
+import type { HydraResponse } from "../types.js";
 
 const databasePrefix = "thred_workspace_";
 

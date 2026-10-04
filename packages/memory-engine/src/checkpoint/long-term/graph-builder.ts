@@ -2,6 +2,21 @@ import type { LongTermMemoryInput } from "@repo/hydra";
 import type { LongTermMemoryClaim } from "@repo/memory-extractor";
 import type { RevisionDecision } from "./revision-resolver.js";
 
+
+// hydradb sentence here: 
+// 
+// 
+// 
+//  claim.subject claim.predicate claim.value
+// kind: claim.kind
+// confidence: claim.confidence
+// evidenceEventIds: scope.evidenceEventIds
+// sourceMessageIds: claim.sourceMessageIds
+// files: claim.files
+// relations: relations
+
+
+
 export function buildHydraMemory(
   claim: LongTermMemoryClaim,
   decision: RevisionDecision,

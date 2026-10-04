@@ -4,15 +4,15 @@ import {
   type MemoryExtractionRequest,
 } from "@repo/memory-extractor";
 import { writeLongTermMemories } from "@repo/hydra";
-import { saveCheckpoint } from "@repo/working-memory";
 import { memorySemanticKey } from "../shared/entity-resolver.js";
-import { HydraMemoryLookup } from "./hydra-lookup.js";
+import { HydraMemoryLookup } from "./long-term/hydra-lookup.js";
 import {
   processLongTermClaim,
   resolveLongTermClaim,
   type MemoryLookup,
   type ProcessedLongTermClaim,
-} from "./engine.js";
+} from "./long-term/engine.js";
+import { saveWorkingMemoryHandoff } from "./short-term/save-working-memory.js";
 
 export type IngestSessionInput = {
   workspaceId: string;
@@ -116,21 +116,10 @@ export async function ingestSession(
   );
 
   const checkpoint = input.persistWorkingMemory !== false && extracted.workingMemory
-    ? await saveCheckpoint({
+    ? await saveWorkingMemoryHandoff({
         workspaceId: input.workspaceId,
         sessionId: input.sessionId,
-        taskKey: extracted.workingMemory.taskKey,
-        task: extracted.workingMemory.task,
-        status: extracted.workingMemory.status,
-        payload: {
-          completed: extracted.workingMemory.completed,
-          filesChanged: extracted.workingMemory.filesChanged,
-          tests: extracted.workingMemory.tests,
-          blockers: extracted.workingMemory.blockers,
-          ...(extracted.workingMemory.nextStep
-            ? { nextStep: extracted.workingMemory.nextStep }
-            : {}),
-        },
+        workingMemory: extracted.workingMemory,
         hydraMemoryIds,
       })
     : null;

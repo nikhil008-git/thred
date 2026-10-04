@@ -1,35 +1,12 @@
-import { getHydraClient, hydraWithRetry } from "./client.js";
-import { workspaceDatabaseId } from "./tenant.js";
-import type { HydraMemoryWriteResponse, LongTermMemoryInput } from "./types.js";
+import { getHydraClient, hydraWithRetry } from "../setup/client.js";
+import { workspaceDatabaseId } from "../setup/tenant.js";
+import type { HydraMemoryWriteResponse, LongTermMemoryInput } from "../types.js";
+import { memoryToSentence, validateMemory } from "./sentence-builder.js";
 
 const longTermCollection = "long_term";
 // HydraDB rejects ingest payloads above 1,000 memory tokens. Leave headroom
 // for provider-side tokenization variance while retaining most batch savings.
 const maxBatchTokens = 850;
-
-function validateMemory(input: LongTermMemoryInput) {
-  if (!input.text.trim()) throw new Error("long-term memory text is required");
-  if (!input.sessionId.trim()) throw new Error("sessionId is required for provenance");
-  if (input.confidence < 0 || input.confidence > 1) {
-    throw new Error("confidence must be between 0 and 1");
-  }
-}
-
-function serializeMemory(input: LongTermMemoryInput) {
-  const provenance = [
-    `kind=${input.kind}`,
-    `session=${input.sessionId}`,
-    `confidence=${input.confidence}`,
-    input.evidenceEventIds?.length ? `evidence=${input.evidenceEventIds.join(",")}` : undefined,
-    input.sourceMessageIds?.length ? `messages=${input.sourceMessageIds.join(",")}` : undefined,
-    input.files?.length ? `files=${input.files.join(",")}` : undefined,
-    input.relations?.length
-      ? `relations=${input.relations.map((relation) => `${relation.predicate}:${relation.target}`).join("|")}`
-      : undefined,
-  ].filter(Boolean).join("; ");
-
-  return { text: `${input.text.trim()}\n\n[Thred provenance: ${provenance}]` };
-}
 
 /**
  * Persists independent claims from one session in one request. The caller keeps
@@ -46,10 +23,10 @@ export async function writeLongTermMemories(
     throw new Error("a batched HydraDB write must use one workspace");
   }
 
-  const batches: Array<Array<ReturnType<typeof serializeMemory>>> = [];
-  let batch: Array<ReturnType<typeof serializeMemory>> = [];
+  const batches: Array<Array<ReturnType<typeof memoryToSentence>>> = [];
+  let batch: Array<ReturnType<typeof memoryToSentence>> = [];
   let batchTokens = 0;
-  for (const memory of inputs.map(serializeMemory)) {
+  for (const memory of inputs.map(memoryToSentence)) {
     const tokens = Math.max(1, Math.ceil(memory.text.length / 4));
     if (batch.length && batchTokens + tokens > maxBatchTokens) {
       batches.push(batch);
