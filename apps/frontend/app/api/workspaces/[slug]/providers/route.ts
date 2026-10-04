@@ -29,7 +29,7 @@ function decrypt(value: string) {
 async function workspaceForRequest(slug: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
-  return prisma.workspace.findFirst({ where: { slug, members: { some: { userId: session.user.id } } }, select: { id: true } });
+  return prisma.workspace.findFirst({ where: { slug, ownerId: session.user.id }, select: { id: true } });
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ slug: string }> }) {

@@ -7,11 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum WorkspaceRole {
-  OWNER
-  MEMBER
-}
-
 enum AgentKind {
   CODEX
   CLAUDE
@@ -24,15 +19,6 @@ enum CheckpointStatus {
   IN_PROGRESS
   BLOCKED
   DONE
-}
-
-enum EvidenceKind {
-  GIT_COMMIT
-  GIT_DIFF
-  TEST_RUN
-  GITHUB_ISSUE
-  GITHUB_PR
-  MCP_PERMISSION
 }
 
 enum EvalStrategy {
@@ -50,7 +36,7 @@ model User {
   updatedAt        DateTime
   sessions         Session[]
   accounts         Account[]
-  workspaceMembers WorkspaceMember[]
+  workspaces       Workspace[]
 
   @@unique([email])
   @@map("user")
@@ -105,16 +91,17 @@ model Workspace {
   id          String              @id @default(cuid())
   name        String
   slug        String              @unique()
+  ownerId     String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  members     WorkspaceMember[]
+  owner       User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   apiKeys     ApiKey[]
-  connections AgentConnection[]
   sessions    AgentSession[]
   checkpoints WorkingCheckpoint[]
-  evidence    EvidenceEvent[]
   evalRuns    EvalRun[]
   providerCredentials ProviderCredential[]
+
+  @@index([ownerId])
 }
 
 model ProviderCredential {
@@ -134,19 +121,6 @@ model ProviderCredential {
   @@index([workspaceId])
 }
 
-model WorkspaceMember {
-  id          String        @id @default(cuid())
-  workspaceId String
-  userId      String
-  role        WorkspaceRole @default(MEMBER)
-  createdAt   DateTime      @default(now())
-  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([workspaceId, userId])
-  @@index([userId])
-}
-
 model ApiKey {
   id          String    @id @default(cuid())
   workspaceId String
@@ -162,33 +136,17 @@ model ApiKey {
   @@index([workspaceId])
 }
 
-model AgentConnection {
-  id          String         @id @default(cuid())
-  workspaceId String
-  name        String
-  agent       AgentKind
-  createdAt   DateTime       @default(now())
-  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  sessions    AgentSession[]
-
-  @@index([workspaceId])
-}
-
 model AgentSession {
   id           String              @id @default(cuid())
   workspaceId  String
-  connectionId String?
   agent        AgentKind
   externalId   String?
   startedAt    DateTime            @default(now())
   endedAt      DateTime?
   workspace    Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  connection   AgentConnection?    @relation(fields: [connectionId], references: [id], onDelete: SetNull)
   checkpoints  WorkingCheckpoint[]
-  evidence     EvidenceEvent[]
 
   @@index([workspaceId, startedAt])
-  @@index([connectionId])
 }
 
 model WorkingCheckpoint {
@@ -206,23 +164,6 @@ model WorkingCheckpoint {
   session        AgentSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, taskKey, updatedAt])
-  @@index([sessionId])
-}
-
-model EvidenceEvent {
-  id          String        @id @default(cuid())
-  workspaceId String
-  sessionId   String?
-  kind        EvidenceKind
-  externalRef String?
-  title       String
-  payload     Json
-  occurredAt  DateTime      @default(now())
-  createdAt   DateTime      @default(now())
-  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  session     AgentSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-
-  @@index([workspaceId, kind, occurredAt])
   @@index([sessionId])
 }
 

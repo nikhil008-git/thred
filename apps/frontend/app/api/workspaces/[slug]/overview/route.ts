@@ -7,7 +7,7 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
   const { slug } = await context.params;
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const workspace = await prisma.workspace.findFirst({ where: { slug, members: { some: { userId: session.user.id } } } });
+  const workspace = await prisma.workspace.findFirst({ where: { slug, ownerId: session.user.id } });
   if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   const [agentCount, checkpointCount, latestSessions, latestCheckpoints] = await Promise.all([
     prisma.agentSession.count({ where: { workspaceId: workspace.id } }),

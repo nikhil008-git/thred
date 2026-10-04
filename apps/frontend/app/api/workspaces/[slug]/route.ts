@@ -17,7 +17,7 @@ export async function PATCH(request: Request, { params }: Context) {
   }
 
   const workspace = await prisma.workspace.findFirst({
-    where: { slug, members: { some: { userId: session.user.id } } },
+    where: { slug, ownerId: session.user.id },
     select: { id: true },
   });
   if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });

@@ -105,7 +105,7 @@ function param(req: Request, name: string): string {
 
 async function workspaceForUser(userId: string, slug: string) {
     return prisma.workspace.findFirst({
-        where: { slug, members: { some: { userId } } },
+        where: { slug, ownerId: userId },
     });
 }
 
@@ -113,7 +113,7 @@ async function workspaceForUser(userId: string, slug: string) {
 app.get("/api/workspaces", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
         const workspaces = await prisma.workspace.findMany({
-            where: { members: { some: { userId: req.user!.id } } },
+            where: { ownerId: req.user!.id },
             select: { id: true, name: true, slug: true, createdAt: true },
             orderBy: { updatedAt: "desc" },
         });
@@ -131,29 +131,27 @@ app.post("/api/workspaces", requireAuth, async (req: AuthenticatedRequest, res, 
         let attempt = 2;
         while (await prisma.workspace.findUnique({ where: { slug }, select: { id: true } })) slug = `${base}-${attempt++}`;
         const workspace = await prisma.workspace.create({
-            data: { name, slug, members: { create: { userId: req.user!.id, role: "OWNER" } } },
+            data: { name, slug, ownerId: req.user!.id },
             select: { id: true, name: true, slug: true },
         });
         res.status(201).json({ workspace });
     } catch (error) { next(error); }
 });
 
-/** Dashboard data stays operational: checkpoints/evidence/evals live in Postgres; durable memory remains in HydraDB. */
+/** Dashboard data stays operational: checkpoints/evals live in Postgres; durable memory remains in HydraDB. */
 app.get("/api/workspaces/:slug/overview", requireAuth, async (req: AuthenticatedRequest, res, next) => {
     try {
         const slug = param(req, "slug");
         if (!slug) return res.status(400).json({ error: "Workspace slug is required" });
         const workspace = await workspaceForUser(req.user!.id, slug);
         if (!workspace) return res.status(404).json({ error: "Workspace not found" });
-        const [sessionCount, checkpointCount, evidenceCount, latestCheckpoints, latestEvidence, latestEvals] = await Promise.all([
+        const [sessionCount, checkpointCount, latestCheckpoints, latestEvals] = await Promise.all([
             prisma.agentSession.count({ where: { workspaceId: workspace.id } }),
             prisma.workingCheckpoint.count({ where: { workspaceId: workspace.id } }),
-            prisma.evidenceEvent.count({ where: { workspaceId: workspace.id } }),
             prisma.workingCheckpoint.findMany({ where: { workspaceId: workspace.id }, orderBy: { updatedAt: "desc" }, take: 5, select: { id: true, task: true, status: true, updatedAt: true, payload: true } }),
-            prisma.evidenceEvent.findMany({ where: { workspaceId: workspace.id }, orderBy: { occurredAt: "desc" }, take: 5, select: { id: true, title: true, kind: true, occurredAt: true } }),
             prisma.evalRun.findMany({ where: { workspaceId: workspace.id }, orderBy: { startedAt: "desc" }, take: 3, select: { id: true, dataset: true, strategy: true, startedAt: true, completedAt: true, _count: { select: { results: true } } } }),
         ]);
-        res.json({ workspace, metrics: { sessionCount, checkpointCount, evidenceCount }, latestCheckpoints, latestEvidence, latestEvals });
+        res.json({ workspace, metrics: { sessionCount, checkpointCount }, latestCheckpoints, latestEvals });
     } catch (error) { next(error); }
 });
 

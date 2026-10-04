@@ -8,7 +8,7 @@ export async function POST(_request: Request, context: { params: Promise<{ slug:
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const key = await prisma.apiKey.findFirst({
-    where: { id: keyId, workspace: { slug, members: { some: { userId: session.user.id } } } },
+    where: { id: keyId, workspace: { slug, ownerId: session.user.id } },
   });
   if (!key) return NextResponse.json({ error: "API key not found" }, { status: 404 });
   await prisma.apiKey.delete({ where: { id: key.id } });

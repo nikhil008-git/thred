@@ -16,7 +16,7 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const workspaces = await prisma.workspace.findMany({
-    where: { members: { some: { userId: user.id } } },
+    where: { ownerId: user.id },
     select: { id: true, name: true, slug: true, createdAt: true },
     orderBy: { updatedAt: "desc" },
   });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   let attempt = 2;
   while (await prisma.workspace.findUnique({ where: { slug }, select: { id: true } })) slug = `${base}-${attempt++}`;
   const workspace = await prisma.workspace.create({
-    data: { name, slug, members: { create: { userId: user.id, role: "OWNER" } } },
+    data: { name, slug, ownerId: user.id },
     select: { id: true, name: true, slug: true },
   });
   return NextResponse.json({ workspace }, { status: 201 });
