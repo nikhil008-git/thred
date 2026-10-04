@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CachedMemoryLookup } from "./memory-cache.js";
-import { resolveRevision } from "./revision-resolver.js";
-import type { ExistingMemory } from "./revision-resolver.js";
+import { resolveRevision } from "../revision/revision-resolver.js";
+import type { ExistingMemory } from "../revision/revision-resolver.js";
 
 const claim = (value: string) => ({
   kind: "decision" as const,

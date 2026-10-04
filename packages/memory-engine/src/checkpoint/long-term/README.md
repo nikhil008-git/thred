@@ -1,11 +1,10 @@
 # long-term
 
-Durable facts. After ADD / SUPERSEDE, these go to HydraDB `long_term`. IGNORE is not written.
+Durable facts → HydraDB. `engine.ts` is the manager for one claim.
 
-| File | TLDR |
+| Path | Job |
 |---|---|
-| `engine.ts` | One claim: look up existing → decide → optionally write. |
-| `revision-resolver.ts` | Same value → IGNORE. New value → SUPERSEDE. Nothing there → ADD. |
-| `hydra-lookup.ts` | Asks HydraDB “do we already have this subject + predicate?” |
-| `memory-cache.ts` | Remembers IDs just written, because HydraDB indexes slowly. |
-| `graph-builder.ts` | Turns a claim into the **object** hydra later turns into a sentence. |
+| `engine.ts` | Find existing → revision → maybe write. |
+| `hydra/` | Talk to Hydra: lookup + write cache. |
+| `revision/` | ADD / IGNORE / SUPERSEDE. |
+| `graph/` | Claim → object (sentence is built in `@repo/hydra`). |

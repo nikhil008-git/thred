@@ -1,4 +1,4 @@
-import { memorySemanticKey, normalizeEntity } from "./entity-resolver.js";
+import { memorySemanticKey, normalizeEntity } from "../entity/entity-resolver.js";
 
 export type TemporalRelation = "ABOUT" | "FROM_SESSION" | "SUPPORTS" | "SUPERSEDES" | "TOUCHED_FILE";
 

@@ -1,6 +1,6 @@
 import type { LongTermMemoryInput, MemoryRelation } from "@repo/hydra";
 import type { LongTermMemoryClaim } from "@repo/memory-extractor";
-import type { RevisionDecision } from "./revision-resolver.js";
+import type { RevisionDecision } from "../revision/revision-resolver.js";
 
 type MemoryScope = {
   workspaceId: string;
@@ -8,7 +8,7 @@ type MemoryScope = {
   evidenceEventIds: string[];
   occurredAt?: string;
 };
-
+// sentesces ke objexts atp, before sendint or writing it to hydradb tbh.
 /**
  * Turns an extracted claim into the object we save in HydraDB:
  * readable text ("subject predicate value. Kind: ...") plus graph relations.

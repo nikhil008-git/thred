@@ -1,5 +1,5 @@
 import { recallLongTermMemory } from "@repo/hydra";
-import { rankMemories, type RankedMemory } from "./ranker.js";
+import { rankMemories, type RankedMemory } from "../rank/ranker.js";
 
 export type MemoryHistory = {
   status: "FOUND" | "NOT_FOUND";

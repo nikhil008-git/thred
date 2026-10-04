@@ -5,8 +5,8 @@ import {
   type MemoryExtractionRequest,
 } from "@repo/memory-extractor";
 import { writeLongTermMemories } from "@repo/hydra";
-import { memorySemanticKey } from "../shared/entity-resolver.js";
-import { HydraMemoryLookup } from "./long-term/hydra-lookup.js";
+import { memorySemanticKey } from "../shared/entity/entity-resolver.js";
+import { HydraMemoryLookup } from "./long-term/hydra/hydra-lookup.js";
 import {
   processLongTermClaim,
   resolveLongTermClaim,

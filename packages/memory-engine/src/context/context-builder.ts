@@ -1,8 +1,8 @@
 import { recallLongTermMemory } from "@repo/hydra";
-import { shouldAbstain } from "./abstention.js";
-import { compactMemoryText } from "./memory-text.js";
-import { deriveQueryIntent, expansionQueries } from "./query-intent.js";
-import { rankMemories, type RankedMemory } from "./ranker.js";
+import { shouldAbstain } from "./abstain/abstention.js";
+import { compactMemoryText } from "./text/memory-text.js";
+import { deriveQueryIntent, expansionQueries } from "./rank/query-intent.js";
+import { rankMemories, type RankedMemory } from "./rank/ranker.js";
 
 export type MemoryContext =
   | {

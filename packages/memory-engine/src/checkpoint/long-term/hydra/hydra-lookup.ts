@@ -1,7 +1,7 @@
 import { recallLongTermMemory } from "@repo/hydra";
-import { memorySemanticKey } from "../../shared/entity-resolver.js";
-import type { MemoryLookup } from "./engine.js";
-import type { ExistingMemory } from "./revision-resolver.js";
+import { memorySemanticKey } from "../../../shared/entity/entity-resolver.js";
+import type { MemoryLookup } from "../engine.js";
+import type { ExistingMemory } from "../revision/revision-resolver.js";
 
 function valueFromMemoryText(text: string, subject: string, predicate: string): string | null {
   const prefix = `${subject} ${predicate}`.toLocaleLowerCase();

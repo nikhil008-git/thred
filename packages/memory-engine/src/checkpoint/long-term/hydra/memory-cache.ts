@@ -1,6 +1,6 @@
-import { memorySemanticKey } from "../../shared/entity-resolver.js";
-import type { MemoryLookup } from "./engine.js";
-import type { ExistingMemory } from "./revision-resolver.js";
+import { memorySemanticKey } from "../../../shared/entity/entity-resolver.js";
+import type { MemoryLookup } from "../engine.js";
+import type { ExistingMemory } from "../revision/revision-resolver.js";
 
 /**
  * HydraDB indexes writes asynchronously, so a fact revised a few claims later in

@@ -1,11 +1,11 @@
 import { writeLongTermMemory, type HydraMemoryWriteResponse, type LongTermMemoryInput } from "@repo/hydra";
 import type { LongTermMemoryClaim } from "@repo/memory-extractor";
-import { buildHydraMemory } from "./graph-builder.js";
+import { buildHydraMemory } from "./graph/graph-builder.js";
 import {
   resolveRevision,
   type ExistingMemory,
   type RevisionDecision,
-} from "./revision-resolver.js";
+} from "./revision/revision-resolver.js";
 
 export type MemoryLookup = {
   findCurrentBySemanticKey(input: {

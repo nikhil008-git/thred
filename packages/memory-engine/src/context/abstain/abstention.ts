@@ -1,4 +1,4 @@
-import type { RankedMemory } from "./ranker.js";
+import type { RankedMemory } from "../rank/ranker.js";
 
 export type AbstentionResult =
   | { abstain: false }

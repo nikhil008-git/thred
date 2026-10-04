@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compactMemoryText } from "./memory-text.js";
+import { compactMemoryText } from "../text/memory-text.js";
 import { deriveQueryIntent, expansionQueries } from "./query-intent.js";
 import { lexicalOverlap, rankMemories } from "./ranker.js";
 
