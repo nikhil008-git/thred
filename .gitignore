@@ -39,6 +39,9 @@ yarn-error.log*
 !/apps/evals/reports/longmemeval-2026-08-20T15-57-13-641Z.md
 !/apps/evals/reports/longmemeval-v2-2026-08-20T19-04-43-101Z.md
 
+# Local Cursor notes (latency plan, scratch)
+.cursor/
+
 # Misc
 .DS_Store
 *.pem

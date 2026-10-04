@@ -11,14 +11,22 @@ export function apiKey(): string {
 }
 
 export async function callMcp<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${apiBaseUrl()}/api/mcp/${path}`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey()}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const url = `${apiBaseUrl()}/api/mcp/${path}`;
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey()}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    const cause = error instanceof Error && error.cause instanceof Error ? error.cause : null;
+    const detail = cause ? `${"code" in cause && cause.code ? `${cause.code}: ` : ""}${cause.message}` : String(error);
+    throw new Error(`Could not reach Thred API at ${url} (${detail})`);
+  }
 
   const payload = await response.json().catch(() => null) as T | { error?: string } | null;
   if (!response.ok) {

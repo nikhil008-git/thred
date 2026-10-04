@@ -1,5 +1,5 @@
 import { resumeWork, type ResumeHandoff } from "@repo/working-memory";
-import { buildMemoryContext, type MemoryContext } from "./context-builder.js";
+import { buildMemoryContext, type MemoryContext } from "../context/context-builder.js";
 
 export type ResumeWithMemory = ResumeHandoff & { memoryContext: MemoryContext };
 

@@ -1,5 +1,5 @@
 import type { LongTermMemoryClaim } from "@repo/memory-extractor";
-import { memorySemanticKey, normalizeEntity } from "./entity-resolver.js";
+import { memorySemanticKey, normalizeEntity } from "../shared/entity-resolver.js";
 
 export type ExistingMemory = {
   id: string;

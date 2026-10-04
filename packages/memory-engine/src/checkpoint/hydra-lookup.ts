@@ -1,5 +1,5 @@
 import { recallLongTermMemory } from "@repo/hydra";
-import { memorySemanticKey } from "./entity-resolver.js";
+import { memorySemanticKey } from "../shared/entity-resolver.js";
 import type { MemoryLookup } from "./engine.js";
 import type { ExistingMemory } from "./revision-resolver.js";
 

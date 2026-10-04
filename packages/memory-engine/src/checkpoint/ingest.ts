@@ -5,7 +5,7 @@ import {
 } from "@repo/memory-extractor";
 import { writeLongTermMemories } from "@repo/hydra";
 import { saveCheckpoint } from "@repo/working-memory";
-import { memorySemanticKey } from "./entity-resolver.js";
+import { memorySemanticKey } from "../shared/entity-resolver.js";
 import { HydraMemoryLookup } from "./hydra-lookup.js";
 import {
   processLongTermClaim,

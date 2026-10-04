@@ -67,3 +67,15 @@ test("callMcp maps non-JSON failures to a status error", async () => {
     /Thred API request failed \(502\)/,
   );
 });
+
+test("callMcp explains network failures with the URL and cause", async () => {
+  globalThis.fetch = mock.fn(async () => {
+    const cause = Object.assign(new Error("getaddrinfo ENOTFOUND api.thred.fun"), { code: "ENOTFOUND" });
+    throw new TypeError("fetch failed", { cause });
+  }) as typeof fetch;
+
+  await assert.rejects(
+    () => callMcp("context", { query: "auth" }),
+    /Could not reach Thred API at https:\/\/api\.thred\.fun\/api\/mcp\/context \(ENOTFOUND: getaddrinfo ENOTFOUND api\.thred\.fun\)/,
+  );
+});
