@@ -15,7 +15,11 @@ import {
   type ProcessedLongTermClaim,
   type ResolvedLongTermClaim,
 } from "./long-term/engine.js";
+import { mapWithLimit } from "./map-limit.js";
 import { saveWorkingMemoryHandoff } from "./short-term/save-working-memory.js";
+
+/** Unique facts cannot supersede each other, so their Hydra lookups overlap. */
+const uniqueClaimLookupLimit = 5;
 
 export type IngestSessionInput = {
   workspaceId: string;
@@ -84,13 +88,19 @@ export async function ingestSession(
   }
 
   // Step 1: claims with a unique subject + predicate cannot supersede each
-  // other, so resolve them all first and save them in a single HydraDB request.
-  const batch: BatchItem[] = [];
+  // other, so their lookups run a few at a time, then one HydraDB write.
+  const unique: Array<{ index: number; claim: LongTermMemoryClaim }> = [];
   for (const [index, claim] of claims.entries()) {
-    if (isRepeated(claim)) continue;
-    const resolved = await resolveLongTermClaim(lookup, claimInput(claim));
-    batch.push({ index, claim, resolved });
+    if (!isRepeated(claim)) unique.push({ index, claim });
   }
+  const resolved = await mapWithLimit(unique, uniqueClaimLookupLimit, (item) =>
+    resolveLongTermClaim(lookup, claimInput(item.claim)),
+  );
+  const batch: BatchItem[] = unique.map((item, index) => ({
+    index: item.index,
+    claim: item.claim,
+    resolved: resolved[index]!,
+  }));
 
   const toWrite = batch.filter((item) => item.resolved.memory);
   const response = await writeLongTermMemories(toWrite.map((item) => item.resolved.memory!));

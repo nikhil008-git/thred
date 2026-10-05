@@ -45,8 +45,10 @@ mcpRouter.post("/checkpoint", async (req: ThredRequest, res, next) => {
     }
 
     const workspaceId = req.workspaceId!;
-    const agentSessionId = await getAgentSession(workspaceId, sessionId);
-    const model = await extractionModelForWorkspace(workspaceId);
+    const [agentSessionId, model] = await Promise.all([
+      getAgentSession(workspaceId, sessionId),
+      extractionModelForWorkspace(workspaceId),
+    ]);
     const result = await ingestSession(
       {
         workspaceId,
