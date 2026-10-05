@@ -7,7 +7,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@hydradb/sdk": "^2.1.2",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
+    "tsx": "^4.21.0",
     "typescript": "5.9.2"
   }
 }

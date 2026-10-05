@@ -19,6 +19,8 @@ import type { FailedCaseSummary } from "./report.js";
 // npm workspace scripts execute from apps/evals, while local credentials live at
 // the repository root. Loading this explicitly keeps CLI invocation reproducible.
 loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env") });
+// Benchmarks may wait on HydraDB rate limits. Product checkpoint calls use a 30s budget.
+process.env.HYDRA_LONG_RETRY = "1";
 
 function option(name: string) {
   const index = process.argv.indexOf(name);
