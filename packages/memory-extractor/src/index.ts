@@ -6,9 +6,9 @@ export {
   type MemoryExtractionRequest,
   type SessionMessage,
 } from "./extractor.js";
-export { OpenAIMemoryExtractionModel } from "./openai.js";
-export { resolveModelConfig, type ModelConfig, type ModelProvider } from "./provider.js";
-export { isTransientNetworkError } from "./transient.js";
+export { OpenAIMemoryExtractionModel } from "./model/openai.js";
+export { resolveModelConfig, type ModelConfig, type ModelProvider } from "./model/provider.js";
+export { isTransientNetworkError } from "./model/transient.js";
 export {
   parseExtractedRelevantContext,
   type ExtractedRelevantContext,
@@ -16,4 +16,4 @@ export {
   type LongTermMemoryKind,
   type WorkingMemoryCheckpoint,
   type WorkingCheckpointStatus,
-} from "./schema.js";
+} from "./schema/schema.js";

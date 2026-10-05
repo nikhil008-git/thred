@@ -2,7 +2,7 @@ import {
   parseExtractedRelevantContext,
   type ExtractedRelevantContext,
   type LongTermMemoryClaim,
-} from "./schema.js";
+} from "./schema/schema.js";
 
 export type SessionMessage = {
   id: string;

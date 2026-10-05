@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { MemoryExtractionModel, MemoryExtractionRequest } from "./extractor.js";
+import type { MemoryExtractionModel, MemoryExtractionRequest } from "../extractor.js";
 import { resolveModelConfig } from "./provider.js";
 import { isTransientNetworkError } from "./transient.js";
 
