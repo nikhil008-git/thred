@@ -1128,14 +1128,22 @@ function DashboardContent({
       />
       <section className={`min-w-0 bg-[#fcfcfb] ${isHeroPreview ? "" : "lg:ml-[3.625rem]"}`}>
         {!isHeroPreview && (
-          <div className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-[#eceeea] bg-white/90 px-4 backdrop-blur sm:px-5 lg:hidden">
-            <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#4d534c] transition hover:bg-[#eef0ec]">
-              <PixelMenu className="size-4" />
-            </button>
-            <Link href="/" className="flex items-center gap-1.5 text-[14px] font-semibold tracking-[-.055em]">
-              <Mark className="size-5" />
-              thred
-            </Link>
+          <div className="sticky top-0 z-10">
+            <div role="status" className="flex items-center justify-center gap-2 border-b border-[#ecdcb0] bg-[#fbf3dc] px-4 py-2 text-center text-[12.5px] leading-snug text-[#6b5313]">
+              <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-[#d4a017]" />
+              <span>
+                HydraDB has moved API key usage to its paid plans — it&apos;s no longer included in the free tier.
+              </span>
+            </div>
+            <div className="flex h-12 items-center gap-2 border-b border-[#eceeea] bg-white/90 px-4 backdrop-blur sm:px-5 lg:hidden">
+              <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation" className="grid size-8 cursor-pointer place-items-center rounded-[7px] text-[#4d534c] transition hover:bg-[#eef0ec]">
+                <PixelMenu className="size-4" />
+              </button>
+              <Link href="/" className="flex items-center gap-1.5 text-[14px] font-semibold tracking-[-.055em]">
+                <Mark className="size-5" />
+                thred
+              </Link>
+            </div>
           </div>
         )}
         <div className={`bg-[#fcfcfb] ${isHeroPreview ? "min-h-[1100px]" : "min-h-screen"}`}>
